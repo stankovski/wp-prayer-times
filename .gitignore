@@ -8,3 +8,4 @@ wp-content/uploads/*
 wp-content/debug.log
 wp-content/plugins/prayer-times/.phpunit.result.cache
 wp-content/plugins/digital-signage/*
+wp-content/plugins/spice-starter-sites/*

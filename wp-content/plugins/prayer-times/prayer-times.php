@@ -1,9 +1,11 @@
 <?php
 /*
-Plugin Name: Prayer Times Shortcode
-Description: Adds a shortcode to display prayer times inside posts.
+Plugin Name: Prayer Times
+Plugin URI: https://example.com/prayer-times
+Description: A WordPress plugin for managing and displaying Islamic prayer times.
 Version: 1.0
-Author: Example
+Author: Your Name
+Author URI: https://example.com
 */
 
 if (!defined('ABSPATH')) exit;
