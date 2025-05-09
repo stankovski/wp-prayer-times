@@ -27,11 +27,7 @@
                 type: 'string',
                 default: 'center',
             },
-            textColor: {
-                type: 'string',
-                default: '',
-            },
-            backgroundColor: {
+            headerTextColor: {
                 type: 'string',
                 default: '',
             },
@@ -70,14 +66,9 @@
                 props.setAttributes({ align: newAlign });
             }
             
-            // Function to update text color
-            function onChangeTextColor(newColor) {
-                props.setAttributes({ textColor: newColor.hex });
-            }
-            
-            // Function to update background color
-            function onChangeBackgroundColor(newColor) {
-                props.setAttributes({ backgroundColor: newColor.hex });
+            // Function to update header text color
+            function onChangeHeaderTextColor(newColor) {
+                props.setAttributes({ headerTextColor: newColor.hex });
             }
             
             // Function to update header color
@@ -117,16 +108,13 @@
             }
             
             var tableStyle = {};
-            if (attributes.backgroundColor) {
-                tableStyle.backgroundColor = attributes.backgroundColor;
-            }
-            if (attributes.textColor) {
-                tableStyle.color = attributes.textColor;
-            }
             
             var headerStyle = {};
             if (attributes.headerColor) {
                 headerStyle.backgroundColor = attributes.headerColor;
+            }
+            if (attributes.headerTextColor) {
+                headerStyle.color = attributes.headerTextColor;
             }
             
             // Get current month name for preview
@@ -196,24 +184,16 @@
                                 { label: 'Default', value: 'default' },
                                 { label: 'Bordered', value: 'bordered' },
                                 { label: 'Striped', value: 'striped' },
-                                { label: 'Minimal', value: 'minimal' }
                             ],
                             onChange: onChangeTableStyle
                         })
                     ),
                     el(PanelBody, { title: 'Color Settings', initialOpen: false },
                         el('div', {},
-                            el('label', {}, 'Text Color'),
+                            el('label', {}, 'Header Text Color'),
                             el(ColorPicker, {
-                                color: attributes.textColor,
-                                onChangeComplete: onChangeTextColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '20px' } },
-                            el('label', {}, 'Background Color'),
-                            el(ColorPicker, {
-                                color: attributes.backgroundColor,
-                                onChangeComplete: onChangeBackgroundColor
+                                color: attributes.headerTextColor,
+                                onChangeComplete: onChangeHeaderTextColor
                             })
                         ),
                         el('div', { style: { marginTop: '20px' } },

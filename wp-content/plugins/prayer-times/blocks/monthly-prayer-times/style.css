@@ -42,11 +42,32 @@
     cursor: not-allowed;
 }
 
+/* Table styles */
 .wp-block-prayer-times-monthly-prayer-times .prayer-times-table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 1em;
     font-size: 0.95em;
+}
+
+.wp-block-prayer-times-monthly-prayer-times .prayer-times-table,
+.wp-block-prayer-times-monthly-prayer-times .prayer-times-table th,
+.wp-block-prayer-times-monthly-prayer-times .prayer-times-table td {
+    padding: 0.5em !important;
+    text-align: center !important;
+}
+
+.wp-block-prayer-times-monthly-prayer-times .prayer-times-table tbody tr {
+    background-color: #fff !important;
+}
+
+.wp-block-prayer-times-monthly-prayer-times .prayer-times-table thead th {
+    background-color: inherit !important; /* Preserve inline background for row highlighting */
+    color: inherit !important; /* Preserve inline color  */
+    font-weight: bold !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1 !important;
 }
 
 /* Date column styles */
@@ -86,90 +107,45 @@
 }
 
 /* Today row highlighting */
-.wp-block-prayer-times-monthly-prayer-times tr.today {
+.wp-block-prayer-times-monthly-prayer-times .prayer-times-table tbody tr.today {
     background-color: rgba(255, 243, 205, 0.7) !important;
 }
 
-/* Friday row highlighting */
-.wp-block-prayer-times-monthly-prayer-times tr.friday {
-    background-color: rgba(209, 231, 221, 0.5);
+/* Friday row highlighting - with increased specificity */
+.wp-block-prayer-times-monthly-prayer-times .prayer-times-table tbody tr.friday {
+    background-color: rgba(163, 198, 182, 0.5) !important;
 }
 
-/* Both today and Friday */
-.wp-block-prayer-times-monthly-prayer-times tr.today.friday {
-    background-color: rgba(255, 243, 205, 0.7) !important;
-    border-left: 4px solid rgba(25, 135, 84, 0.7);
+/* Both today and Friday - with increased specificity */
+.wp-block-prayer-times-monthly-prayer-times .prayer-times-table tbody tr.today.friday {
+    background-color: rgba(163, 198, 182, 0.5) !important;
+    border-left: 4px solid rgba(25, 135, 84, 0.7) !important;
 }
 
 /* Default table style */
+.wp-block-prayer-times-monthly-prayer-times .table-style-default,
 .wp-block-prayer-times-monthly-prayer-times .table-style-default th,
 .wp-block-prayer-times-monthly-prayer-times .table-style-default td {
-    padding: 0.5em;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-}
-
-.wp-block-prayer-times-monthly-prayer-times .table-style-default th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-    z-index: 1;
+    border: 0px !important;
+    border-bottom: 1px solid #ddd !important;
 }
 
 /* Bordered table style */
+.wp-block-prayer-times-monthly-prayer-times .table-style-bordered,
 .wp-block-prayer-times-monthly-prayer-times .table-style-bordered th,
 .wp-block-prayer-times-monthly-prayer-times .table-style-bordered td {
-    padding: 0.5em;
-    text-align: center;
-    border: 1px solid #ddd;
-}
-
-.wp-block-prayer-times-monthly-prayer-times .table-style-bordered th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-    z-index: 1;
+    border: 1px solid #ddd !important;
 }
 
 /* Striped table style */
+.wp-block-prayer-times-monthly-prayer-times .table-style-striped,
 .wp-block-prayer-times-monthly-prayer-times .table-style-striped th,
 .wp-block-prayer-times-monthly-prayer-times .table-style-striped td {
-    padding: 0.5em;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-}
-
-.wp-block-prayer-times-monthly-prayer-times .table-style-striped th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-    z-index: 1;
+    border-bottom: 1px solid #ddd !important;
 }
 
 .wp-block-prayer-times-monthly-prayer-times .table-style-striped tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-/* Minimal table style */
-.wp-block-prayer-times-monthly-prayer-times .table-style-minimal th,
-.wp-block-prayer-times-monthly-prayer-times .table-style-minimal td {
-    padding: 0.5em;
-    text-align: center;
-}
-
-.wp-block-prayer-times-monthly-prayer-times .table-style-minimal th {
-    border-bottom: 2px solid #ddd;
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-.wp-block-prayer-times-monthly-prayer-times .table-style-minimal td {
-    border-bottom: 1px solid #f0f0f0;
+    background-color: #f9f9f9 !important;
 }
 
 /* Loading indicator */

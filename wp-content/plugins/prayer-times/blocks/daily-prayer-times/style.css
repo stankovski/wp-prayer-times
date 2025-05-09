@@ -128,7 +128,8 @@
 .prayer-times-carousel-dots {
     display: flex;
     justify-content: center;
-    margin-top: 15px;
+    margin-top: 20px;
+    margin-bottom: 5px;
     gap: 8px;
 }
 
@@ -148,11 +149,6 @@
 /* Carousel navigation arrows - set to display: none to hide them */
 .prayer-times-carousel-nav {
     display: none;
-}
-
-/* Make the carousel dots more prominent since they're now the only navigation method */
-.prayer-times-carousel-dots {
-    margin-top: 20px;
 }
 
 .prayer-times-carousel-dot {

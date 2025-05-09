@@ -40,11 +40,7 @@ function prayertimes_register_monthly_prayer_times_block() {
                 'type' => 'string',
                 'default' => 'center',
             ),
-            'textColor' => array(
-                'type' => 'string',
-                'default' => '',
-            ),
-            'backgroundColor' => array(
+            'headerTextColor' => array(
                 'type' => 'string',
                 'default' => '',
             ),
@@ -90,8 +86,7 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     // Get block attributes
     $className = isset($attributes['className']) ? $attributes['className'] : '';
     $align = isset($attributes['align']) ? $attributes['align'] : 'center';
-    $textColor = isset($attributes['textColor']) ? $attributes['textColor'] : '';
-    $backgroundColor = isset($attributes['backgroundColor']) ? $attributes['backgroundColor'] : '';
+    $headerTextColor = isset($attributes['headerTextColor']) ? $attributes['headerTextColor'] : '';
     $headerColor = isset($attributes['headerColor']) ? $attributes['headerColor'] : '';
     $tableStyle = isset($attributes['tableStyle']) ? $attributes['tableStyle'] : 'default';
     $fontSize = isset($attributes['fontSize']) ? $attributes['fontSize'] : 16;
@@ -109,16 +104,13 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     }
     
     $table_style = '';
-    if ($backgroundColor) {
-        $table_style .= "background-color: {$backgroundColor};";
-    }
-    if ($textColor) {
-        $table_style .= "color: {$textColor};";
-    }
     
     $header_style = '';
     if ($headerColor) {
         $header_style .= "background-color: {$headerColor};";
+    }
+    if ($headerTextColor) {
+        $header_style .= "color: {$headerTextColor};";
     }
     
     // Get current month's start and end dates
