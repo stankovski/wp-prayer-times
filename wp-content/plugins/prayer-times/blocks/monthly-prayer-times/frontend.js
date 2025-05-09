@@ -19,6 +19,7 @@ jQuery(document).ready(function($) {
         var highlightToday = $block.data('highlight-today');
         var tableStyle = $block.data('table-style');
         var reportType = $block.data('report-type') || 'monthly';
+        var showPagination = $block.data('show-pagination');
         
         // Set up pagination buttons
         var $prevButton = $block.find('.prev-page');
@@ -26,8 +27,8 @@ jQuery(document).ready(function($) {
         var $currentMonthSpan = $block.find('.month-name');
         var $tableContainer = $block.find('.prayer-times-table-container');
         
-        // Skip pagination setup for non-monthly report types
-        if (reportType !== 'monthly') {
+        // Skip pagination setup for non-monthly report types or when pagination is disabled
+        if (reportType !== 'monthly' || !showPagination) {
             return;
         }
         

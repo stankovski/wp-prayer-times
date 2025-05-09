@@ -59,6 +59,10 @@
                 type: 'string',
                 default: 'monthly',
             },
+            showPagination: {
+                type: 'boolean',
+                default: true,
+            },
         },
         
         // Editor UI
@@ -108,6 +112,11 @@
             // Function to change report type
             function onChangeReportType(newType) {
                 props.setAttributes({ reportType: newType });
+            }
+            
+            // Function to toggle pagination
+            function onTogglePagination(newVal) {
+                props.setAttributes({ showPagination: newVal });
             }
             
             // Set up inline styles based on attributes
@@ -171,6 +180,11 @@
                                 { label: 'Next 5 Days', value: 'next5days' }
                             ],
                             onChange: onChangeReportType
+                        }),
+                        attributes.reportType === 'monthly' && el(ToggleControl, {
+                            label: 'Enable Pagination',
+                            checked: attributes.showPagination,
+                            onChange: onTogglePagination
                         }),
                         el(ToggleControl, {
                             label: 'Show Sunrise',
@@ -238,12 +252,12 @@
                     el('div', { className: 'prayer-times-month-header' },
                         el('button', { 
                             className: 'prev-page',
-                            disabled: attributes.reportType !== 'monthly'
+                            disabled: attributes.reportType !== 'monthly' || !attributes.showPagination
                         }, attributes.reportType === 'monthly' ? '« Previous Month' : '« Previous'),
                         el('h3', { className: 'month-name' }, headerText),
                         el('button', { 
                             className: 'next-page',
-                            disabled: attributes.reportType !== 'monthly'
+                            disabled: attributes.reportType !== 'monthly' || !attributes.showPagination
                         }, attributes.reportType === 'monthly' ? 'Next Month »' : 'Next »')
                     ),
                     el('div', { className: 'prayer-times-table-container' },

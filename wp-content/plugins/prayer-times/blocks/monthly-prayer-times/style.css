@@ -248,12 +248,14 @@
 
 /* Report type specific styles */
 .wp-block-prayer-times-monthly-prayer-times[data-report-type="weekly"] .prayer-times-month-header,
-.wp-block-prayer-times-monthly-prayer-times[data-report-type="next5days"] .prayer-times-month-header {
+.wp-block-prayer-times-monthly-prayer-times[data-report-type="next5days"] .prayer-times-month-header,
+.wp-block-prayer-times-monthly-prayer-times[data-show-pagination="0"] .prayer-times-month-header {
     justify-content: center;
 }
 
 .wp-block-prayer-times-monthly-prayer-times[data-report-type="weekly"] .prayer-times-month-header button,
-.wp-block-prayer-times-monthly-prayer-times[data-report-type="next5days"] .prayer-times-month-header button {
+.wp-block-prayer-times-monthly-prayer-times[data-report-type="next5days"] .prayer-times-month-header button,
+.wp-block-prayer-times-monthly-prayer-times[data-show-pagination="0"] .prayer-times-month-header button {
     visibility: hidden;
 }
 

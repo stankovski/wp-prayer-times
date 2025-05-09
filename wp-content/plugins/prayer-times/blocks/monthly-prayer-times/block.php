@@ -72,6 +72,10 @@ function prayertimes_register_monthly_prayer_times_block() {
                 'type' => 'string',
                 'default' => 'monthly',
             ),
+            'showPagination' => array(
+                'type' => 'boolean',
+                'default' => true,
+            ),
         ),
     ));
 }
@@ -98,6 +102,7 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     $showIqama = isset($attributes['showIqama']) ? $attributes['showIqama'] : true;
     $highlightToday = isset($attributes['highlightToday']) ? $attributes['highlightToday'] : true;
     $reportType = isset($attributes['reportType']) ? $attributes['reportType'] : 'monthly';
+    $showPagination = isset($attributes['showPagination']) ? $attributes['showPagination'] : true;
     
     // Generate a unique ID for this instance
     $block_id = 'prayertimes-monthly-' . uniqid();
@@ -182,17 +187,18 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
                    data-table-style="' . esc_attr($tableStyle) . '"
                    data-month="' . esc_attr($current_date->format('n')) . '"
                    data-year="' . esc_attr($current_date->format('Y')) . '"
-                   data-report-type="' . esc_attr($reportType) . '">';
+                   data-report-type="' . esc_attr($reportType) . '"
+                   data-show-pagination="' . esc_attr($showPagination ? '1' : '0') . '">';
     
-    // Header with navigation controls (only for monthly view)
+    // Header with navigation controls (only for monthly view with pagination enabled)
     $output .= '<div class="prayer-times-month-header">';
     
-    if ($reportType === 'monthly') {
+    if ($reportType === 'monthly' && $showPagination) {
         $output .= '<button class="prev-page">&laquo; Previous Month</button>';
         $output .= '<h3 class="month-name">' . esc_html($header_text) . '</h3>';
         $output .= '<button class="next-page">Next Month &raquo;</button>';
     } else {
-        // For weekly/next5days, show header but disable navigation
+        // For weekly/next5days or monthly without pagination, show header but disable navigation
         $output .= '<button class="prev-page" disabled style="visibility:hidden;">&laquo; Previous</button>';
         $output .= '<h3 class="month-name">' . esc_html($header_text) . '</h3>';
         $output .= '<button class="next-page" disabled style="visibility:hidden;">Next &raquo;</button>';
