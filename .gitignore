@@ -1,0 +1,10 @@
+wp-content/themes/*
+wp-content/fonts/*
+wp-content/plugins/akismet/*
+wp-content/plugins/hello.php
+wp-content/uploads/*
+**/vendor/**/*
+.DS_Store
+wp-content/debug.log
+wp-content/plugins/prayer-times/.phpunit.result.cache
+wp-content/plugins/digital-signage/*

@@ -1,0 +1,20 @@
+{
+  "servers": {
+    "github-mcp-remote-capi-http": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${input:github_token}",
+        "Copilot-Integration-Id": "playground-dev"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "id": "github_token",
+      "description": "GitHub Personal Access Token",
+      "type": "promptString",
+      "password": true
+    }
+  ]
+}
