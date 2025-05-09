@@ -42,6 +42,13 @@
     cursor: not-allowed;
 }
 
+/* Add styling for disabled pagination buttons */
+.wp-block-prayer-times-monthly-prayer-times .prev-page.disabled,
+.wp-block-prayer-times-monthly-prayer-times .next-page.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Table styles */
 .wp-block-prayer-times-monthly-prayer-times .prayer-times-table {
     width: 100%;
@@ -172,9 +179,38 @@
     animation: spin 1s linear infinite;
 }
 
+/* Loading indicator styles */
+.prayer-times-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.prayer-times-loading:after {
+    content: "";
+    width: 30px;
+    height: 30px;
+    border: 3px solid #ccc;
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: loading-spinner 0.8s linear infinite;
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+@keyframes loading-spinner {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive styles for small screens */

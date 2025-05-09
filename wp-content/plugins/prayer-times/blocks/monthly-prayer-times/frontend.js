@@ -31,8 +31,13 @@ jQuery(document).ready(function($) {
             return;
         }
         
+        // Initially check adjacent months for prayer times
+        checkAdjacentMonths(initialMonth, initialYear);
+        
         // Add click handler for next button
         $nextButton.on('click', function() {
+            if ($(this).prop('disabled')) return;
+            
             // Go to next month
             currentMonth++;
             if (currentMonth > 12) {
@@ -44,6 +49,8 @@ jQuery(document).ready(function($) {
         
         // Add click handler for previous button
         $prevButton.on('click', function() {
+            if ($(this).prop('disabled')) return;
+            
             // Go to previous month
             currentMonth--;
             if (currentMonth < 1) {
@@ -52,6 +59,70 @@ jQuery(document).ready(function($) {
             }
             loadMonth(currentMonth, currentYear);
         });
+        
+        // Function to check if adjacent months have prayer times
+        function checkAdjacentMonths(month, year) {
+            // Calculate previous and next month/year
+            var prevMonth = month - 1;
+            var prevYear = year;
+            if (prevMonth < 1) {
+                prevMonth = 12;
+                prevYear--;
+            }
+            
+            var nextMonth = month + 1;
+            var nextYear = year;
+            if (nextMonth > 12) {
+                nextMonth = 1;
+                nextYear++;
+            }
+            
+            // Check previous month
+            checkMonthAvailability(prevMonth, prevYear, function(hasRecords) {
+                $prevButton.prop('disabled', !hasRecords);
+                if (!hasRecords) {
+                    $prevButton.addClass('disabled');
+                } else {
+                    $prevButton.removeClass('disabled');
+                }
+            });
+            
+            // Check next month
+            checkMonthAvailability(nextMonth, nextYear, function(hasRecords) {
+                $nextButton.prop('disabled', !hasRecords);
+                if (!hasRecords) {
+                    $nextButton.addClass('disabled');
+                } else {
+                    $nextButton.removeClass('disabled');
+                }
+            });
+        }
+        
+        // Function to check if a month has prayer times
+        function checkMonthAvailability(month, year, callback) {
+            $.ajax({
+                url: prayertimes_monthly_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'prayertimes_check_month_availability',
+                    nonce: prayertimes_monthly_ajax.nonce,
+                    month: month,
+                    year: year
+                },
+                success: function(response) {
+                    if (response.success) {
+                        callback(response.data.has_records);
+                    } else {
+                        // Default to false on error
+                        callback(false);
+                    }
+                },
+                error: function() {
+                    // Default to false on error
+                    callback(false);
+                }
+            });
+        }
         
         // Function to load a specific month via AJAX
         function loadMonth(month, year) {
@@ -85,17 +156,8 @@ jQuery(document).ready(function($) {
                         currentMonth = month;
                         currentYear = year;
                         
-                        // Check if we're at current month to manage button states
-                        var now = new Date();
-                        var isCurrentMonth = (now.getMonth() + 1) === month && now.getFullYear() === year;
-                        var isPastLimit = (year < now.getFullYear() - 1) || 
-                                          (year === now.getFullYear() - 1 && month < now.getMonth() + 1);
-                        var isFutureLimit = (year > now.getFullYear() + 1) || 
-                                            (year === now.getFullYear() + 1 && month > now.getMonth() + 1);
-                        
-                        // Optionally disable buttons if reaching past/future limits
-                        // $prevButton.prop('disabled', isPastLimit);
-                        // $nextButton.prop('disabled', isFutureLimit);
+                        // Check adjacent months for availability
+                        checkAdjacentMonths(month, year);
                     } else {
                         // Display error message
                         $tableContainer.html('<p class="error">Error loading prayer times: ' + response.data + '</p>');

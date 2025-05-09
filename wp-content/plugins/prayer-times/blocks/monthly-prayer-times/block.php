@@ -439,6 +439,46 @@ add_action('wp_ajax_prayertimes_monthly_prayer_times_pagination', 'prayertimes_m
 add_action('wp_ajax_nopriv_prayertimes_monthly_prayer_times_pagination', 'prayertimes_monthly_prayer_times_pagination');
 
 /**
+ * AJAX handler to check if a month has prayer times
+ */
+function prayertimes_check_month_availability() {
+    check_ajax_referer('prayertimes_monthly_prayer_times_nonce', 'nonce');
+    
+    global $wpdb;
+    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    
+    // Get parameters from the request
+    $month = isset($_POST['month']) ? intval($_POST['month']) : date('n');
+    $year = isset($_POST['year']) ? intval($_POST['year']) : date('Y');
+    
+    // Validate month and year
+    if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
+        wp_send_json_error('Invalid month or year');
+        return;
+    }
+    
+    // Get start and end dates for the month
+    $start_of_month = new DateTime("$year-$month-01");
+    $end_of_month = new DateTime($start_of_month->format('Y-m-t'));
+    
+    // Check if there are any prayer times for the month
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table_name 
+         WHERE day BETWEEN %s AND %s",
+        $start_of_month->format('Y-m-d'),
+        $end_of_month->format('Y-m-d')
+    ));
+    
+    wp_send_json_success([
+        'has_records' => ($count > 0),
+        'month' => $month,
+        'year' => $year
+    ]);
+}
+add_action('wp_ajax_prayertimes_check_month_availability', 'prayertimes_check_month_availability');
+add_action('wp_ajax_nopriv_prayertimes_check_month_availability', 'prayertimes_check_month_availability');
+
+/**
  * Helper function to format time based on global time format setting
  */
 function prayertimes_format_prayer_time($time_string) {
