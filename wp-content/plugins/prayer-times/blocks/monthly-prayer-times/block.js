@@ -55,6 +55,10 @@
                 type: 'boolean',
                 default: true,
             },
+            reportType: {
+                type: 'string',
+                default: 'monthly',
+            },
         },
         
         // Editor UI
@@ -101,6 +105,11 @@
                 props.setAttributes({ fontSize: newSize });
             }
             
+            // Function to change report type
+            function onChangeReportType(newType) {
+                props.setAttributes({ reportType: newType });
+            }
+            
             // Set up inline styles based on attributes
             var containerStyle = { textAlign: attributes.align };
             if (attributes.fontSize) {
@@ -122,6 +131,14 @@
                               'July', 'August', 'September', 'October', 'November', 'December'];
             var currentDate = new Date();
             var currentMonthYear = monthNames[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
+            
+            // Header text based on report type
+            var headerText = currentMonthYear;
+            if (attributes.reportType === 'weekly') {
+                headerText = 'Weekly Prayer Times';
+            } else if (attributes.reportType === 'next5days') {
+                headerText = 'Next 5 Days Prayer Times';
+            }
             
             // Generate sample dates for the preview table
             var sampleDates = [];
@@ -145,6 +162,16 @@
                 // Inspector controls (sidebar)
                 el(InspectorControls, { key: 'inspector' },
                     el(PanelBody, { title: 'Display Settings', initialOpen: true },
+                        el(SelectControl, {
+                            label: 'Report Type',
+                            value: attributes.reportType,
+                            options: [
+                                { label: 'Monthly', value: 'monthly' },
+                                { label: 'Weekly', value: 'weekly' },
+                                { label: 'Next 5 Days', value: 'next5days' }
+                            ],
+                            onChange: onChangeReportType
+                        }),
                         el(ToggleControl, {
                             label: 'Show Sunrise',
                             checked: attributes.showSunrise,
@@ -209,9 +236,15 @@
                 // Block preview
                 el('div', { className: props.className, style: containerStyle },
                     el('div', { className: 'prayer-times-month-header' },
-                        el('button', { className: 'prev-page' }, '« Previous Month'),
-                        el('h3', { className: 'month-name' }, currentMonthYear),
-                        el('button', { className: 'next-page' }, 'Next Month »')
+                        el('button', { 
+                            className: 'prev-page',
+                            disabled: attributes.reportType !== 'monthly'
+                        }, attributes.reportType === 'monthly' ? '« Previous Month' : '« Previous'),
+                        el('h3', { className: 'month-name' }, headerText),
+                        el('button', { 
+                            className: 'next-page',
+                            disabled: attributes.reportType !== 'monthly'
+                        }, attributes.reportType === 'monthly' ? 'Next Month »' : 'Next »')
                     ),
                     el('div', { className: 'prayer-times-table-container' },
                         el('table', { 

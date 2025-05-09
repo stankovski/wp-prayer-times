@@ -68,6 +68,10 @@ function prayertimes_register_monthly_prayer_times_block() {
                 'type' => 'boolean',
                 'default' => true,
             ),
+            'reportType' => array(
+                'type' => 'string',
+                'default' => 'monthly',
+            ),
         ),
     ));
 }
@@ -93,6 +97,7 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     $showSunrise = isset($attributes['showSunrise']) ? $attributes['showSunrise'] : true;
     $showIqama = isset($attributes['showIqama']) ? $attributes['showIqama'] : true;
     $highlightToday = isset($attributes['highlightToday']) ? $attributes['highlightToday'] : true;
+    $reportType = isset($attributes['reportType']) ? $attributes['reportType'] : 'monthly';
     
     // Generate a unique ID for this instance
     $block_id = 'prayertimes-monthly-' . uniqid();
@@ -113,26 +118,58 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
         $header_style .= "color: {$headerTextColor};";
     }
     
-    // Get current month's start and end dates
+    // Get dates based on report type
     $current_date = new DateTime();
-    $start_of_month = new DateTime($current_date->format('Y-m-01'));
-    $end_of_month = new DateTime($current_date->format('Y-m-t'));
+    $start_date = null;
+    $end_date = null;
     
-    $month_year = $current_date->format('F Y');
+    switch ($reportType) {
+        case 'weekly':
+            // Get current week's start (Monday) and end (Sunday)
+            $current_day_of_week = $current_date->format('N'); // 1 (Mon) through 7 (Sun)
+            $days_to_monday = $current_day_of_week - 1;
+            
+            $start_date = clone $current_date;
+            $start_date->modify("-{$days_to_monday} days"); // Go to Monday
+            
+            $end_date = clone $start_date;
+            $end_date->modify('+6 days'); // Go to Sunday
+            
+            $header_text = 'Weekly Prayer Times (' . $start_date->format('M j') . ' - ' . $end_date->format('M j, Y') . ')';
+            break;
+            
+        case 'next5days':
+            // Get next 5 days including today
+            $start_date = clone $current_date;
+            $end_date = clone $current_date;
+            $end_date->modify('+4 days'); // 5 days total including today
+            
+            $header_text = 'Next 5 Days Prayer Times (' . $start_date->format('M j') . ' - ' . $end_date->format('M j, Y') . ')';
+            break;
+            
+        case 'monthly':
+        default:
+            // Get current month's start and end dates
+            $start_date = new DateTime($current_date->format('Y-m-01'));
+            $end_date = new DateTime($current_date->format('Y-m-t'));
+            
+            $header_text = $current_date->format('F Y');
+            break;
+    }
     
-    // Get all prayer times for the current month
+    // Get prayer times for the specified date range
     $prayer_times = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $table_name 
          WHERE day BETWEEN %s AND %s 
          ORDER BY day ASC",
-        $start_of_month->format('Y-m-d'),
-        $end_of_month->format('Y-m-d')
+        $start_date->format('Y-m-d'),
+        $end_date->format('Y-m-d')
     ), ARRAY_A);
     
     // If no times available, return a message
     if (empty($prayer_times)) {
         return '<div class="wp-block-prayer-times-monthly-prayer-times">
-            <p>No prayer times available for the current month.</p>
+            <p>No prayer times available for the selected date range.</p>
         </div>';
     }
     
@@ -144,13 +181,23 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
                    data-highlight-today="' . esc_attr($highlightToday ? '1' : '0') . '"
                    data-table-style="' . esc_attr($tableStyle) . '"
                    data-month="' . esc_attr($current_date->format('n')) . '"
-                   data-year="' . esc_attr($current_date->format('Y')) . '">';
+                   data-year="' . esc_attr($current_date->format('Y')) . '"
+                   data-report-type="' . esc_attr($reportType) . '">';
     
-    // Month header with navigation controls
+    // Header with navigation controls (only for monthly view)
     $output .= '<div class="prayer-times-month-header">';
-    $output .= '<button class="prev-page">&laquo; Previous Month</button>';
-    $output .= '<h3 class="month-name">' . esc_html($month_year) . '</h3>';
-    $output .= '<button class="next-page">Next Month &raquo;</button>';
+    
+    if ($reportType === 'monthly') {
+        $output .= '<button class="prev-page">&laquo; Previous Month</button>';
+        $output .= '<h3 class="month-name">' . esc_html($header_text) . '</h3>';
+        $output .= '<button class="next-page">Next Month &raquo;</button>';
+    } else {
+        // For weekly/next5days, show header but disable navigation
+        $output .= '<button class="prev-page" disabled style="visibility:hidden;">&laquo; Previous</button>';
+        $output .= '<h3 class="month-name">' . esc_html($header_text) . '</h3>';
+        $output .= '<button class="next-page" disabled style="visibility:hidden;">Next &raquo;</button>';
+    }
+    
     $output .= '</div>';
     
     // Table container

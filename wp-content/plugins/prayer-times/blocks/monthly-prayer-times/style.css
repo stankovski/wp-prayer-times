@@ -209,3 +209,22 @@
 .wp-block-prayer-times-monthly-prayer-times .format-24h .prayer-column .iqama-time {
     letter-spacing: -0.2px; /* Slightly tighter kerning for 24h format */
 }
+
+/* Report type specific styles */
+.wp-block-prayer-times-monthly-prayer-times[data-report-type="weekly"] .prayer-times-month-header,
+.wp-block-prayer-times-monthly-prayer-times[data-report-type="next5days"] .prayer-times-month-header {
+    justify-content: center;
+}
+
+.wp-block-prayer-times-monthly-prayer-times[data-report-type="weekly"] .prayer-times-month-header button,
+.wp-block-prayer-times-monthly-prayer-times[data-report-type="next5days"] .prayer-times-month-header button {
+    visibility: hidden;
+}
+
+.wp-block-prayer-times-monthly-prayer-times[data-report-type="next5days"] .prayer-times-table tbody tr {
+    font-weight: 400;
+}
+
+.wp-block-prayer-times-monthly-prayer-times[data-report-type="next5days"] .prayer-times-table tbody tr.today {
+    font-weight: bold;
+}

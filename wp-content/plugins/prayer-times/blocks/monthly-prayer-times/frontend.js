@@ -18,12 +18,18 @@ jQuery(document).ready(function($) {
         var showIqama = $block.data('show-iqama');
         var highlightToday = $block.data('highlight-today');
         var tableStyle = $block.data('table-style');
+        var reportType = $block.data('report-type') || 'monthly';
         
         // Set up pagination buttons
         var $prevButton = $block.find('.prev-page');
         var $nextButton = $block.find('.next-page');
         var $currentMonthSpan = $block.find('.month-name');
         var $tableContainer = $block.find('.prayer-times-table-container');
+        
+        // Skip pagination setup for non-monthly report types
+        if (reportType !== 'monthly') {
+            return;
+        }
         
         // Add click handler for next button
         $nextButton.on('click', function() {
@@ -64,7 +70,8 @@ jQuery(document).ready(function($) {
                     show_sunrise: showSunrise ? '1' : '0',
                     show_iqama: showIqama ? '1' : '0',
                     highlight_today: highlightToday ? '1' : '0',
-                    table_style: tableStyle
+                    table_style: tableStyle,
+                    report_type: reportType
                 },
                 success: function(response) {
                     if (response.success) {
