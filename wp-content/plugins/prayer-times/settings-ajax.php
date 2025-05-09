@@ -80,19 +80,65 @@ function prayertimes_handle_generate() {
         $method = isset($opts['method']) ? $opts['method'] : 'ISNA';
         $asr_calc = isset($opts['asr_calc']) ? $opts['asr_calc'] : 'STANDARD';
         
-        // Get the number of days to generate from the request
-        $days_to_generate = isset($_POST['period']) ? intval($_POST['period']) : 30;
-        
-        // Debug log - add to error_log
-        error_log('Prayer Times Generate: Days to generate = ' . $days_to_generate);
-        error_log('Prayer Times Generate: POST data = ' . print_r($_POST, true));
-        
-        // Apply a reasonable limit to prevent server overload
-        $days_to_generate = min(max($days_to_generate, 7), 365);
-        
-        // Create a DateTime object for the current date
+        // Create DateTime objects for the current date and timezone
         $dtz = new DateTimeZone($timezone);
         $now = new DateTime('now', $dtz);
+        
+        // Handle period or custom date range
+        if (isset($_POST['period']) && $_POST['period'] === 'custom') {
+            // Custom date range specified
+            if (!isset($_POST['start_date']) || !isset($_POST['end_date'])) {
+                wp_send_json_error('Custom date range requires both start and end dates');
+                return;
+            }
+            
+            try {
+                // Parse start date
+                $start_date = new DateTime($_POST['start_date'], $dtz);
+                
+                // Parse end date
+                $end_date = new DateTime($_POST['end_date'], $dtz);
+                
+                // Ensure start date is not after end date
+                if ($start_date > $end_date) {
+                    wp_send_json_error('Start date cannot be after end date');
+                    return;
+                }
+                
+                // Calculate days difference
+                $days_diff = $start_date->diff($end_date)->days + 1; // +1 to include both start and end dates
+                
+                // Limit to 730 days (2 years) to prevent server overload
+                if ($days_diff > 730) {
+                    wp_send_json_error('Custom date range cannot exceed 2 years (730 days)');
+                    return;
+                }
+                
+                $days_to_generate = $days_diff;
+                
+                // Debug log
+                error_log('Prayer Times Generate: Custom date range from ' . $start_date->format('Y-m-d') . ' to ' . $end_date->format('Y-m-d') . ' (' . $days_to_generate . ' days)');
+                
+            } catch (Exception $e) {
+                wp_send_json_error('Invalid date format: ' . $e->getMessage());
+                return;
+            }
+        } else {
+            // Standard period option
+            $days_to_generate = isset($_POST['period']) ? intval($_POST['period']) : 30;
+            
+            // Apply a reasonable limit to prevent server overload
+            $days_to_generate = min(max($days_to_generate, 7), 365);
+            
+            // Use current date as start date
+            $start_date = clone $now;
+            
+            // Debug log
+            error_log('Prayer Times Generate: Days to generate = ' . $days_to_generate);
+        }
+        
+        // Debug log - add to error_log
+        error_log('Prayer Times Generate: POST data = ' . print_r($_POST, true));
         
         // Initialize the PrayerTimes object
         $pt = new PrayerTimes($method, $asr_calc);
@@ -137,18 +183,23 @@ function prayertimes_handle_generate() {
         $isha_daily_change = isset($opts['isha_daily_change']) ? $opts['isha_daily_change'] : 0;
         $isha_rounding = isset($opts['isha_rounding']) ? $opts['isha_rounding'] : 1;
         
-        // Find the next Friday or use current date if it's Friday
-        $start_date = clone $now;
-        $day_of_week = $start_date->format('w');  // 0 (Sun) - 6 (Sat)
-        
-        if ($day_of_week != 5) { // 5 is Friday
-            // Calculate days since the last Friday
-            $days_since_friday = ($day_of_week + 2) % 7;
-            $start_date->modify("-{$days_since_friday} days");
+        // Find the next Friday or use current date if it's Friday (or use start_date for custom range)
+        if (isset($_POST['period']) && $_POST['period'] === 'custom') {
+            // For custom date range, use the specified start date
+            $current_date = clone $start_date;
+        } else {
+            // For standard periods, find the next Friday from now
+            $current_date = clone $now;
+            $day_of_week = $current_date->format('w');  // 0 (Sun) - 6 (Sat)
+            
+            if ($day_of_week != 5) { // 5 is Friday
+                // Calculate days since the last Friday
+                $days_since_friday = ($day_of_week + 2) % 7;
+                $current_date->modify("-{$days_since_friday} days");
+            }
         }
         
         // Process days in weekly batches
-        $current_date = clone $start_date;
         $processed_days = 0;
         $current_week_start = null;
         $week_number = 0;

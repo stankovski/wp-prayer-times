@@ -47,6 +47,15 @@ jQuery(document).ready(function($) {
         });
     }
     
+    // Show/hide custom date range fields based on period selection
+    $('#prayertimes_period').on('change', function() {
+        if ($(this).val() === 'custom') {
+            $('#custom_date_range').show();
+        } else {
+            $('#custom_date_range').hide();
+        }
+    });
+    
     // Generate prayer times functionality for generating calculated times
     $('#prayertimes_generate_btn').on('click', function() {
         $(this).text('Generating...').prop('disabled', true);
@@ -56,14 +65,48 @@ jQuery(document).ready(function($) {
         var selectedPeriod = $('#prayertimes_period').val();
         console.log("Selected period:", selectedPeriod); // Debug info
         
+        var data = {
+            action: 'prayertimes_generate_times',
+            nonce: ptpAdmin.export_nonce,
+            period: selectedPeriod
+        };
+        
+        // Add custom date range if selected
+        if (selectedPeriod === 'custom') {
+            data.start_date = $('#prayertimes_start_date').val();
+            data.end_date = $('#prayertimes_end_date').val();
+            
+            if (!data.start_date || !data.end_date) {
+                $('#prayertimes_generate_btn').text('Generate Prayer Times').prop('disabled', false);
+                $('#prayertimes_export_result').html('<div class="notice notice-error inline"><p>Please specify both start and end dates for custom date range.</p></div>');
+                return;
+            }
+            
+            // Validate date range
+            var startDate = new Date(data.start_date);
+            var endDate = new Date(data.end_date);
+            
+            if (startDate > endDate) {
+                $('#prayertimes_generate_btn').text('Generate Prayer Times').prop('disabled', false);
+                $('#prayertimes_export_result').html('<div class="notice notice-error inline"><p>Start date cannot be after end date.</p></div>');
+                return;
+            }
+            
+            // Set a max range of 730 days (2 years) to prevent server overload
+            var daysDiff = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+            if (daysDiff > 730) {
+                $('#prayertimes_generate_btn').text('Generate Prayer Times').prop('disabled', false);
+                $('#prayertimes_export_result').html('<div class="notice notice-error inline"><p>Custom date range cannot exceed 2 years (730 days).</p></div>');
+                return;
+            }
+            
+            console.log("Custom date range:", data.start_date, "to", data.end_date);
+        }
+        
         $.ajax({
             url: ptpAdmin.ajaxurl,
             type: 'POST',
-            data: {
-                action: 'prayertimes_generate_times',
-                nonce: ptpAdmin.export_nonce,
-                period: selectedPeriod
-            },
+            data: data,
             success: function(response) {
                 $('#prayertimes_generate_btn').text('Generate Prayer Times').prop('disabled', false);
                 

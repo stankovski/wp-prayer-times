@@ -738,8 +738,43 @@ function prayertimes_settings_page() {
                     <option value="30" selected>30 days</option>
                     <option value="90">90 days</option>
                     <option value="365">365 days</option>
+                    <option value="custom">Custom range</option>
                 </select>
+                <div id="custom_date_range" style="margin-top: 10px; display: none;">
+                    <label for="prayertimes_start_date">Start date:</label>
+                    <input type="date" id="prayertimes_start_date" style="margin-right: 10px;">
+                    <label for="prayertimes_end_date">End date:</label>
+                    <input type="date" id="prayertimes_end_date">
+                </div>
             </div>
+            
+            <script>
+            // Inline script to ensure the dropdown functionality works
+            jQuery(document).ready(function($) {
+                // Initialize on page load
+                if ($('#prayertimes_period').val() === 'custom') {
+                    $('#custom_date_range').show();
+                }
+                
+                // Set current dates as defaults for custom range
+                var today = new Date();
+                var nextMonth = new Date();
+                nextMonth.setMonth(today.getMonth() + 1);
+                
+                $('#prayertimes_start_date').val(today.toISOString().split('T')[0]);
+                $('#prayertimes_end_date').val(nextMonth.toISOString().split('T')[0]);
+                
+                // Handle changes
+                $('#prayertimes_period').on('change', function() {
+                    console.log('Period selection changed (inline):', $(this).val());
+                    if ($(this).val() === 'custom') {
+                        $('#custom_date_range').show();
+                    } else {
+                        $('#custom_date_range').hide();
+                    }
+                });
+            });
+            </script>
             
             <h3 style="margin-top:20px;">2. Import Prayer Times</h3>
             <p>Import prayer times from a CSV file. The file should match the format of the exported CSV.</p>
