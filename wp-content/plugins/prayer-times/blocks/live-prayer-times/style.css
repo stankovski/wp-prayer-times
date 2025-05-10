@@ -98,7 +98,6 @@
 /* Prayer Table Styles - Border Override */
 .wp-block-prayer-times-live-prayer-times .prayer-times-live-table thead th {
     background-color: inherit !important; /* Preserve inline background for row highlighting */
-    color: inherit !important; /* Preserve inline color  */
 }
 
 .wp-block-prayer-times-live-prayer-times .prayer-times-live-table td{
@@ -162,6 +161,19 @@
 .wp-block-prayer-times-live-prayer-times .iqama-time {
     font-size: 1.2em;
     font-weight: bold;
+}
+
+/* Time Changes Column Styles */
+.wp-block-prayer-times-live-prayer-times .changes-column {
+    text-align: center;
+    color: #ff0000;
+}
+
+.wp-block-prayer-times-live-prayer-times .time-change {
+    display: block;
+    font-size: 1.1em;
+    font-weight: bold;
+    line-height: 1.2;
 }
 
 

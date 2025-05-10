@@ -92,6 +92,14 @@
                 type: 'boolean',
                 default: true,
             },
+            showChanges: {
+                type: 'boolean',
+                default: true,
+            },
+            changeColor: {
+                type: 'string',
+                default: '#ff0000',
+            },
         },
         
         // Editor UI
@@ -173,6 +181,16 @@
                 props.setAttributes({ showSeconds: newVal });
             }
             
+            // Function to toggle showing changes
+            function onToggleShowChanges(newVal) {
+                props.setAttributes({ showChanges: newVal });
+            }
+            
+            // Function to update change color
+            function onChangeChangeColor(newColor) {
+                props.setAttributes({ changeColor: newColor.hex });
+            }
+            
             // Helper function to create a prayer cell with icon
             function createPrayerNameCell(prayerName) {
                 var iconName = prayerName.toLowerCase();
@@ -215,46 +233,87 @@
                     highlightStyle.color = attributes.highlightColor;
                 }
                 
+                // Style for changes column
+                var changeStyle = {
+                    color: attributes.changeColor || '#ff0000'
+                };
+                
+                // Table headers including the changes column if enabled
+                var tableHeaders = [
+                    el('th', { style: headerStyle }, ''),
+                    el('th', { style: headerStyle }, 'Athan'),
+                    el('th', { style: headerStyle }, 'Iqama')
+                ];
+                
+                if (attributes.showChanges) {
+                    tableHeaders.push(el('th', { 
+                        style: Object.assign({}, headerStyle, changeStyle),
+                        className: 'changes-column'
+                    }, 'Jun 21'));
+                }
+                
                 return el('table', { 
                     className: 'prayer-times-live-table ' + ('table-style-' + attributes.tableStyle),
                     style: tableStyle 
                 },
                     el('thead', {},
-                        el('tr', { style: headerStyle },
-                            el('th', { style: headerStyle }, 'Prayer'),
-                            el('th', { style: headerStyle }, 'Athan'),
-                            el('th', { style: headerStyle }, 'Iqama')
-                        )
+                        el('tr', { style: headerStyle }, tableHeaders)
                     ),
                     el('tbody', {},
                         el('tr', { className: 'next-prayer' },
                             createPrayerNameCell('Fajr'),
                             el('td', { style: highlightStyle }, '5:30 AM'),
-                            el('td', { className: 'iqama-time' }, '5:50 AM')
+                            el('td', { className: 'iqama-time' }, '5:50 AM'),
+                            attributes.showChanges && el('td', { 
+                                className: 'changes-column',
+                                style: changeStyle 
+                            }, 
+                                el('span', { className: 'time-change' }, '6:00 AM')
+                            )
                         ),
                         attributes.showSunrise && el('tr', { className: 'sunrise-row' },
                             createPrayerNameCell('Sunrise'),
-                            el('td', { colSpan: '2' }, '7:00 AM')
+                            el('td', { colSpan: attributes.showChanges ? '1' : '2' }, '7:00 AM'),
+                            attributes.showChanges && el('td', {}),
+                            attributes.showChanges && el('td', { 
+                                className: 'changes-column',
+                                style: changeStyle 
+                            })
                         ),
                         el('tr', {},
                             createPrayerNameCell('Dhuhr'),
                             el('td', { style: highlightStyle }, '12:30 PM'),
-                            el('td', { className: 'iqama-time' }, '12:45 PM')
+                            el('td', { className: 'iqama-time' }, '12:45 PM'),
+                            attributes.showChanges && el('td', { 
+                                className: 'changes-column' 
+                            })
                         ),
                         el('tr', {},
                             createPrayerNameCell('Asr'),
                             el('td', { style: highlightStyle }, '3:45 PM'),
-                            el('td', { className: 'iqama-time' }, '4:00 PM')
+                            el('td', { className: 'iqama-time' }, '4:00 PM'),
+                            attributes.showChanges && el('td', { 
+                                className: 'changes-column',
+                                style: changeStyle 
+                            }, 
+                                el('span', { className: 'time-change' }, '4:15 PM')
+                            )
                         ),
                         el('tr', {},
                             createPrayerNameCell('Maghrib'),
                             el('td', { style: highlightStyle }, '6:00 PM'),
-                            el('td', { className: 'iqama-time' }, '6:05 PM')
+                            el('td', { className: 'iqama-time' }, '6:05 PM'),
+                            attributes.showChanges && el('td', { 
+                                className: 'changes-column'
+                            })
                         ),
                         el('tr', {},
                             createPrayerNameCell('Isha'),
                             el('td', { style: highlightStyle }, '7:30 PM'),
-                            el('td', { className: 'iqama-time' }, '7:45 PM')
+                            el('td', { className: 'iqama-time' }, '7:45 PM'),
+                            attributes.showChanges && el('td', { 
+                                className: 'changes-column'
+                            })
                         )
                     )
                 );
@@ -343,6 +402,18 @@
                             checked: attributes.showSunrise,
                             onChange: onToggleSunrise
                         }),
+                        el(ToggleControl, {
+                            label: 'Show Upcoming Changes',
+                            checked: attributes.showChanges,
+                            onChange: onToggleShowChanges
+                        }),
+                        attributes.showChanges && el('div', { style: { marginTop: '10px' } },
+                            el('label', {}, 'Change Indicator Color'),
+                            el(ColorPicker, {
+                                color: attributes.changeColor,
+                                onChangeComplete: onChangeChangeColor
+                            })
+                        ),
                         el(SelectControl, {
                             label: 'Text Alignment',
                             value: attributes.align,
