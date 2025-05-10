@@ -179,10 +179,12 @@ function prayertimes_render_live_prayer_times_block($attributes) {
         $container_style .= "font-size: {$fontSize}px;";
     }
     
-    $table_style = '';
+    $row_style = '';
     if ($backgroundColor) {
-        $table_style .= "background-color: {$backgroundColor};";
+        $row_style .= "background-color: {$backgroundColor};";
     }
+
+    $table_style = '';
     if ($textColor) {
         $table_style .= "color: {$textColor};";
     }
@@ -263,6 +265,20 @@ function prayertimes_render_live_prayer_times_block($attributes) {
                data-show-seconds="' . esc_attr($showSeconds ? '1' : '0') . '"
                data-time-format="' . esc_attr($timeFormat) . '">';
     
+    // Add SVG filter for icon coloring
+    $headerTextColorHex = $headerTextColor ?: '#000000';
+    $rgb = prayertimes_hex2rgb($headerTextColorHex);
+    $red = isset($rgb['r']) ? ($rgb['r'] / 255) : 0;
+    $green = isset($rgb['g']) ? ($rgb['g'] / 255) : 0;
+    $blue = isset($rgb['b']) ? ($rgb['b'] / 255) : 0;
+    
+    // Add SVG filter definition
+    $output .= '<svg width="0" height="0" style="position:absolute">
+      <filter id="' . esc_attr($block_id) . '-icon-color">
+        <feColorMatrix type="matrix" values="0 0 0 0 ' . esc_attr($red) . ' 0 0 0 0 ' . esc_attr($green) . ' 0 0 0 0 ' . esc_attr($blue) . ' 0 0 0 1 0" />
+      </filter>
+    </svg>';
+    
     // Add the current time clock
     $output .= '<div class="live-prayer-clock" style="' . esc_attr($clock_style) . '">';
     $output .= '<span class="live-time">00:00:00</span>';
@@ -295,14 +311,14 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     
     // Table header
     $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
-    $output .= '<th style="' . esc_attr($header_style) . '"></th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['athan']) . '" alt="Athan" class="header-icon">Athan</th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['iqama']) . '" alt="Iqama" class="header-icon">Iqama</th>';
+    $output .= '<th style="' . esc_attr($header_style) . '"></th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['athan']) . '" alt="Athan" class="header-icon" style="filter:url(#' . esc_attr($block_id) . '-icon-color)">Athan</th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['iqama']) . '" alt="Iqama" class="header-icon" style="filter:url(#' . esc_attr($block_id) . '-icon-color)">Iqama</th>';
     $output .= '</tr></thead>';
     
     // Table body
     $output .= '<tbody>';
     
     // Fajr row
-    $output .= '<tr>';
+    $output .= '<tr style="' . esc_attr($row_style) . '">';
     $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['fajr']) . '" alt="Fajr" class="prayer-icon"> Fajr</td>';
     $output .= '<td class="athan-time" style="' . esc_attr($highlight_style) . '">' . (isset($formatted_times['fajr_athan']) ? esc_html($formatted_times['fajr_athan']) : '-') . '</td>';
     $output .= '<td class="iqama-time">' . (isset($formatted_times['fajr_iqama']) ? esc_html($formatted_times['fajr_iqama']) : '-') . '</td>';
@@ -310,35 +326,35 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     
     // Sunrise row (if enabled)
     if ($showSunrise) {
-        $output .= '<tr class="sunrise-row">';
+        $output .= '<tr class="sunrise-row" style="' . esc_attr($row_style) . '">';
         $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['sunrise']) . '" alt="Sunrise" class="prayer-icon"> Sunrise</td>';
         $output .= '<td class="athan-time" colspan="2">' . (isset($formatted_times['sunrise']) ? esc_html($formatted_times['sunrise']) : '-') . '</td>';
         $output .= '</tr>';
     }
     
     // Dhuhr row
-    $output .= '<tr>';
+    $output .= '<tr style="' . esc_attr($row_style) . '">';
     $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['dhuhr']) . '" alt="Dhuhr" class="prayer-icon"> Dhuhr</td>';
     $output .= '<td class="athan-time" style="' . esc_attr($highlight_style) . '">' . (isset($formatted_times['dhuhr_athan']) ? esc_html($formatted_times['dhuhr_athan']) : '-') . '</td>';
     $output .= '<td class="iqama-time">' . (isset($formatted_times['dhuhr_iqama']) ? esc_html($formatted_times['dhuhr_iqama']) : '-') . '</td>';
     $output .= '</tr>';
     
     // Asr row
-    $output .= '<tr>';
+    $output .= '<tr style="' . esc_attr($row_style) . '">';
     $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['asr']) . '" alt="Asr" class="prayer-icon"> Asr</td>';
     $output .= '<td class="athan-time" style="' . esc_attr($highlight_style) . '">' . (isset($formatted_times['asr_athan']) ? esc_html($formatted_times['asr_athan']) : '-') . '</td>';
     $output .= '<td class="iqama-time">' . (isset($formatted_times['asr_iqama']) ? esc_html($formatted_times['asr_iqama']) : '-') . '</td>';
     $output .= '</tr>';
     
     // Maghrib row
-    $output .= '<tr>';
+    $output .= '<tr style="' . esc_attr($row_style) . '">';
     $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['maghrib']) . '" alt="Maghrib" class="prayer-icon"> Maghrib</td>';
     $output .= '<td class="athan-time" style="' . esc_attr($highlight_style) . '">' . (isset($formatted_times['maghrib_athan']) ? esc_html($formatted_times['maghrib_athan']) : '-') . '</td>';
     $output .= '<td class="iqama-time">' . (isset($formatted_times['maghrib_iqama']) ? esc_html($formatted_times['maghrib_iqama']) : '-') . '</td>';
     $output .= '</tr>';
     
     // Isha row
-    $output .= '<tr>';
+    $output .= '<tr style="' . esc_attr($row_style) . '">';
     $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['isha']) . '" alt="Isha" class="prayer-icon"> Isha</td>';
     $output .= '<td class="athan-time" style="' . esc_attr($highlight_style) . '">' . (isset($formatted_times['isha_athan']) ? esc_html($formatted_times['isha_athan']) : '-') . '</td>';
     $output .= '<td class="iqama-time">' . (isset($formatted_times['isha_iqama']) ? esc_html($formatted_times['isha_iqama']) : '-') . '</td>';
@@ -419,4 +435,23 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     $output .= '</div>';
     
     return $output;
+}
+
+/**
+ * Helper function to convert hex color to RGB
+ */
+function prayertimes_hex2rgb($hex) {
+    $hex = str_replace('#', '', $hex);
+    
+    if(strlen($hex) == 3) {
+        $r = hexdec(substr($hex, 0, 1).substr($hex, 0, 1));
+        $g = hexdec(substr($hex, 1, 1).substr($hex, 1, 1));
+        $b = hexdec(substr($hex, 2, 1).substr($hex, 2, 1));
+    } else {
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+    }
+    
+    return array('r' => $r, 'g' => $g, 'b' => $b);
 }

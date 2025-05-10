@@ -74,8 +74,7 @@
 
 /* Prayer Name Cell with Icon */
 .wp-block-prayer-times-live-prayer-times .prayer-name {
-    display: flex;
-    align-items: center;
+    text-align: left;
 }
 
 .wp-block-prayer-times-live-prayer-times .prayer-icon {
@@ -96,59 +95,31 @@
     display: inline-block;
 }
 
+/* Prayer Table Styles - Border Override */
+.wp-block-prayer-times-live-prayer-times .prayer-times-live-table thead th {
+    background-color: inherit !important; /* Preserve inline background for row highlighting */
+    color: inherit !important; /* Preserve inline color  */
+}
+
+.wp-block-prayer-times-live-prayer-times .prayer-times-live-table td{
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
 /* Table Styles - Default */
+.wp-block-prayer-times-live-prayer-times .table-style-default,
 .wp-block-prayer-times-live-prayer-times .table-style-default th,
 .wp-block-prayer-times-live-prayer-times .table-style-default td {
-    padding: 0em;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
+    border: 0px !important;
+    border-bottom: 1px solid #ddd !important;
 }
 
-.wp-block-prayer-times-live-prayer-times .table-style-default th {
-    background-color: #f5f5f5;
-}
 
 /* Table Styles - Bordered */
+.wp-block-prayer-times-live-prayer-times .table-style-bordered,
 .wp-block-prayer-times-live-prayer-times .table-style-bordered th,
 .wp-block-prayer-times-live-prayer-times .table-style-bordered td {
-    padding: 0em;
-    text-align: center;
-    border: 1px solid #ddd;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-bordered th {
-    background-color: #f5f5f5;
-}
-
-/* Table Styles - Striped */
-.wp-block-prayer-times-live-prayer-times .table-style-striped th,
-.wp-block-prayer-times-live-prayer-times .table-style-striped td {
-    padding: 0em;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-striped th {
-    background-color: #f5f5f5;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-striped tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-/* Table Styles - Minimal */
-.wp-block-prayer-times-live-prayer-times .table-style-minimal th,
-.wp-block-prayer-times-live-prayer-times .table-style-minimal td {
-    padding: 0em;
-    text-align: center;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-minimal th {
-    border-bottom: 2px solid #ddd;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-minimal td {
-    border-bottom: 1px solid #f0f0f0;
+    border: 1px solid #ddd !important;
 }
 
 /* Jumuah times styling */
@@ -193,106 +164,4 @@
     font-weight: bold;
 }
 
-/* Prayer Table Styles - Border Override */
-.wp-block-prayer-times-live-prayer-times .prayer-times-live-table,
-.wp-block-prayer-times-live-prayer-times .jumuah-times-table {
-    border: none !important;
-    box-shadow: none !important;
-    border-collapse: collapse !important;
-}
 
-.wp-block-prayer-times-live-prayer-times .prayer-times-live-table *,
-.wp-block-prayer-times-live-prayer-times .jumuah-times-table * {
-    border-color: inherit;
-}
-
-/* Table Style Overrides - Force No Borders */
-.wp-block-prayer-times-live-prayer-times table,
-.wp-block-prayer-times-live-prayer-times table.prayer-times-live-table,
-.wp-block-prayer-times-live-prayer-times table.jumuah-times-table {
-    border: none !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
-}
-
-.wp-block-prayer-times-live-prayer-times table th,
-.wp-block-prayer-times-live-prayer-times table td {
-    border-width: 0 !important;
-    border: none !important;
-}
-
-/* Style variants with border overrides */
-.wp-block-prayer-times-live-prayer-times .table-style-default th,
-.wp-block-prayer-times-live-prayer-times .table-style-default td {
-    padding: 0em;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-bordered th,
-.wp-block-prayer-times-live-prayer-times .table-style-bordered td {
-    padding: 0em;
-    text-align: center;
-    border: 1px solid #ddd !important;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-striped th,
-.wp-block-prayer-times-live-prayer-times .table-style-striped td {
-    padding: 0em;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-minimal th,
-.wp-block-prayer-times-live-prayer-times .table-style-minimal td {
-    padding: 0em;
-    text-align: center;
-    border: none !important;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-minimal th {
-    border-bottom: 2px solid #ddd !important;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-}
-
-.wp-block-prayer-times-live-prayer-times .table-style-minimal td {
-    border-bottom: 1px solid #f0f0f0 !important;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-}
-
-/* Row Background Override */
-.wp-block-prayer-times-live-prayer-times table tr,
-.wp-block-prayer-times-live-prayer-times .prayer-times-live-table tr,
-.wp-block-prayer-times-live-prayer-times .jumuah-times-table tr {
-    background: transparent !important;
-    background-color: transparent !important;
-}
-
-/* Preserve specific background colors for active and next prayers */
-.wp-block-prayer-times-live-prayer-times .next-prayer {
-    background-color: rgba(255, 243, 205, 0.7) !important;
-}
-
-.wp-block-prayer-times-live-prayer-times .active-prayer {
-    background-color: rgba(209, 231, 221, 0.7) !important;
-}
-
-/* Preserve striped table styles */
-.wp-block-prayer-times-live-prayer-times .table-style-striped tr:nth-child(even) {
-    background-color: #f9f9f9 !important;
-}
-
-/* Add specific override for table header rows */
-.wp-block-prayer-times-live-prayer-times table thead tr {
-    background-color: transparent !important;
-}

@@ -366,8 +366,6 @@
                             options: [
                                 { label: 'Default', value: 'default' },
                                 { label: 'Bordered', value: 'bordered' },
-                                { label: 'Striped', value: 'striped' },
-                                { label: 'Minimal', value: 'minimal' }
                             ],
                             onChange: onChangeTableStyle
                         })
