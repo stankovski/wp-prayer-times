@@ -189,7 +189,11 @@
 }
 
 /* Highlight next prayer */
-.wp-block-prayer-times-live-prayer-times .next-prayer td {
+.wp-block-prayer-times-live-prayer-times .next-prayer td,
+.wp-block-prayer-times-live-prayer-times .next-prayer,
+.wp-block-prayer-times-live-prayer-times .prayer-countdown-row {
     /* Removed fixed color to allow dynamic styling */
     background-color: transparent; 
+    border-top: 0px solid #eee;
+    border-bottom: 0px solid #eee;
 }

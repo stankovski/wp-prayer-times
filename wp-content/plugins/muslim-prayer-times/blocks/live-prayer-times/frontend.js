@@ -324,6 +324,9 @@ function updateAllClocks() {
             clockElement.innerHTML = timeStr;
         }
         
+        // Update countdown to next prayer if it exists
+        updatePrayerCountdown(block, now);
+        
         // Check if we need to highlight a different prayer
         // Only recheck this every minute (when seconds is 0)
         if (now.getSeconds() === 0) {
@@ -366,11 +369,26 @@ function highlightNextPrayer(block) {
     const now = new Date();
     const prayerRows = block.querySelectorAll('.prayer-times-live-table tbody tr');
     let nextPrayerFound = false;
+    let nextPrayerRow = null;
+    let nextPrayerTime = null;
+    let nextPrayerName = '';
+    
+    // Remove any existing countdown row
+    const existingCountdown = block.querySelector('tr.prayer-countdown-row');
+    if (existingCountdown) {
+        existingCountdown.remove();
+    }
     
     // Clear any existing highlight
     prayerRows.forEach(row => {
         row.classList.remove('next-prayer');
         row.classList.remove('active-prayer');
+        
+        // Also clear any background color styles
+        const cells = row.querySelectorAll('td');
+        cells.forEach(cell => {
+            cell.style.backgroundColor = '';
+        });
     });
     
     // Get the time format being used
@@ -430,6 +448,14 @@ function highlightNextPrayer(block) {
                 cell.style.backgroundColor = nextPrayerColor;
             });
             nextPrayerFound = true;
+            nextPrayerRow = row;
+            nextPrayerTime = prayerTime;
+            
+            // Get the prayer name from the first cell
+            const nameCell = row.querySelector('td:first-child');
+            if (nameCell) {
+                nextPrayerName = nameCell.textContent.trim();
+            }
             break;
         }
         
@@ -451,5 +477,128 @@ function highlightNextPrayer(block) {
         cells.forEach(cell => {
             cell.style.backgroundColor = nextPrayerColor;
         });
+        nextPrayerRow = firstRow;
+        
+        // Create tomorrow's date at Fajr time
+        const firstTimeCell = firstRow.querySelector('td:nth-child(3)');
+        if (firstTimeCell) {
+            let timeText = firstTimeCell.textContent.trim();
+            if (timeText !== '-') {
+                let hour, minute;
+                
+                if (timeFormat === '12hour') {
+                    // Parse the time in 12-hour format
+                    const [timePart, meridiem] = timeText.split(' ');
+                    const [hourStr, minuteStr] = timePart.split(':');
+                    
+                    hour = parseInt(hourStr, 10);
+                    minute = parseInt(minuteStr, 10);
+                    
+                    // Convert to 24-hour format
+                    if (meridiem === 'PM' && hour < 12) {
+                        hour += 12;
+                    } else if (meridiem === 'AM' && hour === 12) {
+                        hour = 0;
+                    }
+                } else {
+                    // Parse 24-hour format
+                    const [hourStr, minuteStr] = timeText.split(':');
+                    hour = parseInt(hourStr, 10);
+                    minute = parseInt(minuteStr, 10);
+                }
+                
+                nextPrayerTime = new Date();
+                nextPrayerTime.setDate(nextPrayerTime.getDate() + 1); // Tomorrow
+                nextPrayerTime.setHours(hour, minute, 0);
+                
+                // Get the prayer name
+                const nameCell = firstRow.querySelector('td:first-child');
+                if (nameCell) {
+                    nextPrayerName = nameCell.textContent.trim();
+                }
+            }
+        }
     }
+    
+    // Add countdown row if we have a next prayer
+    if (nextPrayerRow && nextPrayerTime) {
+        // Create the countdown row
+        const countdownRow = document.createElement('tr');
+        countdownRow.className = 'prayer-countdown-row';
+        
+        // Copy the background color from the next prayer row
+        countdownRow.style.backgroundColor = nextPrayerColor;
+        
+        // Create a cell that spans all columns
+        const countdownCell = document.createElement('td');
+        const numCols = nextPrayerRow.querySelectorAll('td').length;
+        countdownCell.setAttribute('colspan', numCols);
+        countdownCell.className = 'prayer-countdown';
+        countdownCell.style.fontSize = '80%';
+        countdownCell.style.textAlign = 'center';
+        countdownCell.style.fontWeight = 'bold';
+        countdownCell.style.padding = '4px';
+        
+        // Set initial content
+        countdownCell.innerHTML = 'Loading...';
+        
+        // Save prayer time for countdown updates
+        countdownCell.setAttribute('data-prayer-time', nextPrayerTime.getTime());
+        countdownCell.setAttribute('data-prayer-name', nextPrayerName);
+        
+        // Add the cell to the row
+        countdownRow.appendChild(countdownCell);
+        
+        // Insert after the next prayer row
+        if (nextPrayerRow.nextSibling) {
+            nextPrayerRow.parentNode.insertBefore(countdownRow, nextPrayerRow.nextSibling);
+        } else {
+            nextPrayerRow.parentNode.appendChild(countdownRow);
+        }
+        
+        // Update the countdown immediately
+        updatePrayerCountdown(block, now);
+    }
+}
+
+/**
+ * Update the countdown to the next prayer time
+ */
+function updatePrayerCountdown(block, currentTime) {
+    const countdownCell = block.querySelector('.prayer-countdown');
+    if (!countdownCell) return;
+    
+    // Get the stored prayer time
+    const prayerTimeMs = parseInt(countdownCell.getAttribute('data-prayer-time'), 10);
+    if (!prayerTimeMs) return;
+    
+    const prayerTime = new Date(prayerTimeMs);
+    const prayerName = countdownCell.getAttribute('data-prayer-name');
+    
+    // Calculate time difference
+    const diffMs = prayerTime - currentTime;
+    if (diffMs <= 0) {
+        // If time has passed, trigger a re-highlight
+        highlightNextPrayer(block);
+        return;
+    }
+    
+    // Convert to hours, minutes, seconds
+    const diffSecs = Math.floor(diffMs / 1000);
+    const hours = Math.floor(diffSecs / 3600);
+    const minutes = Math.floor((diffSecs % 3600) / 60);
+    const seconds = diffSecs % 60;
+    
+    // Format the countdown text
+    let countdownText = '';
+    if (hours > 0) {
+        countdownText += hours + (hours === 1 ? ' hour ' : ' hours ');
+    }
+    if (hours > 0 || minutes > 0) {
+        countdownText += minutes + (minutes === 1 ? ' minute ' : ' minutes ');
+    }
+    countdownText += seconds + (seconds === 1 ? ' second' : ' seconds');
+    
+    // Update the countdown display
+    countdownCell.innerHTML = `${countdownText} until ${prayerName} Iqama`;
 }
