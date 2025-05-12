@@ -176,11 +176,6 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     if ($highlightColor) {
         $highlight_style .= "color: {$highlightColor};";
     }
-    
-    $change_style = "color: {$changeColor};";
-    if ($backgroundColor) {
-        $change_style .= "background-color: {$backgroundColor};";
-    }
 
     $change_header_style = "color: {$changeColor};";
     if ($headerColor) {
@@ -219,6 +214,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
                data-show-hijri-date="' . esc_attr($showHijriDate ? '1' : '0') . '"
                data-show-sunrise="' . esc_attr($showSunrise ? '1' : '0') . '"
                data-show-changes="' . esc_attr($showChanges ? '1' : '0') . '"
+               data-change-color="' . esc_attr($changeColor) . '"
                data-time-format="' . esc_attr($timeFormat) . '">';
     
     // Add SVG filter for icon coloring

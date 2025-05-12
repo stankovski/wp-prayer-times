@@ -118,6 +118,7 @@ function updateBlockWithData(block, data) {
     const showHijriDate = block.getAttribute('data-show-hijri-date') === '1';
     const showSunrise = block.getAttribute('data-show-sunrise') === '1';
     const showChanges = block.getAttribute('data-show-changes') === '1';
+    const changeColor = block.getAttribute('data-change-color') || '#ff0000';
     
     // Update date display if enabled
     if (showDate) {
@@ -220,6 +221,7 @@ function updateBlockWithData(block, data) {
                 const changeHeader = block.querySelector('.prayer-times-live-table thead th.changes-column');
                 if (changeHeader) {
                     changeHeader.textContent = earliestChange.date.split(',')[0]; // Just show day, like "Mon"
+                    changeHeader.style.color = changeColor;
                 }
                 
                 // Update each prayer row with its change if any
@@ -246,6 +248,7 @@ function updateBlockWithData(block, data) {
                             if (dayChanges[prayerData.iqama]) {
                                 changesCell.innerHTML = '<span class="time-change">' + 
                                     dayChanges[prayerData.iqama].new_time + '</span>';
+                                changesCell.style.color = changeColor;
                                 break;
                             }
                             
@@ -253,6 +256,7 @@ function updateBlockWithData(block, data) {
                             if (dayChanges[prayerData.athan]) {
                                 changesCell.innerHTML = '<span class="time-change">' + 
                                     dayChanges[prayerData.athan].new_time + '</span>';
+                                changesCell.style.color = changeColor;
                                 break;
                             }
                         }
