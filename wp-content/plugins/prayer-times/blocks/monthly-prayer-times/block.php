@@ -105,8 +105,7 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     $showPagination = isset($attributes['showPagination']) ? $attributes['showPagination'] : true;
     
     // Get timezone from settings
-    $opts = get_option('prayertimes_settings', []);
-    $timezone = isset($opts['tz']) ? $opts['tz'] : 'UTC';
+    $timezone = prayertimes_get_timezone();
     
     // Create DateTime object with timezone
     $datetime_zone = new DateTimeZone($timezone);

@@ -499,3 +499,34 @@ function prayertimes_convert_to_arabic_numerals($number) {
     // Replace Western numerals with Arabic equivalents
     return str_replace($western_numerals, $arabic_numerals, $number_str);
 }
+
+/**
+ * Get the configured timezone or default to WordPress timezone
+ * 
+ * @return string The timezone identifier
+ */
+function prayertimes_get_timezone() {
+    // Get timezone from options
+    $opts = get_option('prayertimes_settings', []);
+    $tz = isset($opts['tz']) ? $opts['tz'] : null;
+    
+    // If timezone is not set in options, use WordPress timezone
+    if (empty($tz)) {
+        $tz = get_option('timezone_string');
+        
+        // If WordPress timezone is set as an offset instead of a timezone string
+        if (empty($tz)) {
+            $gmt_offset = get_option('gmt_offset');
+            if (!empty($gmt_offset)) {
+                // Convert offset to timezone format like "UTC+3" or "UTC-5"
+                $prefix = $gmt_offset >= 0 ? '+' : '';
+                $tz = 'UTC' . $prefix . (string)$gmt_offset;
+            } else {
+                // Fallback to UTC if no timezone is set
+                $tz = 'UTC';
+            }
+        }
+    }
+    
+    return $tz;
+}

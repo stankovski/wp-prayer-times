@@ -1,11 +1,13 @@
 <?php
 /*
 Plugin Name: Prayer Times
-Plugin URI: https://example.com/prayer-times
+Plugin URI: https://github.com/stankovski/wp-prayer-times
 Description: A WordPress plugin for managing and displaying Islamic prayer times.
 Version: 1.0
-Author: Your Name
-Author URI: https://example.com
+Author: stankovski
+Author URI: https://github.com/stankovski
+License: MIT
+License URI: https://opensource.org/licenses/MIT
 */
 
 if (!defined('ABSPATH')) exit;

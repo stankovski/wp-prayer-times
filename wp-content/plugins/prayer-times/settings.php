@@ -208,7 +208,7 @@ function prayertimes_settings_page() {
     $opts = get_option('prayertimes_settings', []);
     $lat = isset($opts['lat']) ? $opts['lat'] : 47.7623;
     $lng = isset($opts['lng']) ? $opts['lng'] : -122.2054;
-    $tz = isset($opts['tz']) ? $opts['tz'] : 'America/Los_Angeles';
+    $tz = prayertimes_get_timezone();
     $method = isset($opts['method']) ? $opts['method'] : 'ISNA';
     $asr_calc = isset($opts['asr_calc']) ? $opts['asr_calc'] : 'STANDARD';
     $hijri_offset = isset($opts['hijri_offset']) ? $opts['hijri_offset'] : 0;

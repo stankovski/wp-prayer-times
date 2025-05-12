@@ -103,7 +103,7 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
     
     // Get timezone from settings
     $opts = get_option('prayertimes_settings', []);
-    $timezone = isset($opts['tz']) ? $opts['tz'] : 'UTC';
+    $timezone = prayertimes_get_timezone();
     $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
     
     // Create DateTime object with timezone
