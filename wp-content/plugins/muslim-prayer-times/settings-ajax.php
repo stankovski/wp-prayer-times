@@ -65,7 +65,8 @@ function prayertimes_handle_generate() {
     }
     
     try {
-        require_once __DIR__ . '/vendor/autoload.php';
+        // Include the autoloader for Islamic Network libraries
+        require_once __DIR__ . '/includes/islamic-network/autoload.php';
         
         if (!class_exists('IslamicNetwork\PrayerTimes\PrayerTimes')) {
             wp_send_json_error('Muslim Prayer Times library not available');
