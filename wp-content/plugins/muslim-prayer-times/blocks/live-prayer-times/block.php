@@ -119,9 +119,6 @@ add_action('init', 'prayertimes_register_live_prayer_times_block');
  * Render the Live Prayer Times block on the frontend
  */
 function prayertimes_render_live_prayer_times_block($attributes) {
-    global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
-    
     // Load Hijri date converter if needed
     if (isset($attributes['showHijriDate']) && $attributes['showHijriDate']) {
         require_once plugin_dir_path(dirname(dirname(__FILE__))) . 'includes/hijri-date-converter.php';
@@ -131,98 +128,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     $opts = get_option('prayertimes_settings', []);
     $timezone = prayertimes_get_timezone();
     $timeFormat = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
-    
-    // Create DateTime object with timezone
-    $datetime_zone = new DateTimeZone($timezone);
-    $now = new DateTime('now', $datetime_zone);
-    $today = $now->format('Y-m-d');
-    
-    // Query the database for today's prayer times
-    $prayer_times = $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM $table_name WHERE day = %s",
-        $today
-    ), ARRAY_A);
-    
-    // If no times available for today, try finding the next available date
-    if (!$prayer_times) {
-        $future_time = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE day >= %s ORDER BY day ASC LIMIT 1",
-            $today
-        ), ARRAY_A);
-        
-        if ($future_time) {
-            $prayer_times = $future_time;
-            $today = $prayer_times['day']; // Update today's date to match found prayer times
-        }
-    }
-    
-    // If no prayer times available, return a message
-    if (!$prayer_times) {
-        return '<div class="wp-block-prayer-times-live-prayer-times">
-            <p>No prayer times available for today or future dates.</p>
-        </div>';
-    }
 
-    // Check for the next 3 days' prayer times to detect changes
-    $future_changes = array();
-    $has_changes = false;
-    $show_changes = isset($attributes['showChanges']) ? $attributes['showChanges'] : true;
-    
-    if ($show_changes) {
-        // Get the next 3 days' prayer times
-        $next_days = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE day > %s ORDER BY day ASC LIMIT 3",
-            $today
-        ), ARRAY_A);
-        
-        // Check for changes in prayer times
-        if ($next_days) {
-            foreach ($next_days as $next_day) {
-                $changes_for_day = array();
-                $date_formatted = prayertimes_date('D, M j', strtotime($next_day['day']));
-                
-                // Loop through each prayer time column
-                foreach ($next_day as $column => $value) {
-                    // Skip non-prayer time columns
-                    if (in_array($column, array('id', 'day'))) continue;
-                    
-                    // Skip sunrise time changes
-                    if ($column === 'sunrise') continue;
-                    
-                    // Only check for iqama time changes
-                    if (strpos($column, '_iqama') === false) continue;
-                    
-                    // Check if this time differs from today's time
-                    if (isset($prayer_times[$column]) && $prayer_times[$column] != $value && !empty($value)) {
-                        // Format the time for display
-                        $time = strtotime($value);
-                        
-                        if ($timeFormat === '24hour') {
-                            $formatted_time = prayertimes_date('H:i', $time);
-                        } else {
-                            $formatted_time = prayertimes_date('g:i A', $time);
-                        }
-                        
-                        $changes_for_day[$column] = array(
-                            'new_time' => $formatted_time,
-                            'date' => $date_formatted,
-                            'day' => $next_day['day']
-                        );
-                        $has_changes = true;
-                    }
-                }
-                
-                // If we found changes for this day, add them to our changes array
-                if (!empty($changes_for_day)) {
-                    $future_changes[$next_day['day']] = array(
-                        'date' => $date_formatted,
-                        'changes' => $changes_for_day
-                    );
-                }
-            }
-        }
-    }
-    
     // Extract attributes for styling
     $className = isset($attributes['className']) ? $attributes['className'] : '';
     $align = isset($attributes['align']) ? $attributes['align'] : 'center';
@@ -239,6 +145,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     $tableStyle = isset($attributes['tableStyle']) ? $attributes['tableStyle'] : 'default';
     $fontSize = isset($attributes['fontSize']) ? $attributes['fontSize'] : 16;
     $showSeconds = isset($attributes['showSeconds']) ? $attributes['showSeconds'] : true;
+    $showChanges = isset($attributes['showChanges']) ? $attributes['showChanges'] : true;
     $changeColor = isset($attributes['changeColor']) ? $attributes['changeColor'] : '#ff0000';
     
     // Create inline styles
@@ -301,39 +208,6 @@ function prayertimes_render_live_prayer_times_block($attributes) {
         'iqama' => $icons_dir . 'iqama.svg',
     );
     
-    // Format times for display (convert from 24h to 12h format if needed)
-    $formatted_times = array();
-    $prayer_columns = array(
-        'fajr_athan' => 'Fajr Athan',
-        'fajr_iqama' => 'Fajr Iqama',
-        'sunrise' => 'Sunrise',
-        'dhuhr_athan' => 'Dhuhr Athan',
-        'dhuhr_iqama' => 'Dhuhr Iqama',
-        'asr_athan' => 'Asr Athan',
-        'asr_iqama' => 'Asr Iqama',
-        'maghrib_athan' => 'Maghrib Athan',
-        'maghrib_iqama' => 'Maghrib Iqama',
-        'isha_athan' => 'Isha Athan',
-        'isha_iqama' => 'Isha Iqama'
-    );
-    
-    foreach ($prayer_columns as $column => $label) {
-        if (isset($prayer_times[$column]) && $prayer_times[$column]) {
-            // Skip sunrise if not showing
-            if ($column === 'sunrise' && !$showSunrise) {
-                continue;
-            }
-            
-            $time = strtotime($prayer_times[$column]);
-            // Format based on time format
-            if ($timeFormat === '24hour') {
-                $formatted_times[$column] = prayertimes_date('H:i', $time);
-            } else {
-                $formatted_times[$column] = prayertimes_date('g:i A', $time);
-            }
-        }
-    }
-    
     // Generate a unique ID for this block instance
     $block_id = 'prayertimes-live-' . uniqid();
     
@@ -341,6 +215,10 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     $output = '<div id="' . esc_attr($block_id) . '" class="wp-block-prayer-times-live-prayer-times ' . esc_attr($className) . '" 
                style="' . esc_attr($container_style) . '"
                data-show-seconds="' . esc_attr($showSeconds ? '1' : '0') . '"
+               data-show-date="' . esc_attr($showDate ? '1' : '0') . '"
+               data-show-hijri-date="' . esc_attr($showHijriDate ? '1' : '0') . '"
+               data-show-sunrise="' . esc_attr($showSunrise ? '1' : '0') . '"
+               data-show-changes="' . esc_attr($showChanges ? '1' : '0') . '"
                data-time-format="' . esc_attr($timeFormat) . '">';
     
     // Add SVG filter for icon coloring
@@ -362,68 +240,42 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     $output .= '<span class="live-time">00:00:00</span>';
     $output .= '</div>';
     
-    // Format date for display
-    $display_date = prayertimes_date('l, F j, Y', strtotime($today));
-    
-    // Get Hijri date if needed
-    $hijri_date = '';
-    $hijri_date_arabic = '';
-    if ($showHijriDate) {
-        // Get hijri offset from settings
-        $opts = get_option('prayertimes_settings', []);
-        $hijri_offset = isset($opts['hijri_offset']) ? intval($opts['hijri_offset']) : 0;
-        $hijri_date = function_exists('prayertimes_convert_to_hijri') ? prayertimes_convert_to_hijri($today, true, 'en', $hijri_offset) : '';
-        $hijri_date_arabic = function_exists('prayertimes_convert_to_hijri') ? prayertimes_convert_to_hijri($today, true, 'ar', $hijri_offset) : '';
-    }
-    
-    // Add date if enabled
+    // Add date placeholder if enabled
     if ($showDate) {
         $output .= '<div class="prayer-times-date">';
-        $output .= '<div class="gregorian-date">' . esc_html($display_date) . '</div>';
-        if ($showHijriDate && !empty($hijri_date)) {
-            $output .= '<div class="hijri-date">' . esc_html($hijri_date) . '</div>';
-            $output .= '<div class="hijri-date-arabic" style="' . esc_attr($highlight_style) . '">' . esc_html($hijri_date_arabic) . '</div>';
+        $output .= '<div class="gregorian-date">Loading date...</div>';
+        if ($showHijriDate) {
+            $output .= '<div class="hijri-date"></div>';
+            $output .= '<div class="hijri-date-arabic" style="' . esc_attr($highlight_style) . '"></div>';
         }
         $output .= '</div>';
     }
     
-    // Prayer times table
+    // Prayer times table (initial structure that will be populated via AJAX)
     $output .= '<table class="prayer-times-live-table ' . esc_attr('table-style-' . $tableStyle) . '" style="' . esc_attr($table_style) . '">';
     
     // Table header
     $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
     $output .= '<th style="' . esc_attr($header_style) . '"></th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['athan']) . '" alt="Athan" class="header-icon" style="filter:url(#' . esc_attr($block_id) . '-icon-color)">Athan</th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['iqama']) . '" alt="Iqama" class="header-icon" style="filter:url(#' . esc_attr($block_id) . '-icon-color)">Iqama</th>';
     
-    // Add the changes column header if we have changes
-    if ($has_changes && $show_changes) {
-        // Find the earliest date with changes
-        // Find the earliest date with changes
-        $earliest_change_date = '';
-        if (!empty($future_changes)) {
-            // Sort by date
-            ksort($future_changes);
-            // Get the first change date
-            $first_change = reset($future_changes);
-            $earliest_change_date = $first_change['date'];
-        }
-        
-        $header_text = !empty($earliest_change_date) ? prayertimes_date('M j', strtotime($earliest_change_date)) : '';
-        $output .= '<th style="' . esc_attr($change_header_style) . '" class="changes-column">' . esc_html($header_text) . '</th>';
+    // Add the changes column header if enabled
+    if ($showChanges) {
+        $output .= '<th style="' . esc_attr($change_header_style) . '" class="changes-column"></th>';
     }
     
     $output .= '</tr></thead>';
     
-    // Table body
+    // Table body - Empty rows that will be filled by JavaScript
     $output .= '<tbody>';
     
-    // Prayer rows - now including potential changes
+    // Prayer rows - Create the structure with icons, but no times
     $prayer_map = array(
-        'fajr' => array('athan' => 'fajr_athan', 'iqama' => 'fajr_iqama', 'name' => 'Fajr'),
-        'sunrise' => array('time' => 'sunrise', 'name' => 'Sunrise'),
-        'dhuhr' => array('athan' => 'dhuhr_athan', 'iqama' => 'dhuhr_iqama', 'name' => 'Dhuhr'),
-        'asr' => array('athan' => 'asr_athan', 'iqama' => 'asr_iqama', 'name' => 'Asr'),
-        'maghrib' => array('athan' => 'maghrib_athan', 'iqama' => 'maghrib_iqama', 'name' => 'Maghrib'),
-        'isha' => array('athan' => 'isha_athan', 'iqama' => 'isha_iqama', 'name' => 'Isha')
+        'fajr' => array('name' => 'Fajr'),
+        'sunrise' => array('name' => 'Sunrise'),
+        'dhuhr' => array('name' => 'Dhuhr'),
+        'asr' => array('name' => 'Asr'),
+        'maghrib' => array('name' => 'Maghrib'),
+        'isha' => array('name' => 'Isha')
     );
     
     foreach ($prayer_map as $prayer_key => $prayer_data) {
@@ -437,134 +289,37 @@ function prayertimes_render_live_prayer_times_block($attributes) {
         
         if ($prayer_key === 'sunrise') {
             // Sunrise has a single time column that spans both athan and iqama
-            $output .= '<td class="athan-time" colspan="2">' . (isset($formatted_times['sunrise']) ? esc_html($formatted_times['sunrise']) : '-') . '</td>';
+            $output .= '<td class="athan-time" colspan="2">-</td>';
             
             // Add empty changes cell for sunrise if we have changes
-            if ($has_changes && $show_changes) {
-                $changes_html = '';
-                
-                // Check if sunrise time is changing
-                foreach ($future_changes as $day_data) {
-                    if (isset($day_data['changes']['sunrise'])) {
-                        $change = $day_data['changes']['sunrise'];
-                        $changes_html = '<span class="time-change" style="' . esc_attr($change_style) . '">' 
-                            . esc_html($change['new_time']) 
-                            . '</span>';
-                        break; // Only show the nearest change
-                    }
-                }
-                
-                $output .= '<td class="changes-column">' . $changes_html . '</td>';
+            if ($showChanges) {
+                $output .= '<td class="changes-column"></td>';
             }
         } else {
-            // Regular prayer with athan and iqama times
-            $athan_col = $prayer_data['athan'];
-            $iqama_col = $prayer_data['iqama'];
+            // Regular prayer with athan and iqama
+            $output .= '<td class="athan-time" style="' . esc_attr($highlight_style) . '">-</td>';
+            $output .= '<td class="iqama-time">-</td>';
             
-            $output .= '<td class="athan-time" style="' . esc_attr($highlight_style) . '">' . (isset($formatted_times[$athan_col]) ? esc_html($formatted_times[$athan_col]) : '-') . '</td>';
-            $output .= '<td class="iqama-time">' . (isset($formatted_times[$iqama_col]) ? esc_html($formatted_times[$iqama_col]) : '-') . '</td>';
-            
-            // Add changes cell if we have changes
-            if ($has_changes && $show_changes) {
-                $changes_html = '';
-                
-                // Check for iqama time changes (prioritizing these as they're most relevant)
-                foreach ($future_changes as $day_data) {
-                    if (isset($day_data['changes'][$iqama_col])) {
-                        $change = $day_data['changes'][$iqama_col];
-                        $changes_html = '<span class="time-change" style="' . esc_attr($change_style) . '">' 
-                            . esc_html($change['new_time']) 
-                            . '</span>';
-                        break; // Only show the nearest change
-                    }
-                }
-                
-                // If no iqama changes, check for athan changes
-                if (empty($changes_html)) {
-                    foreach ($future_changes as $day_data) {
-                        if (isset($day_data['changes'][$athan_col])) {
-                            $change = $day_data['changes'][$athan_col];
-                            $changes_html = '<span class="time-change" style="' . esc_attr($change_style) . '">' 
-                                . esc_html($change['new_time']) 
-                                . '</span>';
-                            break; // Only show the nearest change
-                        }
-                    }
-                }
-                
-                $output .= '<td class="changes-column">' . $changes_html . '</td>';
+            // Add changes cell if enabled
+            if ($showChanges) {
+                $output .= '<td class="changes-column"></td>';
             }
         }
         
         $output .= '</tr>';
     }
     
-    // Add Jumuah times if available in settings
+    // Add placeholder for Jumuah times
     $opts = get_option('prayertimes_settings', []);
     $jumuah1 = isset($opts['jumuah1']) && !empty($opts['jumuah1']) ? $opts['jumuah1'] : '';
     $jumuah2 = isset($opts['jumuah2']) && !empty($opts['jumuah2']) ? $opts['jumuah2'] : '';
     $jumuah3 = isset($opts['jumuah3']) && !empty($opts['jumuah3']) ? $opts['jumuah3'] : '';
     
-    // Get custom Jumuah names
-    $jumuah1_name = isset($opts['jumuah1_name']) ? $opts['jumuah1_name'] : 'Jumuah 1';
-    $jumuah2_name = isset($opts['jumuah2_name']) ? $opts['jumuah2_name'] : 'Jumuah 2';
-    $jumuah3_name = isset($opts['jumuah3_name']) ? $opts['jumuah3_name'] : 'Jumuah 3';
-
-    // Format Jumuah times to 12-hour format
-    if (!empty($jumuah1)) {
-        $jumuah1_time = strtotime($jumuah1);
-        if ($timeFormat === '24hour') {
-            $jumuah1 = prayertimes_date('H:i', $jumuah1_time);
-        } else {
-            $jumuah1 = prayertimes_date('g:i A', $jumuah1_time);
-        }
-    }
-    if (!empty($jumuah2)) {
-        $jumuah2_time = strtotime($jumuah2);
-        if ($timeFormat === '24hour') {
-            $jumuah2 = prayertimes_date('H:i', $jumuah2_time);
-        } else {
-            $jumuah2 = prayertimes_date('g:i A', $jumuah2_time);
-        }
-    }
-    if (!empty($jumuah3)) {
-        $jumuah3_time = strtotime($jumuah3);
-        if ($timeFormat === '24hour') {
-            $jumuah3 = prayertimes_date('H:i', $jumuah3_time);
-        } else {
-            $jumuah3 = prayertimes_date('g:i A', $jumuah3_time);
-        }
-    }
-
-    // Only display Jumuah times if at least one is set
+    // Only create Jumuah structure if at least one is set
     if (!empty($jumuah1) || !empty($jumuah2) || !empty($jumuah3)) {
         $output .= '<div class="prayer-times-jumuah">';
         $output .= '<table class="jumuah-times-table ' . esc_attr('table-style-' . $tableStyle) . '" style="' . esc_attr($table_style) . '">';
-        $output .= '<tr>';
-        
-        // Add cells for each available Jumuah time
-        if (!empty($jumuah1)) {
-            $output .= '<td class="jumuah-time">';
-            $output .= '<span class="jumuah-label">' . esc_html($jumuah1_name) . '</span>';
-            $output .= '<span class="jumuah-time-value">' . esc_html($jumuah1) . '</span>';
-            $output .= '</td>';
-        }
-        
-        if (!empty($jumuah2)) {
-            $output .= '<td class="jumuah-time">';
-            $output .= '<span class="jumuah-label">' . esc_html($jumuah2_name) . '</span>';
-            $output .= '<span class="jumuah-time-value">' . esc_html($jumuah2) . '</span>';
-            $output .= '</td>';
-        }
-        
-        if (!empty($jumuah3)) {
-            $output .= '<td class="jumuah-time">';
-            $output .= '<span class="jumuah-label">' . esc_html($jumuah3_name) . '</span>';
-            $output .= '<span class="jumuah-time-value">' . esc_html($jumuah3) . '</span>';
-            $output .= '</td>';
-        }
-        
-        $output .= '</tr>';
+        $output .= '<tr></tr>'; // Empty row to be filled with JavaScript
         $output .= '</table>';
         $output .= '</div>';
     }
