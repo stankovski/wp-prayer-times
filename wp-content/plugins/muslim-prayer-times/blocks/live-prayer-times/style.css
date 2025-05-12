@@ -190,12 +190,6 @@
 
 /* Highlight next prayer */
 .wp-block-prayer-times-live-prayer-times .next-prayer td {
-    background-color: rgba(255, 255, 102, 0.3) !important;
+    /* Removed fixed color to allow dynamic styling */
+    background-color: transparent; 
 }
-
-/* Highlight active prayer */
-.wp-block-prayer-times-live-prayer-times .active-prayer td {
-    background-color: rgba(102, 204, 255, 0.3) !important;
-}
-
-

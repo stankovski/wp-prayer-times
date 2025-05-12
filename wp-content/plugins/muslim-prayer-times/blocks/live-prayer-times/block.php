@@ -110,6 +110,10 @@ function prayertimes_register_live_prayer_times_block() {
                 'type' => 'string',
                 'default' => '#ff0000',
             ),
+            'nextPrayerColor' => array(
+                'type' => 'string',
+                'default' => 'rgba(255, 255, 102, 0.3)',
+            ),
         ),
     ));
 }
@@ -147,6 +151,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     $showSeconds = isset($attributes['showSeconds']) ? $attributes['showSeconds'] : true;
     $showChanges = isset($attributes['showChanges']) ? $attributes['showChanges'] : true;
     $changeColor = isset($attributes['changeColor']) ? $attributes['changeColor'] : '#ff0000';
+    $nextPrayerColor = isset($attributes['nextPrayerColor']) ? $attributes['nextPrayerColor'] : 'rgba(255, 255, 102, 0.3)';
     
     // Create inline styles
     $container_style = "text-align: {$align};";
@@ -215,6 +220,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
                data-show-sunrise="' . esc_attr($showSunrise ? '1' : '0') . '"
                data-show-changes="' . esc_attr($showChanges ? '1' : '0') . '"
                data-change-color="' . esc_attr($changeColor) . '"
+               data-next-prayer-color="' . esc_attr($nextPrayerColor) . '"
                data-time-format="' . esc_attr($timeFormat) . '">';
     
     // Add SVG filter for icon coloring

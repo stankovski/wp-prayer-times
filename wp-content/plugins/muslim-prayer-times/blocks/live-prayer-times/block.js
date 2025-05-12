@@ -100,6 +100,10 @@
                 type: 'string',
                 default: '#ff0000',
             },
+            nextPrayerColor: {
+                type: 'string',
+                default: 'rgba(255, 255, 102, 0.3)',
+            },
         },
         
         // Editor UI
@@ -191,6 +195,11 @@
                 props.setAttributes({ changeColor: newColor.hex });
             }
             
+            // Function to update next prayer highlight color
+            function onChangeNextPrayerColor(newColor) {
+                props.setAttributes({ nextPrayerColor: newColor.hex });
+            }
+            
             // Helper function to create a prayer cell with icon
             function createPrayerNameCell(prayerName) {
                 var iconName = prayerName.toLowerCase();
@@ -238,6 +247,11 @@
                     color: attributes.changeColor || '#ff0000'
                 };
                 
+                // Style for next prayer highlighting
+                var nextPrayerStyle = {
+                    backgroundColor: attributes.nextPrayerColor || 'rgba(255, 255, 102, 0.3)'
+                };
+                
                 // Table headers including the changes column if enabled
                 var tableHeaders = [
                     el('th', { style: headerStyle }, ''),
@@ -260,7 +274,10 @@
                         el('tr', { style: headerStyle }, tableHeaders)
                     ),
                     el('tbody', {},
-                        el('tr', { className: 'next-prayer' },
+                        el('tr', { 
+                            className: 'next-prayer',
+                            style: nextPrayerStyle
+                        },
                             createPrayerNameCell('Fajr'),
                             el('td', { style: highlightStyle }, '5:30 AM'),
                             el('td', { className: 'iqama-time' }, '5:50 AM'),
@@ -304,7 +321,7 @@
                             el('td', { style: highlightStyle }, '6:00 PM'),
                             el('td', { className: 'iqama-time' }, '6:05 PM'),
                             attributes.showChanges && el('td', { 
-                                className: 'changes-column'
+                                className: 'changes-column' 
                             })
                         ),
                         el('tr', {},
@@ -312,7 +329,7 @@
                             el('td', { style: highlightStyle }, '7:30 PM'),
                             el('td', { className: 'iqama-time' }, '7:45 PM'),
                             attributes.showChanges && el('td', { 
-                                className: 'changes-column'
+                                className: 'changes-column' 
                             })
                         )
                     )
@@ -412,6 +429,13 @@
                             el(ColorPicker, {
                                 color: attributes.changeColor,
                                 onChangeComplete: onChangeChangeColor
+                            })
+                        ),
+                        el('div', { style: { marginTop: '10px' } },
+                            el('label', {}, 'Next Prayer Background Color'),
+                            el(ColorPicker, {
+                                color: attributes.nextPrayerColor,
+                                onChangeComplete: onChangeNextPrayerColor
                             })
                         ),
                         el(SelectControl, {

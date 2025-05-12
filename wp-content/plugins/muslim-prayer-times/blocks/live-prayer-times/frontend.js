@@ -376,6 +376,9 @@ function highlightNextPrayer(block) {
     // Get the time format being used
     const timeFormat = block.getAttribute('data-time-format') || '12hour';
     
+    // Get the next prayer color from the data attribute
+    const nextPrayerColor = block.getAttribute('data-next-prayer-color') || 'rgba(255, 255, 102, 0.3)';
+    
     // Get all prayer times and find the next one
     for (let i = 0; i < prayerRows.length; i++) {
         const row = prayerRows[i];
@@ -421,6 +424,11 @@ function highlightNextPrayer(block) {
         // Check if this prayer is in the future
         if (prayerTime > now) {
             row.classList.add('next-prayer');
+            // Apply the next prayer color inline
+            const cells = row.querySelectorAll('td');
+            cells.forEach(cell => {
+                cell.style.backgroundColor = nextPrayerColor;
+            });
             nextPrayerFound = true;
             break;
         }
@@ -436,6 +444,12 @@ function highlightNextPrayer(block) {
     // If no next prayer found (all prayers for today have passed)
     // highlight the first prayer of the day (Fajr) as the next one
     if (!nextPrayerFound && prayerRows.length > 0) {
-        prayerRows[0].classList.add('next-prayer');
+        const firstRow = prayerRows[0];
+        firstRow.classList.add('next-prayer');
+        // Apply the next prayer color inline
+        const cells = firstRow.querySelectorAll('td');
+        cells.forEach(cell => {
+            cell.style.backgroundColor = nextPrayerColor;
+        });
     }
 }
