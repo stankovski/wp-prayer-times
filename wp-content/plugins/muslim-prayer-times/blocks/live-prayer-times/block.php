@@ -304,24 +304,24 @@ function prayertimes_render_live_prayer_times_block($attributes) {
         
         $output .= '</tr>';
     }
+
+    $output .= '</tbody>';
+    $output .= '</table>';
     
-    // Add placeholder for Jumuah times
-    $opts = get_option('prayertimes_settings', []);
-    $jumuah1 = isset($opts['jumuah1']) && !empty($opts['jumuah1']) ? $opts['jumuah1'] : '';
-    $jumuah2 = isset($opts['jumuah2']) && !empty($opts['jumuah2']) ? $opts['jumuah2'] : '';
-    $jumuah3 = isset($opts['jumuah3']) && !empty($opts['jumuah3']) ? $opts['jumuah3'] : '';
-    
-    // Only create Jumuah structure if at least one is set
-    if (!empty($jumuah1) || !empty($jumuah2) || !empty($jumuah3)) {
-        $output .= '<div class="prayer-times-jumuah">';
-        $output .= '<table class="jumuah-times-table ' . esc_attr('table-style-' . $tableStyle) . '" style="' . esc_attr($table_style) . '">';
-        $output .= '<tr></tr>'; // Empty row to be filled with JavaScript
-        $output .= '</table>';
-        $output .= '</div>';
-    }
-    
+    // Jumuah structure - Fixed to be a properly separated section
+    $output .= '<div class="prayer-times-jumuah">';
+    $output .= '<table class="jumuah-times-table ' . esc_attr('table-style-' . $tableStyle) . '" style="' . esc_attr($table_style) . '">';
+    $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
+    $output .= '<th style="' . esc_attr($header_style) . '">' . esc_html__('Khutbah', 'muslim-prayer-times') . '</th>';
+    $output .= '<th style="' . esc_attr($header_style) . '">' . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
+    $output .= '</tr></thead>';
+    $output .= '<tbody>';
+    $output .= '</tbody>';
+    $output .= '</table>';
     $output .= '</div>';
     
+    $output .= '</div>'; // Close main container div
+
     return $output;
 }
 
