@@ -6,7 +6,24 @@ if (!defined('ABSPATH')) {
     define('ABSPATH', dirname(dirname(dirname(dirname(__FILE__)))) . '/');
 }
 
-require_once ABSPATH . 'plugins/prayer-times/includes/helpers.php';
+// Mock WordPress get_option function
+if (!function_exists('get_option')) {
+    function get_option($option, $default = false) {
+        global $wp_options;
+        
+        if (!isset($wp_options) || !is_array($wp_options)) {
+            $wp_options = [];
+        }
+        
+        if (isset($wp_options[$option])) {
+            return $wp_options[$option];
+        }
+        
+        return $default;
+    }
+}
+
+require_once ABSPATH . 'plugins/muslim-prayer-times/includes/helpers.php';
 
 /**
  * Muslim Prayer Times Plugin Helper Functions Tests
@@ -15,6 +32,22 @@ require_once ABSPATH . 'plugins/prayer-times/includes/helpers.php';
  */
 
 class HelpersTest extends TestCase {
+    // Setup and teardown to handle the mocked options
+    protected function setUp(): void {
+        global $wp_options;
+        $wp_options = [];
+    }
+    
+    protected function tearDown(): void {
+        global $wp_options;
+        $wp_options = null;
+    }
+
+    // Mock setting an option value for testing
+    protected function setOption($option, $value) {
+        global $wp_options;
+        $wp_options[$option] = $value;
+    }
 
     /**
      * Test the time to minutes conversion function
@@ -802,7 +835,7 @@ class HelpersTest extends TestCase {
      */
     public function testConvertToHijri() {
         // Require the hijri date converter file
-        require_once ABSPATH . 'plugins/prayer-times/includes/hijri-date-converter.php';
+        require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
         
         // Test with specific known dates (these are approximate conversions)
         // January 1, 2023 ≈ Jumada al-Thani 9, 1444
@@ -865,5 +898,41 @@ class HelpersTest extends TestCase {
         
         $this->assertStringContainsString('30 Rajab 1444H', $result9a);
         $this->assertStringContainsString('1 Sha\'ban 1444H', $result9b);
+    }
+
+    /**
+     * Test getting timezone function
+     */
+    public function testGetTimezone() {
+        // Test when plugin timezone setting is set
+        $this->setOption('prayertimes_settings', ['tz' => 'America/Los_Angeles']);
+        $this->assertEquals('America/Los_Angeles', prayertimes_get_timezone());
+        
+        // Test when plugin timezone is not set but WordPress timezone is set
+        $this->setOption('prayertimes_settings', []);
+        $this->setOption('timezone_string', 'Europe/London');
+        $this->assertEquals('Europe/London', prayertimes_get_timezone());
+        
+        // Test when WordPress timezone is set as an offset
+        $this->setOption('timezone_string', '');
+        $this->setOption('gmt_offset', 5.5);
+        $this->assertEquals('UTC+5.5', prayertimes_get_timezone());
+        
+        // Test negative offset
+        $this->setOption('gmt_offset', -4);
+        $this->assertEquals('UTC-4', prayertimes_get_timezone());
+        
+        // Test fallback to UTC
+        $this->setOption('prayertimes_settings', []);
+        $this->setOption('timezone_string', '');
+        $this->setOption('gmt_offset', 0);
+        $this->assertEquals('UTC', prayertimes_get_timezone());
+        $this->setOption('gmt_offset', '');
+        $this->assertEquals('UTC', prayertimes_get_timezone());
+        
+        // Test empty settings
+        global $wp_options;
+        $wp_options = [];
+        $this->assertEquals('UTC', prayertimes_get_timezone());
     }
 }

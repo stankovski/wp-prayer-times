@@ -21,21 +21,6 @@ define('PRAYERTIMES_IQAMA_TABLE', 'prayertimes_iqama_times');
 // Define version for database upgrades
 define('PRAYERTIMES_DB_VERSION', '1.1');
 
-// Function to check if dependencies are installed
-function prayertimes_check_dependencies() {
-    $autoload = __DIR__ . '/vendor/autoload.php';
-    if (!file_exists($autoload)) {
-        return false;
-    }
-    
-    require_once $autoload;
-    if (!class_exists('\IslamicNetwork\PrayerTimes\PrayerTimes')) {
-        return false;
-    }
-    
-    return true;
-}
-
 // Include the upgrade script
 require_once __DIR__ . '/includes/upgrade.php';
 
@@ -88,11 +73,6 @@ function prayertimes_plugin_activate() {
     // Execute the SQL using dbDelta() for safe table creation
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql);
-    
-    // Check if dependencies are installed
-    if (!prayertimes_check_dependencies()) {
-        add_action('admin_notices', 'prayertimes_missing_dependencies_notice');
-    }
 }
 
 // Admin notice for missing dependencies
@@ -105,11 +85,6 @@ function prayertimes_missing_dependencies_notice() {
         </p>
     </div>
     <?php
-}
-
-// Display admin notice if dependencies are missing
-if (!prayertimes_check_dependencies()) {
-    add_action('admin_notices', 'prayertimes_missing_dependencies_notice');
 }
 
 // Settings defaults

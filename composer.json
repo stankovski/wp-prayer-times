@@ -1,0 +1,8 @@
+{
+    "name": "wordpress/muslim-prayer-times",
+    "description": "WordPress plugin for displaying Islamic prayer times",
+    "type": "wordpress-plugin",
+    "require-dev": {
+        "phpunit/phpunit": "^12.1"
+    }
+}

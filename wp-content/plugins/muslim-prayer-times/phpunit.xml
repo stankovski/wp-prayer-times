@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
-<phpunit
-    colors="true">
+<phpunit colors="true" 
+         bootstrap="../../vendor/frozzare/wp-test-suite/bootstrap.php"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnSkippedTests="true">
     <testsuites>
         <testsuite name="PrayerTimes">
             <directory suffix="Test.php">./tests/</directory>
