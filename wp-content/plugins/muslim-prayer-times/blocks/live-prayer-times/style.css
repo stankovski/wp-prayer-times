@@ -23,6 +23,7 @@
 /* Live Clock Styles */
 .wp-block-prayer-times-live-prayer-times .live-prayer-clock {
     text-align: center;
+    margin-bottom: -0.3em; /* Changed to negative margin to reduce whitespace */
 }
 
 .wp-block-prayer-times-live-prayer-times .live-time {
@@ -43,7 +44,7 @@
 
 /* Date Display Styles */
 .wp-block-prayer-times-live-prayer-times .prayer-times-date {
-    margin-bottom: 0.8em;
+    margin-bottom: 0.5em;
     text-align: center;
 }
 
