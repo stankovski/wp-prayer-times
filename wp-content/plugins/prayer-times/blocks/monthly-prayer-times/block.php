@@ -104,6 +104,14 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     $reportType = isset($attributes['reportType']) ? $attributes['reportType'] : 'monthly';
     $showPagination = isset($attributes['showPagination']) ? $attributes['showPagination'] : true;
     
+    // Get timezone from settings
+    $opts = get_option('prayertimes_settings', []);
+    $timezone = isset($opts['tz']) ? $opts['tz'] : 'UTC';
+    
+    // Create DateTime object with timezone
+    $datetime_zone = new DateTimeZone($timezone);
+    $current_date = new DateTime('now', $datetime_zone);
+    
     // Generate a unique ID for this instance
     $block_id = 'prayertimes-monthly-' . uniqid();
     
@@ -124,7 +132,6 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     }
     
     // Get dates based on report type
-    $current_date = new DateTime();
     $start_date = null;
     $end_date = null;
     
@@ -155,8 +162,8 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
         case 'monthly':
         default:
             // Get current month's start and end dates
-            $start_date = new DateTime($current_date->format('Y-m-01'));
-            $end_date = new DateTime($current_date->format('Y-m-t'));
+            $start_date = new DateTime($current_date->format('Y-m-01'), $datetime_zone);
+            $end_date = new DateTime($current_date->format('Y-m-t'), $datetime_zone);
             
             $header_text = $current_date->format('F Y');
             break;
@@ -220,7 +227,13 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
  * Generate the HTML table for monthly prayer times
  */
 function prayertimes_generate_monthly_prayer_times_table($prayer_times, $showSunrise, $showIqama, $highlightToday, $tableStyle, $header_style, $table_style) {
-    $today = date('Y-m-d');
+    // Get timezone from settings
+    $opts = get_option('prayertimes_settings', []);
+    $timezone = isset($opts['tz']) ? $opts['tz'] : 'UTC';
+    
+    // Create DateTime object with timezone
+    $datetime_zone = new DateTimeZone($timezone);
+    $today = (new DateTime('now', $datetime_zone))->format('Y-m-d');
     
     $output = '<table class="prayer-times-table ' . esc_attr('table-style-' . $tableStyle) . '" style="' . esc_attr($table_style) . '">';
     $output .= '<thead><tr style="' . esc_attr($header_style) . '">';

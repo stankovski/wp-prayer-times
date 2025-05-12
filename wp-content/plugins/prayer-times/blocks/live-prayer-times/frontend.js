@@ -27,7 +27,8 @@ function initLiveBlock(block) {
 function updateAllClocks() {
     const liveBlocks = document.querySelectorAll('.wp-block-prayer-times-live-prayer-times');
     
-    // Get current time
+    // Get current time - using browser's timezone which should reflect user's local time
+    // Note: Server timezone is already handled in the PHP side when generating prayer times
     const now = new Date();
     
     liveBlocks.forEach(block => {

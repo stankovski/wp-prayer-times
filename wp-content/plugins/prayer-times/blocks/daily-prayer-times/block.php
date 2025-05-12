@@ -101,8 +101,15 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
     // Load Hijri date converter
     require_once plugin_dir_path(dirname(dirname(__FILE__))) . 'includes/hijri-date-converter.php';
     
-    // Get today's date
-    $today = date('Y-m-d');
+    // Get timezone from settings
+    $opts = get_option('prayertimes_settings', []);
+    $timezone = isset($opts['tz']) ? $opts['tz'] : 'UTC';
+    $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
+    
+    // Create DateTime object with timezone
+    $datetime_zone = new DateTimeZone($timezone);
+    $now = new DateTime('now', $datetime_zone);
+    $today = $now->format('Y-m-d');
     $days_to_display = 5; // Show prayer times for 5 days
     
     // Array to store prayer times for multiple days
@@ -110,7 +117,9 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
     
     // Get prayer times for the next X days
     for ($i = 0; $i < $days_to_display; $i++) {
-        $current_date = date('Y-m-d', strtotime("$today +$i days"));
+        $current_date_obj = clone $now;
+        $current_date_obj->modify("+$i days");
+        $current_date = $current_date_obj->format('Y-m-d');
         
         // Query the database for current day's prayer times
         $prayer_times = $wpdb->get_row($wpdb->prepare(

@@ -127,8 +127,15 @@ function prayertimes_render_live_prayer_times_block($attributes) {
         require_once plugin_dir_path(dirname(dirname(__FILE__))) . 'includes/hijri-date-converter.php';
     }
     
-    // Get today's date
-    $today = date('Y-m-d');
+    // Get timezone from settings
+    $opts = get_option('prayertimes_settings', []);
+    $timezone = isset($opts['tz']) ? $opts['tz'] : 'UTC';
+    $timeFormat = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
+    
+    // Create DateTime object with timezone
+    $datetime_zone = new DateTimeZone($timezone);
+    $now = new DateTime('now', $datetime_zone);
+    $today = $now->format('Y-m-d');
     
     // Query the database for today's prayer times
     $prayer_times = $wpdb->get_row($wpdb->prepare(
@@ -156,10 +163,6 @@ function prayertimes_render_live_prayer_times_block($attributes) {
         </div>';
     }
 
-    // Get time format from global settings
-    $opts = get_option('prayertimes_settings', []);
-    $timeFormat = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
-    
     // Check for the next 3 days' prayer times to detect changes
     $future_changes = array();
     $has_changes = false;
