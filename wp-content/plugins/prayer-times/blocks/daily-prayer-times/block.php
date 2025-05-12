@@ -129,10 +129,10 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         
         // If no times available for this day, try finding the next available date
         if (!$prayer_times && $i === 0) {
-            $future_time = $wpdb->get_row(
-                "SELECT * FROM $table_name WHERE day >= CURDATE() ORDER BY day ASC LIMIT 1",
-                ARRAY_A
-            );
+            $future_time = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM $table_name WHERE day >= %s ORDER BY day ASC LIMIT 1",
+                $current_date
+            ), ARRAY_A);
             
             if ($future_time) {
                 $prayer_times = $future_time;
