@@ -394,14 +394,12 @@ function prayertimes_handle_export_db() {
         $end_date->modify('+365 days');
         $end_date = $end_date->format('Y-m-d');
         
-        // Get all dates in the given range from the database
-        $query = $wpdb->prepare(
+        // Get all dates in the given range from the database       
+        $results = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$table_name} WHERE day BETWEEN %s AND %s ORDER BY day ASC",
             $start_date,
             $end_date
-        );
-        
-        $results = $wpdb->get_results($query, ARRAY_A);
+        ), ARRAY_A);
         
         // Create a lookup array of existing days
         $existing_days = [];
@@ -502,54 +500,72 @@ function prayertimes_handle_import_preview() {
         return;
     }
     
+    // Initialize WP_Filesystem
+    global $wp_filesystem;
+    if (!function_exists('WP_Filesystem')) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+    }
+    WP_Filesystem();
+    
     // Process the CSV file
     $rows = array();
-    if (($handle = fopen($file['tmp_name'], 'r')) !== false) {
-        // Read header row
-        $header = fgetcsv($handle, 1000, ',');
+    
+    // Get file content using WP_Filesystem
+    $content = $wp_filesystem->get_contents($file['tmp_name']);
+    if ($content === false) {
+        wp_send_json_error('Failed to read file');
+        return;
+    }
+    
+    // Process CSV content
+    $lines = explode("\n", $content);
+    if (empty($lines)) {
+        wp_send_json_error('No data found in the CSV file');
+        return;
+    }
+    
+    // Parse header row
+    $header = str_getcsv(array_shift($lines));
+    $header = array_map('trim', array_map('strtolower', $header));
+    
+    // Validate header structure
+    $expected_headers = array('day', 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama');
+    
+    if (count(array_intersect($expected_headers, $header)) !== count($expected_headers)) {
+        wp_send_json_error('CSV header format is invalid. Expected columns: ' . implode(', ', $expected_headers));
+        return;
+    }
+    
+    // Process data rows
+    foreach ($lines as $line) {
+        if (empty(trim($line))) continue;
         
-        // Validate header structure
-        $expected_headers = array('day', 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama');
-        $header = array_map('trim', array_map('strtolower', $header));
-        
-        if (count(array_intersect($expected_headers, $header)) !== count($expected_headers)) {
-            fclose($handle);
-            wp_send_json_error('CSV header format is invalid. Expected columns: ' . implode(', ', $expected_headers));
-            return;
-        }
-        
-        // Read all data rows (removed the 10 row limit)
-        while (($data = fgetcsv($handle, 1000, ',')) !== false) {
-            if (count($data) === count($header)) {
-                $row = array_combine($header, $data);
+        $data = str_getcsv($line);
+        if (count($data) === count($header)) {
+            $row = array_combine($header, $data);
+            
+            // Convert any date format to Y-m-d
+            if (isset($row['day'])) {
+                // Try different date formats (including Excel's M/d/YY)
+                $date_obj = false;
+                $formats = array('Y-m-d', 'n/j/y', 'n/j/Y', 'm/d/y', 'm/d/Y', 'd-m-Y', 'd/m/Y');
                 
-                // Convert any date format to Y-m-d
-                if (isset($row['day'])) {
-                    // Try different date formats (including Excel's M/d/YY)
-                    $date_obj = false;
-                    $formats = array('Y-m-d', 'n/j/y', 'n/j/Y', 'm/d/y', 'm/d/Y', 'd-m-Y', 'd/m/Y');
-                    
-                    foreach ($formats as $format) {
-                        $date_obj = DateTime::createFromFormat($format, $row['day']);
-                        if ($date_obj !== false) {
-                            break;
-                        }
-                    }
-                    
-                    if ($date_obj) {
-                        $row['day'] = $date_obj->format('Y-m-d');
-                    } else {
-                        $row['day_error'] = 'Invalid date format';
+                foreach ($formats as $format) {
+                    $date_obj = DateTime::createFromFormat($format, $row['day']);
+                    if ($date_obj !== false) {
+                        break;
                     }
                 }
                 
-                $rows[] = $row;
+                if ($date_obj) {
+                    $row['day'] = $date_obj->format('Y-m-d');
+                } else {
+                    $row['day_error'] = 'Invalid date format';
+                }
             }
+            
+            $rows[] = $row;
         }
-        fclose($handle);
-    } else {
-        wp_send_json_error('Failed to open file');
-        return;
     }
     
     if (empty($rows)) {
@@ -590,96 +606,113 @@ function prayertimes_handle_import() {
         return;
     }
     
-    // Process the CSV file
+    // Initialize WP_Filesystem
+    global $wp_filesystem;
+    if (!function_exists('WP_Filesystem')) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+    }
+    WP_Filesystem();
+    
+    // Get file content using WP_Filesystem
+    $content = $wp_filesystem->get_contents($file['tmp_name']);
+    if ($content === false) {
+        wp_send_json_error('Failed to read file');
+        return;
+    }
+    
+    // Process CSV content
+    $lines = explode("\n", $content);
+    if (empty($lines)) {
+        wp_send_json_error('No data found in the CSV file');
+        return;
+    }
+    
+    // Parse header row
+    $header = str_getcsv(array_shift($lines));
+    $header = array_map('trim', array_map('strtolower', $header));
+    
+    // Process data rows
     $success_count = 0;
     $error_count = 0;
     $errors = array();
     
-    if (($handle = fopen($file['tmp_name'], 'r')) !== false) {
-        // Read header row
-        $header = fgetcsv($handle, 1000, ',');
-        $header = array_map('trim', array_map('strtolower', $header));
+    foreach ($lines as $line) {
+        if (empty(trim($line))) continue;
         
-        // Process data rows
-        while (($data = fgetcsv($handle, 1000, ',')) !== false) {
-            if (count($data) === count($header)) {
-                $row = array_combine($header, $data);
-                
-                // Parse date
-                $date_obj = false;
-                $formats = array('Y-m-d', 'n/j/y', 'n/j/Y', 'm/d/y', 'm/d/Y', 'd-m-Y', 'd/m/Y');
-                
-                foreach ($formats as $format) {
-                    $date_obj = DateTime::createFromFormat($format, $row['day']);
-                    if ($date_obj !== false) {
-                        break;
-                    }
-                }
-                
-                if (!$date_obj) {
-                    $error_count++;
-                    $errors[] = "Row skipped: Invalid date format '{$row['day']}'";
-                    continue;
-                }
-                
-                // Format date for database
-                $row['day'] = $date_obj->format('Y-m-d');
-                
-                // Format prayer times (convert from AM/PM to 24h format for database)
-                $prayer_columns = array('fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 
-                                      'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 
-                                      'isha_athan', 'isha_iqama');
-                
-                foreach ($prayer_columns as $column) {
-                    if (!empty($row[$column])) {
-                        // Try to parse the time
-                        $time_obj = DateTime::createFromFormat('g:i A', $row[$column]);
-                        if (!$time_obj) {
-                            $time_obj = DateTime::createFromFormat('H:i', $row[$column]);
-                        }
-                        
-                        if ($time_obj) {
-                            $row[$column] = $time_obj->format('H:i:s');
-                        } else {
-                            $row[$column] = null; // If time can't be parsed, set to null
-                        }
-                    } else {
-                        $row[$column] = null;
-                    }
-                }
-                
-                // Insert or update the database record
-                $result = $wpdb->replace(
-                    $table_name,
-                    array(
-                        'day' => $row['day'],
-                        'fajr_athan' => $row['fajr_athan'],
-                        'fajr_iqama' => $row['fajr_iqama'],
-                        'sunrise' => $row['sunrise'],
-                        'dhuhr_athan' => $row['dhuhr_athan'],
-                        'dhuhr_iqama' => $row['dhuhr_iqama'],
-                        'asr_athan' => $row['asr_athan'],
-                        'asr_iqama' => $row['asr_iqama'],
-                        'maghrib_athan' => $row['maghrib_athan'],
-                        'maghrib_iqama' => $row['maghrib_iqama'],
-                        'isha_athan' => $row['isha_athan'],
-                        'isha_iqama' => $row['isha_iqama']
-                    ),
-                    array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
-                );
-                
-                if ($result !== false) {
-                    $success_count++;
-                } else {
-                    $error_count++;
-                    $errors[] = "Database error on row with date {$row['day']}: " . $wpdb->last_error;
+        $data = str_getcsv($line);
+        if (count($data) === count($header)) {
+            $row = array_combine($header, $data);
+            
+            // Parse date
+            $date_obj = false;
+            $formats = array('Y-m-d', 'n/j/y', 'n/j/Y', 'm/d/y', 'm/d/Y', 'd-m-Y', 'd/m/Y');
+            
+            foreach ($formats as $format) {
+                $date_obj = DateTime::createFromFormat($format, $row['day']);
+                if ($date_obj !== false) {
+                    break;
                 }
             }
+            
+            if (!$date_obj) {
+                $error_count++;
+                $errors[] = "Row skipped: Invalid date format '{$row['day']}'";
+                continue;
+            }
+            
+            // Format date for database
+            $row['day'] = $date_obj->format('Y-m-d');
+            
+            // Format prayer times (convert from AM/PM to 24h format for database)
+            $prayer_columns = array('fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 
+                                  'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 
+                                  'isha_athan', 'isha_iqama');
+            
+            foreach ($prayer_columns as $column) {
+                if (!empty($row[$column])) {
+                    // Try to parse the time
+                    $time_obj = DateTime::createFromFormat('g:i A', $row[$column]);
+                    if (!$time_obj) {
+                        $time_obj = DateTime::createFromFormat('H:i', $row[$column]);
+                    }
+                    
+                    if ($time_obj) {
+                        $row[$column] = $time_obj->format('H:i:s');
+                    } else {
+                        $row[$column] = null; // If time can't be parsed, set to null
+                    }
+                } else {
+                    $row[$column] = null;
+                }
+            }
+            
+            // Insert or update the database record
+            $result = $wpdb->replace(
+                $table_name,
+                array(
+                    'day' => $row['day'],
+                    'fajr_athan' => $row['fajr_athan'],
+                    'fajr_iqama' => $row['fajr_iqama'],
+                    'sunrise' => $row['sunrise'],
+                    'dhuhr_athan' => $row['dhuhr_athan'],
+                    'dhuhr_iqama' => $row['dhuhr_iqama'],
+                    'asr_athan' => $row['asr_athan'],
+                    'asr_iqama' => $row['asr_iqama'],
+                    'maghrib_athan' => $row['maghrib_athan'],
+                    'maghrib_iqama' => $row['maghrib_iqama'],
+                    'isha_athan' => $row['isha_athan'],
+                    'isha_iqama' => $row['isha_iqama']
+                ),
+                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+            );
+            
+            if ($result !== false) {
+                $success_count++;
+            } else {
+                $error_count++;
+                $errors[] = "Database error on row with date {$row['day']}: " . $wpdb->last_error;
+            }
         }
-        fclose($handle);
-    } else {
-        wp_send_json_error('Failed to open file');
-        return;
     }
     
     wp_send_json_success(array(

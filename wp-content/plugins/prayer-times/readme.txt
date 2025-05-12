@@ -1,6 +1,6 @@
 === Prayer Times ===
 Contributors: stankovski
-Tags: prayer times, muslim, islamic, iqama, mosque, salah
+Tags: prayer times, muslim, islamic, mosque, salah
 Requires at least: 5.0
 Tested up to: 6.8
 Stable tag: 1.0
