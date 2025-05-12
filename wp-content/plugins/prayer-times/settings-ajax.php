@@ -423,17 +423,17 @@ function prayertimes_handle_export_db() {
                 $row = $existing_days[$date_str];
                 $csv_data[] = [
                     $row['day'],
-                    $row['fajr_athan'] ? date('g:i A', strtotime($row['fajr_athan'])) : '',
-                    $row['fajr_iqama'] ? date('g:i A', strtotime($row['fajr_iqama'])) : '',
-                    $row['sunrise'] ? date('g:i A', strtotime($row['sunrise'])) : '',
-                    $row['dhuhr_athan'] ? date('g:i A', strtotime($row['dhuhr_athan'])) : '',
-                    $row['dhuhr_iqama'] ? date('g:i A', strtotime($row['dhuhr_iqama'])) : '',
-                    $row['asr_athan'] ? date('g:i A', strtotime($row['asr_athan'])) : '',
-                    $row['asr_iqama'] ? date('g:i A', strtotime($row['asr_iqama'])) : '',
-                    $row['maghrib_athan'] ? date('g:i A', strtotime($row['maghrib_athan'])) : '',
-                    $row['maghrib_iqama'] ? date('g:i A', strtotime($row['maghrib_iqama'])) : '',
-                    $row['isha_athan'] ? date('g:i A', strtotime($row['isha_athan'])) : '',
-                    $row['isha_iqama'] ? date('g:i A', strtotime($row['isha_iqama'])) : ''
+                    $row['fajr_athan'] ? prayertimes_date('g:i A', strtotime($row['fajr_athan'])) : '',
+                    $row['fajr_iqama'] ? prayertimes_date('g:i A', strtotime($row['fajr_iqama'])) : '',
+                    $row['sunrise'] ? prayertimes_date('g:i A', strtotime($row['sunrise'])) : '',
+                    $row['dhuhr_athan'] ? prayertimes_date('g:i A', strtotime($row['dhuhr_athan'])) : '',
+                    $row['dhuhr_iqama'] ? prayertimes_date('g:i A', strtotime($row['dhuhr_iqama'])) : '',
+                    $row['asr_athan'] ? prayertimes_date('g:i A', strtotime($row['asr_athan'])) : '',
+                    $row['asr_iqama'] ? prayertimes_date('g:i A', strtotime($row['asr_iqama'])) : '',
+                    $row['maghrib_athan'] ? prayertimes_date('g:i A', strtotime($row['maghrib_athan'])) : '',
+                    $row['maghrib_iqama'] ? prayertimes_date('g:i A', strtotime($row['maghrib_iqama'])) : '',
+                    $row['isha_athan'] ? prayertimes_date('g:i A', strtotime($row['isha_athan'])) : '',
+                    $row['isha_iqama'] ? prayertimes_date('g:i A', strtotime($row['isha_iqama'])) : ''
                 ];
             } else {
                 // Day doesn't exist, add empty row with just the date

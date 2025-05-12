@@ -327,9 +327,9 @@ function prayertimes_render_live_prayer_times_block($attributes) {
             $time = strtotime($prayer_times[$column]);
             // Format based on time format
             if ($timeFormat === '24hour') {
-                $formatted_times[$column] = date('H:i', $time);
+                $formatted_times[$column] = prayertimes_date('H:i', $time);
             } else {
-                $formatted_times[$column] = date('g:i A', $time);
+                $formatted_times[$column] = prayertimes_date('g:i A', $time);
             }
         }
     }

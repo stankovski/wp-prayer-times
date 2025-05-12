@@ -375,7 +375,7 @@ function prayertimes_settings_page() {
                                     <?php 
                                     // Load Hijri date converter
                                     require_once plugin_dir_path(__FILE__) . 'includes/hijri-date-converter.php';
-                                    $today = date('Y-m-d');
+                                    $today = prayertimes_date('Y-m-d');
                                     $hijri_date = prayertimes_convert_to_hijri($today, true, 'en', $hijri_offset);
                                     echo esc_html("Today: " . $hijri_date); 
                                     ?>
