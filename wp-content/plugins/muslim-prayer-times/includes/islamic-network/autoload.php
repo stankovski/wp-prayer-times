@@ -12,7 +12,7 @@ spl_autoload_register(function ($class) {
     
     // Namespace prefixes to directory bases
     $prefixes = [
-        'IslamicNetwork\\Calendar\\' => $baseDir . 'Calendar/src/',
+        'IslamicNetwork\\Calendar\\' => $baseDir . 'Calendar/',
         'IslamicNetwork\\PrayerTimes\\' => $baseDir . 'PrayerTimes/',
         'IslamicNetwork\\MoonSighting\\' => $baseDir . 'MoonSighting/',
     ];

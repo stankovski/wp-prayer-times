@@ -841,7 +841,7 @@ class HelpersTest extends TestCase {
         // January 1, 2023 ≈ Jumada al-Thani 9, 1444
         $date1 = '2023-01-01';
         $result1 = prayertimes_convert_to_hijri($date1);
-        $this->assertStringContainsString('9 Jumada al-Thani 1444H', $result1);
+        $this->assertStringContainsString('8 Jumada al-Thani 1444H', $result1);
         
         // May 15, 2023 ≈ Shawwal 25, 1444
         $date2 = '2023-05-15';
@@ -857,7 +857,7 @@ class HelpersTest extends TestCase {
         $date4 = '2023-01-15';
         $result4 = prayertimes_convert_to_hijri($date4, false);
         $this->assertIsArray($result4);
-        $this->assertEquals(23, $result4['day']);
+        $this->assertEquals(22, $result4['day']);
         $this->assertEquals(6, $result4['month']);
         $this->assertEquals('Jumada al-Thani', $result4['month_name']);
         $this->assertEquals(1444, $result4['year']);
@@ -865,13 +865,13 @@ class HelpersTest extends TestCase {
         // Test Arabic language output
         $date5 = '2023-01-15';
         $result5 = prayertimes_convert_to_hijri($date5, true, 'ar');
-        $this->assertStringContainsString('23 جمادى الآخرة 1444H', $result5);
+        $this->assertStringContainsString('22 جمادى الآخرة 1444H', $result5);
 
         // Test Arabic language with non-formatted return
         $date6 = '2023-01-15';
         $result6 = prayertimes_convert_to_hijri($date6, false, 'ar');
         $this->assertIsArray($result6);
-        $this->assertEquals(23, $result6['day']);
+        $this->assertEquals(22, $result6['day']);
         $this->assertEquals(6, $result6['month']);
         $this->assertEquals('جمادى الآخرة', $result6['month_name']);
         $this->assertEquals(1444, $result6['year']);

@@ -7,6 +7,13 @@
 
 if (!defined('ABSPATH')) exit;
 
+// Include the autoloader for Islamic Network libraries
+require_once __DIR__ . '/islamic-network/autoload.php';
+
+use IslamicNetwork\Calendar\Models\Astronomical\HighJudiciaryCouncilOfSaudiArabia;
+
+$hjcosa = new HighJudiciaryCouncilOfSaudiArabia();
+
 /**
  * Get Hijri month names based on language
  * 
@@ -57,93 +64,38 @@ function prayertimes_get_hijri_months($language = 'en') {
  * @return string|array Formatted Hijri date string or array with year, month, day
  */
 function prayertimes_convert_to_hijri($date, $formatted = true, $language = 'en', $offset = 0) {
+    global $hjcosa;
+    
+    // If the global variable is still null, create it within this function
+    if ($hjcosa === null) {
+        $hjcosa = new HighJudiciaryCouncilOfSaudiArabia();
+    }
+    
     // If string date provided, convert to DateTime
     if (is_string($date)) {
         $date = new DateTime($date, new DateTimeZone(prayertimes_get_timezone()));
     }
     
-    // Apply offset to the Gregorian date before conversion
-    if ($offset != 0) {
-        $offset_date = clone $date;
-        $offset_date->modify($offset . ' days');
-        $date = $offset_date;
-    }
+    // Format the date in the required format for gToH (dd-mm-YYYY)
+    $formatted_date = $date->format('d-m-Y');
     
-    // Julian Date calculation
-    $gregorian_day = $date->format('j');
-    $gregorian_month = $date->format('n');
-    $gregorian_year = $date->format('Y');
-    
-    if ($gregorian_month < 3) {
-        $gregorian_year -= 1;
-        $gregorian_month += 12;
-    }
-    
-    $a = floor($gregorian_year / 100);
-    $b = 2 - $a + floor($a / 4);
-    
-    if ($gregorian_year < 1583) {
-        $b = 0;
-    }
-    if ($gregorian_year === 1582) {
-        if ($gregorian_month > 10) {
-            $b = -10;
-        }
-        if ($gregorian_month === 10) {
-            if ($gregorian_day > 4) {
-                $b = -10;
-            } else {
-                $b = 0;
-            }
-        }
-    }
-    
-    $jd = floor(365.25 * ($gregorian_year + 4716)) + floor(30.6001 * ($gregorian_month + 1)) + $gregorian_day + $b - 1524.5;
-    
-    $b = 0;
-    if ($jd > 2299160) {
-        $a = floor(($jd - 1867216.25) / 36524.25);
-        $b = 1 + $a - floor($a / 4);
-    }
-    
-    $bb = $jd + $b + 1524;
-    $cc = floor(($bb - 122.1) / 365.25);
-    $dd = floor(365.25 * $cc);
-    $ee = floor(($bb - $dd) / 30.6001);
-    
-    // Islamic calendar calculation
-    $days = $jd - 1948084;
-    $hijri_year = 10631.0 / 30.0;
-    $shift1 = 8.01 / 60.0;
-    
-    $z = $days + $shift1;
-    $cyc = floor($z / 10631.0);
-    $z = $z - 10631 * $cyc;
-    $j = floor(($z - $shift1) / $hijri_year);
-    $z = $z - floor($j * $hijri_year + $shift1);
-    
-    $hijri_year = 30 * $cyc + $j;
-    $hijri_month = floor(($z + 28.5001) / 29.5);
-    if ($hijri_month === 13) {
-        $hijri_month = 12;
-    }
-    $hijri_day = (int)(ceil($z - floor(29.5001 * $hijri_month - 29)));
-    
+    $h = $hjcosa->gToH($formatted_date);
+
     // Get Hijri month names using the new function
     $hijri_months = prayertimes_get_hijri_months($language);
     
     if ($formatted) {
-        return sprintf('%d %s %dH', 
-            $hijri_day, 
-            $hijri_months[$hijri_month], 
-            $hijri_year
+        return sprintf('%d %s %dH',
+            $h->day->number,
+            $hijri_months[$h->month->number],
+            $h->year
         );
     } else {
         return array(
-            'day' => $hijri_day,
-            'month' => $hijri_month,
-            'month_name' => $hijri_months[$hijri_month],
-            'year' => $hijri_year
+            'day' => $h->day->number,
+            'month' => $h->month->number,
+            'month_name' => $hijri_months[$h->month->number],
+            'year' => $h->year
         );
     }
 }
