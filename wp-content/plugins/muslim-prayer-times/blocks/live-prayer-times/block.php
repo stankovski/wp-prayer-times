@@ -369,8 +369,11 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     $hijri_date = '';
     $hijri_date_arabic = '';
     if ($showHijriDate) {
-        $hijri_date = function_exists('prayertimes_convert_to_hijri') ? prayertimes_convert_to_hijri($today, true, 'en') : '';
-        $hijri_date_arabic = function_exists('prayertimes_convert_to_hijri') ? prayertimes_convert_to_hijri($today, true, 'ar') : '';
+        // Get hijri offset from settings
+        $opts = get_option('prayertimes_settings', []);
+        $hijri_offset = isset($opts['hijri_offset']) ? intval($opts['hijri_offset']) : 0;
+        $hijri_date = function_exists('prayertimes_convert_to_hijri') ? prayertimes_convert_to_hijri($today, true, 'en', $hijri_offset) : '';
+        $hijri_date_arabic = function_exists('prayertimes_convert_to_hijri') ? prayertimes_convert_to_hijri($today, true, 'ar', $hijri_offset) : '';
     }
     
     // Add date if enabled

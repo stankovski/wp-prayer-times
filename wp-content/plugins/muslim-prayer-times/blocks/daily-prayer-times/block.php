@@ -289,7 +289,10 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         // Get Hijri date
         $hijri_date = '';
         if ($showHijriDate) {
-            $hijri_date = prayertimes_convert_to_hijri($current_date);
+            // Get hijri offset from settings
+            $opts = get_option('prayertimes_settings', []);
+            $hijri_offset = isset($opts['hijri_offset']) ? intval($opts['hijri_offset']) : 0;
+            $hijri_date = prayertimes_convert_to_hijri($current_date, true, 'en', $hijri_offset);
         }
         
         // Add date if enabled
