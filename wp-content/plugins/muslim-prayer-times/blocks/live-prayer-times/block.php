@@ -223,20 +223,6 @@ function prayertimes_render_live_prayer_times_block($attributes) {
                data-next-prayer-color="' . esc_attr($nextPrayerColor) . '"
                data-time-format="' . esc_attr($timeFormat) . '">';
     
-    // Add SVG filter for icon coloring
-    $headerTextColorHex = $headerTextColor ?: '#000000';
-    $rgb = prayertimes_hex2rgb($headerTextColorHex);
-    $red = isset($rgb['r']) ? ($rgb['r'] / 255) : 0;
-    $green = isset($rgb['g']) ? ($rgb['g'] / 255) : 0;
-    $blue = isset($rgb['b']) ? ($rgb['b'] / 255) : 0;
-    
-    // Add SVG filter definition
-    $output .= '<svg width="0" height="0" style="position:absolute">
-      <filter id="' . esc_attr($block_id) . '-icon-color">
-        <feColorMatrix type="matrix" values="0 0 0 0 ' . esc_attr($red) . ' 0 0 0 0 ' . esc_attr($green) . ' 0 0 0 0 ' . esc_attr($blue) . ' 0 0 0 1 0" />
-      </filter>
-    </svg>';
-    
     // Add the current time clock
     $output .= '<div class="live-prayer-clock" style="' . esc_attr($clock_style) . '">';
     $output .= '<span class="live-time">00:00:00</span>';
@@ -258,7 +244,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     
     // Table header
     $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
-    $output .= '<th style="' . esc_attr($header_style) . '"></th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['athan']) . '" alt="Athan" class="header-icon" style="filter:url(#' . esc_attr($block_id) . '-icon-color)">Athan</th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['iqama']) . '" alt="Iqama" class="header-icon" style="filter:url(#' . esc_attr($block_id) . '-icon-color)">Iqama</th>';
+    $output .= '<th style="' . esc_attr($header_style) . '"></th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['athan']) . '" alt="Athan" class="header-icon">Athan</th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['iqama']) . '" alt="Iqama" class="header-icon">Iqama</th>';
     
     // Add the changes column header if enabled
     if ($showChanges) {
