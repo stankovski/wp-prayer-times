@@ -5,6 +5,9 @@
 
 if (!defined('ABSPATH')) exit;
 
+// Require the Hijri date converter
+require_once plugin_dir_path(dirname(dirname(__FILE__))) . 'includes/hijri-date-converter.php';
+
 /**
  * Enqueues the block editor script and adds plugin URL data
  */
