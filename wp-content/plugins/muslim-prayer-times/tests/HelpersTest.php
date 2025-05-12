@@ -838,20 +838,20 @@ class HelpersTest extends TestCase {
         require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
         
         // Test with specific known dates (these are approximate conversions)
-        // January 1, 2023 ≈ Jumada al-Thani 9, 1444
+        // January 1, 2023 ≈ Jumādá al-ākhirah 9, 1444
         $date1 = '2023-01-01';
         $result1 = prayertimes_convert_to_hijri($date1);
-        $this->assertStringContainsString('8 Jumada al-Thani 1444H', $result1);
+        $this->assertStringContainsString('8 Jumādá al-ākhirah 1444H', $result1);
         
-        // May 15, 2023 ≈ Shawwal 25, 1444
+        // May 15, 2023 ≈ Shawwāl 25, 1444
         $date2 = '2023-05-15';
         $result2 = prayertimes_convert_to_hijri($date2);
-        $this->assertStringContainsString('25 Shawwal 1444H', $result2);
+        $this->assertStringContainsString('25 Shawwāl 1444H', $result2);
         
         // Test with DateTime object
         $date3 = new DateTime('2023-03-10');
         $result3 = prayertimes_convert_to_hijri($date3);
-        $this->assertStringContainsString('18 Sha\'ban 1444H', $result3);
+        $this->assertStringContainsString('18 Shaʿbān 1444H', $result3);
         
         // Test non-formatted (array) return
         $date4 = '2023-01-15';
@@ -859,13 +859,13 @@ class HelpersTest extends TestCase {
         $this->assertIsArray($result4);
         $this->assertEquals(22, $result4['day']);
         $this->assertEquals(6, $result4['month']);
-        $this->assertEquals('Jumada al-Thani', $result4['month_name']);
+        $this->assertEquals('Jumādá al-ākhirah', $result4['month_name']);
         $this->assertEquals(1444, $result4['year']);
         
         // Test Arabic language output
         $date5 = '2023-01-15';
         $result5 = prayertimes_convert_to_hijri($date5, true, 'ar');
-        $this->assertStringContainsString('22 جمادى الآخرة 1444H', $result5);
+        $this->assertStringContainsString('22 جُمادى الآخرة 1444H', $result5);
 
         // Test Arabic language with non-formatted return
         $date6 = '2023-01-15';
@@ -873,7 +873,7 @@ class HelpersTest extends TestCase {
         $this->assertIsArray($result6);
         $this->assertEquals(22, $result6['day']);
         $this->assertEquals(6, $result6['month']);
-        $this->assertEquals('جمادى الآخرة', $result6['month_name']);
+        $this->assertEquals('جُمادى الآخرة', $result6['month_name']);
         $this->assertEquals(1444, $result6['year']);
         
         // Test with offset parameter
@@ -882,22 +882,22 @@ class HelpersTest extends TestCase {
         $result7b = prayertimes_convert_to_hijri($date7, true, 'en', 1);  // +1 day
         $result7c = prayertimes_convert_to_hijri($date7, true, 'en', -1); // -1 day
         
-        $this->assertStringContainsString('9 Jumada al-Thani 1444H', $result7a);
-        $this->assertStringContainsString('10 Jumada al-Thani 1444H', $result7b);
-        $this->assertStringContainsString('8 Jumada al-Thani 1444H', $result7c);
+        $this->assertStringContainsString('8 Jumādá al-ākhirah 1444H', $result7a);
+        $this->assertStringContainsString('9 Jumādá al-ākhirah 1444H', $result7b);
+        $this->assertStringContainsString('7 Jumādá al-ākhirah 1444H', $result7c);
         
         // Test date crossing Hijri year boundary
-        $date8 = '2023-07-19'; // Around Muharram 1, 1445
+        $date8 = '2023-07-19'; // Around Muḥarram 1, 1445
         $result8 = prayertimes_convert_to_hijri($date8);
-        $this->assertStringContainsString('2 Muharram 1445H', $result8);
+        $this->assertStringContainsString('1 Muḥarram 1445H', $result8);
         
         // Test date crossing Hijri month boundary
         $date9 = '2023-02-20'; // End of Rajab to beginning of Sha'ban
         $result9a = prayertimes_convert_to_hijri($date9, true, 'en', 0);
         $result9b = prayertimes_convert_to_hijri($date9, true, 'en', 1);
         
-        $this->assertStringContainsString('30 Rajab 1444H', $result9a);
-        $this->assertStringContainsString('1 Sha\'ban 1444H', $result9b);
+        $this->assertStringContainsString('29 Rajab 1444H', $result9a);
+        $this->assertStringContainsString('1 Shaʿbān 1444H', $result9b);
     }
 
     /**

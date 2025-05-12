@@ -47,7 +47,7 @@ class HighJudiciaryCouncilOfSaudiArabia extends Calculator
      * @return Types\Hijri\Date
      * @throws \Exception
      */
-    public function gToH(string $d): Types\Hijri\Date
+    public function gToH(string $d, int $adjustJulian = 0): Types\Hijri\Date
     {
         $d = DateTime::createFromFormat('d-m-Y', $d);
         $this->verifyGregorianInputDate($d);
@@ -56,7 +56,7 @@ class HighJudiciaryCouncilOfSaudiArabia extends Calculator
 
         if ($adjusted === null) {
             $gd = new Gregorian($d);
-            $jd = new Julian($gd->toJulian());
+            $jd = new Julian($gd->toJulian($adjustJulian));
 
             return $jd->toHijri($this->data, $this->lunations, self::ID);
         }

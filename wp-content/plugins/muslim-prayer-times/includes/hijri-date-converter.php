@@ -15,46 +15,6 @@ use IslamicNetwork\Calendar\Models\Astronomical\HighJudiciaryCouncilOfSaudiArabi
 $hjcosa = new HighJudiciaryCouncilOfSaudiArabia();
 
 /**
- * Get Hijri month names based on language
- * 
- * @param string $language Language code ('en' or 'ar')
- * @return array Array of month names indexed by month number
- */
-function prayertimes_get_hijri_months($language = 'en') {
-    if ($language === 'ar') {
-        return array(
-            1 => 'محرم',
-            2 => 'صفر',
-            3 => 'ربيع الأول',
-            4 => 'ربيع الثاني',
-            5 => 'جمادى الأولى',
-            6 => 'جمادى الآخرة',
-            7 => 'رجب',
-            8 => 'شعبان',
-            9 => 'رمضان',
-            10 => 'شوال',
-            11 => 'ذو القعدة',
-            12 => 'ذو الحجة'
-        );
-    } else {
-        return array(
-            1 => 'Muharram',
-            2 => 'Safar',
-            3 => 'Rabi al-Awwal',
-            4 => 'Rabi al-Thani',
-            5 => 'Jumada al-Awwal',
-            6 => 'Jumada al-Thani',
-            7 => 'Rajab',
-            8 => 'Sha\'ban',
-            9 => 'Ramadan',
-            10 => 'Shawwal',
-            11 => 'Dhu al-Qi\'dah',
-            12 => 'Dhu al-Hijjah'
-        );
-    }
-}
-
-/**
  * Convert Gregorian date to Hijri date
  * 
  * @param string|DateTime $date Gregorian date (YYYY-MM-DD) or DateTime object
@@ -79,22 +39,25 @@ function prayertimes_convert_to_hijri($date, $formatted = true, $language = 'en'
     // Format the date in the required format for gToH (dd-mm-YYYY)
     $formatted_date = $date->format('d-m-Y');
     
-    $h = $hjcosa->gToH($formatted_date);
+    $h = $hjcosa->gToH($formatted_date, $offset);
 
     // Get Hijri month names using the new function
-    $hijri_months = prayertimes_get_hijri_months($language);
+    $month_name = $h->month->en;
+    if ($language === 'ar') {
+        $month_name = $h->month->ar;
+    }
     
     if ($formatted) {
         return sprintf('%d %s %dH',
             $h->day->number,
-            $hijri_months[$h->month->number],
+            $month_name,
             $h->year
         );
     } else {
         return array(
             'day' => $h->day->number,
             'month' => $h->month->number,
-            'month_name' => $hijri_months[$h->month->number],
+            'month_name' => $month_name,
             'year' => $h->year
         );
     }

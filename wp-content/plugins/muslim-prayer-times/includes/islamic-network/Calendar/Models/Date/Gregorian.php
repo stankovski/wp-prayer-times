@@ -17,7 +17,7 @@ class Gregorian
         $this->date = $date;
     }
 
-    public function toJulian(): float
+    public function toJulian(int $adjustJulian = 0): float
     {
         $y = $this->date->format('Y');
         $m = $this->date->format('m');
@@ -26,7 +26,7 @@ class Gregorian
         Date::adjustFromGregorian($m, $y);
         $jgc = Date::offsetBetweenGregorianAndJulian($this->date);
 
-        return  floor(365.25 * ($y + 4716)) + floor(30.6001 * ($m + 1)) + $d - $jgc - 1524;
+        return  floor(365.25 * ($y + 4716)) + floor(30.6001 * ($m + 1)) + $d - $jgc - 1524 + $adjustJulian;
     }
 
 
