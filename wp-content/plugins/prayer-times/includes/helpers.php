@@ -70,6 +70,26 @@ function prayertimes_normalize_times_for_dst($days_data) {
     return $normalized_days_data;
 }
 
+/**
+ * Format a date or timestamp with the plugin's timezone
+ * 
+ * @param string $format The format string (as in PHP's date function)
+ * @param int|null $timestamp Optional Unix timestamp (current time if null)
+ * @return string Formatted date/time string with correct timezone
+ */
+function prayertimes_date($format, $timestamp = null) {
+    $timezone = prayertimes_get_timezone();
+    $tz_object = new DateTimeZone($timezone);
+    
+    if ($timestamp === null) {
+        $date_time = new DateTime('now', $tz_object);
+    } else {
+        $date_time = new DateTime('@' . $timestamp, $tz_object);
+    }
+    
+    return $date_time->format($format);
+}
+
 // Helper function to round a time down to the nearest X minutes
 function prayertimes_round_down(DateTime $time, $rounding_minutes = 1) {
     if ($rounding_minutes <= 1) {
@@ -77,8 +97,8 @@ function prayertimes_round_down(DateTime $time, $rounding_minutes = 1) {
     }
     
     $timestamp = $time->getTimestamp();
-    $minutes = date('i', $timestamp);
-    $seconds = date('s', $timestamp);
+    $minutes = prayertimes_date('i', $timestamp);
+    $seconds = prayertimes_date('s', $timestamp);
     $total_seconds = ($minutes * 60) + $seconds;
     
     // Convert rounding_minutes to seconds
@@ -113,8 +133,8 @@ function prayertimes_round_up(DateTime $time, $rounding_minutes = 1) {
     }
     
     $timestamp = $time->getTimestamp();
-    $minutes = date('i', $timestamp);
-    $seconds = date('s', $timestamp);
+    $minutes = prayertimes_date('i', $timestamp);
+    $seconds = prayertimes_date('s', $timestamp);
     $total_seconds = ($minutes * 60) + $seconds;
     
     // Convert rounding_minutes to seconds

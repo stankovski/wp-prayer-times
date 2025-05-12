@@ -361,7 +361,7 @@ function prayertimes_handle_generate() {
         error_log('Prayer Times Generate: Generated ' . count($csv_data) . ' rows');
         
         wp_send_json_success([
-            'filename' => 'prayer_times_' . date('Y-m-d') . '.csv',
+            'filename' => 'prayer_times_' . prayertimes_date('Y-m-d') . '.csv',
             'content' => $csv_content
         ]);
         
@@ -386,7 +386,7 @@ function prayertimes_handle_export_db() {
     
     try {
         // Get the current date
-        $now = new DateTime('now');
+        $now = new DateTime('now', new DateTimeZone(prayertimes_get_timezone()));
         $start_date = $now->format('Y-m-d');
         
         // Get the date 365 days from now
@@ -453,7 +453,7 @@ function prayertimes_handle_export_db() {
         }
         
         wp_send_json_success([
-            'filename' => 'prayer_times_db_' . date('Y-m-d') . '.csv',
+            'filename' => 'prayer_times_db_' . prayertimes_date('Y-m-d') . '.csv',
             'content' => $csv_content
         ]);
         
@@ -704,7 +704,7 @@ function prayertimes_handle_hijri_preview() {
     require_once __DIR__ . '/includes/hijri-date-converter.php';
     
     // Get today's date and convert to Hijri with the offset
-    $today = date('Y-m-d');
+    $today = prayertimes_date('Y-m-d');
     $hijri_date = prayertimes_convert_to_hijri($today, true, 'en', $offset);
     
     wp_send_json_success([

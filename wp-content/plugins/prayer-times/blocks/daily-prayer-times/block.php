@@ -242,7 +242,7 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         // If no prayer times for this day, create an empty slide with a message
         if (!$prayer_times) {
             $output .= '<div class="prayer-times-carousel-item">';
-            $output .= '<p>No prayer times available for ' . date('l, F j, Y', strtotime($current_date)) . '</p>';
+            $output .= '<p>No prayer times available for ' . prayertimes_date('l, F j, Y', strtotime($current_date)) . '</p>';
             $output .= '</div>';
             continue;
         }
@@ -273,9 +273,9 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
                 $time = strtotime($prayer_times[$column]);
                 // Format the time based on the global time format setting
                 if ($time_format === '24hour') {
-                    $formatted_times[$column] = date('H:i', $time);
+                    $formatted_times[$column] = prayertimes_date('H:i', $time);
                 } else {
-                    $formatted_times[$column] = date('g:i A', $time);
+                    $formatted_times[$column] = prayertimes_date('g:i A', $time);
                 }
             }
         }
@@ -284,7 +284,7 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         $output .= '<div class="prayer-times-carousel-item">';
         
         // Format date for display
-        $display_date = date('l, F j, Y', strtotime($current_date));
+        $display_date = prayertimes_date('l, F j, Y', strtotime($current_date));
         
         // Get Hijri date
         $hijri_date = '';
@@ -373,25 +373,25 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         if (!empty($jumuah1)) {
             $jumuah1_time = strtotime($jumuah1);
             if ($time_format === '24hour') {
-                $jumuah1 = date('H:i', $jumuah1_time);
+                $jumuah1 = prayertimes_date('H:i', $jumuah1_time);
             } else {
-                $jumuah1 = date('g:i A', $jumuah1_time);
+                $jumuah1 = prayertimes_date('g:i A', $jumuah1_time);
             }
         }
         if (!empty($jumuah2)) {
             $jumuah2_time = strtotime($jumuah2);
             if ($time_format === '24hour') {
-                $jumuah2 = date('H:i', $jumuah2_time);
+                $jumuah2 = prayertimes_date('H:i', $jumuah2_time);
             } else {
-                $jumuah2 = date('g:i A', $jumuah2_time);
+                $jumuah2 = prayertimes_date('g:i A', $jumuah2_time);
             }
         }
         if (!empty($jumuah3)) {
             $jumuah3_time = strtotime($jumuah3);
             if ($time_format === '24hour') {
-                $jumuah3 = date('H:i', $jumuah3_time);
+                $jumuah3 = prayertimes_date('H:i', $jumuah3_time);
             } else {
-                $jumuah3 = date('g:i A', $jumuah3_time);
+                $jumuah3 = prayertimes_date('g:i A', $jumuah3_time);
             }
         }
 

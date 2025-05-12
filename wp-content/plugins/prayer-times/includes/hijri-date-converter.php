@@ -59,7 +59,7 @@ function prayertimes_get_hijri_months($language = 'en') {
 function prayertimes_convert_to_hijri($date, $formatted = true, $language = 'en', $offset = 0) {
     // If string date provided, convert to DateTime
     if (is_string($date)) {
-        $date = new DateTime($date);
+        $date = new DateTime($date, new DateTimeZone(prayertimes_get_timezone()));
     }
     
     // Apply offset to the Gregorian date before conversion

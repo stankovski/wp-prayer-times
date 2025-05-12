@@ -227,8 +227,7 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
  */
 function prayertimes_generate_monthly_prayer_times_table($prayer_times, $showSunrise, $showIqama, $highlightToday, $tableStyle, $header_style, $table_style) {
     // Get timezone from settings
-    $opts = get_option('prayertimes_settings', []);
-    $timezone = isset($opts['tz']) ? $opts['tz'] : 'UTC';
+    $timezone = prayertimes_get_timezone();
     
     // Create DateTime object with timezone
     $datetime_zone = new DateTimeZone($timezone);
@@ -402,8 +401,8 @@ function prayertimes_monthly_prayer_times_pagination() {
     $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
     
     // Get parameters from the request
-    $month = isset($_POST['month']) ? intval($_POST['month']) : date('n');
-    $year = isset($_POST['year']) ? intval($_POST['year']) : date('Y');
+    $month = isset($_POST['month']) ? intval($_POST['month']) : prayertimes_date('n');
+    $year = isset($_POST['year']) ? intval($_POST['year']) : prayertimes_date('Y');
     $show_sunrise = isset($_POST['show_sunrise']) && $_POST['show_sunrise'] === '1';
     $show_iqama = isset($_POST['show_iqama']) && $_POST['show_iqama'] === '1';
     $highlight_today = isset($_POST['highlight_today']) && $_POST['highlight_today'] === '1';
@@ -466,8 +465,8 @@ function prayertimes_check_month_availability() {
     $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
     
     // Get parameters from the request
-    $month = isset($_POST['month']) ? intval($_POST['month']) : date('n');
-    $year = isset($_POST['year']) ? intval($_POST['year']) : date('Y');
+    $month = isset($_POST['month']) ? intval($_POST['month']) : prayertimes_date('n');
+    $year = isset($_POST['year']) ? intval($_POST['year']) : prayertimes_date('Y');
     
     // Validate month and year
     if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
@@ -509,8 +508,8 @@ function prayertimes_format_prayer_time($time_string) {
     
     // Format according to setting
     if($time_format === '24hour') {
-        return date('H:i', $time);
+        return prayertimes_date('H:i', $time);
     } else {
-        return date('g:i A', $time);
+        return prayertimes_date('g:i A', $time);
     }
 }

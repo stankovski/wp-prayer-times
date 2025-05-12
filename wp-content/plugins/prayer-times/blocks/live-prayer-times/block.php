@@ -179,7 +179,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
         if ($next_days) {
             foreach ($next_days as $next_day) {
                 $changes_for_day = array();
-                $date_formatted = date('D, M j', strtotime($next_day['day']));
+                $date_formatted = prayertimes_date('D, M j', strtotime($next_day['day']));
                 
                 // Loop through each prayer time column
                 foreach ($next_day as $column => $value) {
@@ -198,9 +198,9 @@ function prayertimes_render_live_prayer_times_block($attributes) {
                         $time = strtotime($value);
                         
                         if ($timeFormat === '24hour') {
-                            $formatted_time = date('H:i', $time);
+                            $formatted_time = prayertimes_date('H:i', $time);
                         } else {
-                            $formatted_time = date('g:i A', $time);
+                            $formatted_time = prayertimes_date('g:i A', $time);
                         }
                         
                         $changes_for_day[$column] = array(
@@ -363,7 +363,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     $output .= '</div>';
     
     // Format date for display
-    $display_date = date('l, F j, Y', strtotime($today));
+    $display_date = prayertimes_date('l, F j, Y', strtotime($today));
     
     // Get Hijri date if needed
     $hijri_date = '';
@@ -394,6 +394,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     // Add the changes column header if we have changes
     if ($has_changes && $show_changes) {
         // Find the earliest date with changes
+        // Find the earliest date with changes
         $earliest_change_date = '';
         if (!empty($future_changes)) {
             // Sort by date
@@ -403,7 +404,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
             $earliest_change_date = $first_change['date'];
         }
         
-        $header_text = !empty($earliest_change_date) ? date('M j', strtotime($earliest_change_date)) : '';
+        $header_text = !empty($earliest_change_date) ? prayertimes_date('M j', strtotime($earliest_change_date)) : '';
         $output .= '<th style="' . esc_attr($change_header_style) . '" class="changes-column">' . esc_html($header_text) . '</th>';
     }
     
@@ -510,25 +511,25 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     if (!empty($jumuah1)) {
         $jumuah1_time = strtotime($jumuah1);
         if ($timeFormat === '24hour') {
-            $jumuah1 = date('H:i', $jumuah1_time);
+            $jumuah1 = prayertimes_date('H:i', $jumuah1_time);
         } else {
-            $jumuah1 = date('g:i A', $jumuah1_time);
+            $jumuah1 = prayertimes_date('g:i A', $jumuah1_time);
         }
     }
     if (!empty($jumuah2)) {
         $jumuah2_time = strtotime($jumuah2);
         if ($timeFormat === '24hour') {
-            $jumuah2 = date('H:i', $jumuah2_time);
+            $jumuah2 = prayertimes_date('H:i', $jumuah2_time);
         } else {
-            $jumuah2 = date('g:i A', $jumuah2_time);
+            $jumuah2 = prayertimes_date('g:i A', $jumuah2_time);
         }
     }
     if (!empty($jumuah3)) {
         $jumuah3_time = strtotime($jumuah3);
         if ($timeFormat === '24hour') {
-            $jumuah3 = date('H:i', $jumuah3_time);
+            $jumuah3 = prayertimes_date('H:i', $jumuah3_time);
         } else {
-            $jumuah3 = date('g:i A', $jumuah3_time);
+            $jumuah3 = prayertimes_date('g:i A', $jumuah3_time);
         }
     }
 
