@@ -1,8 +1,8 @@
-## Prayer Times Plugin for WordPress
+## Muslim Prayer Times Plugin for WordPress
 
 ### Description
 
-Prayer Times is a powerful plugin that allows you to display daily and monthly prayer times on your WordPress website. Perfect for mosques, Islamic centers, or any Muslim website.
+Muslim Prayer Times is a powerful plugin that allows you to display daily and monthly prayer times on your WordPress website. Perfect for mosques, Islamic centers, or any Muslim website.
 
 #### Features
 * Daily prayer times display with both Athan and Iqama times
@@ -17,7 +17,7 @@ Prayer Times is a powerful plugin that allows you to display daily and monthly p
 
 1. Upload the `prayer-times` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Configure settings under Settings > Prayer Times
+3. Configure settings under Settings > Muslim Prayer Times
 4. Add prayer times to your posts or pages using blocks or shortcodes
 
 #### Frequently Asked Questions

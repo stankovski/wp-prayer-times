@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
 require_once ABSPATH . 'plugins/prayer-times/includes/helpers.php';
 
 /**
- * Prayer Times Plugin Helper Functions Tests
+ * Muslim Prayer Times Plugin Helper Functions Tests
  *
  * @package PrayerTimes
  */

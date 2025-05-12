@@ -1,6 +1,6 @@
 <?php
 /**
- * Daily Prayer Times Gutenberg Block
+ * Daily Muslim Prayer Times Gutenberg Block
  */
 
 if (!defined('ABSPATH')) exit;
@@ -92,7 +92,7 @@ function prayertimes_register_daily_prayer_times_block() {
 add_action('init', 'prayertimes_register_daily_prayer_times_block');
 
 /**
- * Render the Daily Prayer Times block on the frontend
+ * Render the Daily Muslim Prayer Times block on the frontend
  */
 function prayertimes_render_daily_prayer_times_block($attributes) {
     global $wpdb;

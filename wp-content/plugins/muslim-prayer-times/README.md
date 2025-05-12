@@ -1,4 +1,4 @@
-# Prayer Times WordPress Plugin
+# Muslim Prayer Times WordPress Plugin
 
 This plugin provides a shortcode to display Islamic prayer times in your WordPress posts and pages.
 
@@ -34,4 +34,4 @@ Example:
 
 ## Configuration
 
-Go to Settings > Prayer Times to configure default settings for the plugin.
+Go to Settings > Muslim Prayer Times to configure default settings for the plugin.

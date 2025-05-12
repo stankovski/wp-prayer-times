@@ -1,4 +1,4 @@
-=== Prayer Times ===
+=== Muslim Prayer Times ===
 Contributors: stankovski
 Tags: prayer times, muslim, islamic, mosque, salah
 Requires at least: 5.0
@@ -12,7 +12,7 @@ Add accurate prayer times and iqama schedules to your WordPress site using block
 
 == Description ==
 
-Prayer Times is a powerful plugin that allows you to display daily and monthly prayer times on your WordPress website. Perfect for mosques, Islamic centers, or any Muslim website.
+Muslim Prayer Times is a powerful plugin that allows you to display daily and monthly prayer times on your WordPress website. Perfect for mosques, Islamic centers, or any Muslim website.
 
 = Features =
 * Daily prayer times display with both Athan and Iqama times
@@ -27,7 +27,7 @@ Prayer Times is a powerful plugin that allows you to display daily and monthly p
 
 1. Upload the `prayer-times` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Configure settings under Settings > Prayer Times
+3. Configure settings under Settings > Muslim Prayer Times
 4. Add prayer times to your posts or pages using blocks or shortcodes
 
 == Frequently Asked Questions ==
@@ -56,4 +56,4 @@ Yes, you can select from multiple standard calculation methods in the plugin set
 == Upgrade Notice ==
 
 = 1.0 =
-Initial release of Prayer Times plugin.
+Initial release of Muslim Prayer Times plugin.

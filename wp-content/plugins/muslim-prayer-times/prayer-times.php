@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Prayer Times
+Plugin Name: Muslim Prayer Times
 Plugin URI: https://github.com/stankovski/wp-prayer-times
 Description: A WordPress plugin for managing and displaying Islamic prayer times.
 Version: 1.0
@@ -100,7 +100,7 @@ function prayertimes_missing_dependencies_notice() {
     ?>
     <div class="notice notice-error">
         <p>
-            <strong>Prayer Times Plugin Error:</strong> Required dependencies are missing. 
+            <strong>Muslim Prayer Times Plugin Error:</strong> Required dependencies are missing. 
             Please run <code>composer install</code> in the plugin directory or contact your administrator.
         </p>
     </div>
@@ -119,7 +119,7 @@ function prayertimes_get_option($key, $default) {
 }
 
 /**
- * Register custom block category for Prayer Times blocks
+ * Register custom block category for Muslim Prayer Times blocks
  */
 function prayer_times_register_block_category($categories) {
     return array_merge(
@@ -127,7 +127,7 @@ function prayer_times_register_block_category($categories) {
         [
             [
                 'slug'  => 'prayer-times',
-                'title' => __('Prayer Times', 'prayer-times'),
+                'title' => __('Muslim Prayer Times', 'prayer-times'),
                 'icon'  => null, // You can add a custom SVG icon here
             ],
         ]

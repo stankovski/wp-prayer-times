@@ -9,8 +9,8 @@ require_once plugin_dir_path(__FILE__) . 'settings-ajax.php';
 
 function prayertimes_settings_menu() {
     add_options_page(
-        'Prayer Times Settings',
-        'Prayer Times',
+        'Muslim Prayer Times Settings',
+        'Muslim Prayer Times',
         'manage_options',
         'prayertimes-settings',
         'prayertimes_settings_page'
@@ -295,7 +295,7 @@ function prayertimes_settings_page() {
     $isha_rounding = isset($opts['isha_rounding']) ? $opts['isha_rounding'] : 1;
     ?>
     <div class="wrap">
-        <h1>Prayer Times Settings</h1>
+        <h1>Muslim Prayer Times Settings</h1>
         
         <!-- Accordion Container -->
         <div class="prayertimes-accordion">
