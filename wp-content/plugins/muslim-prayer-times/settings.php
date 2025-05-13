@@ -73,14 +73,14 @@ function prayertimes_admin_scripts($hook) {
             background: #f1f1f1;
         }
         .prayertimes-accordion-header::after {
-            content: "\f140";
+            content: "\\f140";
             font-family: dashicons;
             position: absolute;
             right: 15px;
             color: #777;
         }
         .prayertimes-accordion-header.active::after {
-            content: "\f142";
+            content: "\\f142";
         }
         .prayertimes-accordion-content {
             padding: 15px;
@@ -118,6 +118,45 @@ function prayertimes_admin_scripts($hook) {
             border-radius: 4px;
             border: 1px solid #ddd;
             font-size: 14px;
+        }
+        .prayer-times-header {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .prayer-times-header h1 {
+            margin-top: 0;
+        }
+        .prayer-times-header p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .prayer-times-steps {
+            background-color: #f9f9f9;
+            border-left: 4px solid #0073aa;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .prayer-times-steps ol {
+            margin-left: 20px;
+        }
+        .prayer-times-steps li {
+            margin-bottom: 10px;
+        }
+        .available-blocks {
+            background-color: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            padding: 15px 20px;
+            margin-top: 15px;
+        }
+        .available-blocks h3 {
+            margin-top: 0;
+        }
+        .github-link {
+            font-weight: 600;
+            text-decoration: none;
         }
     ');
 }
@@ -295,7 +334,41 @@ function prayertimes_settings_page() {
     $isha_rounding = isset($opts['isha_rounding']) ? $opts['isha_rounding'] : 1;
     ?>
     <div class="wrap">
-        <h1>Muslim Prayer Times Settings</h1>
+        <!-- Banner Image -->
+        <div class="prayer-times-banner">
+            <img src="<?php echo plugins_url('assets/banner-1544x500.png', __FILE__); ?>" alt="Muslim Prayer Times Banner" style="max-width:100%; height:auto; margin-bottom:20px; border-radius:5px;">
+        </div>
+
+        <!-- New Header Section with Instructions -->
+        <div class="prayer-times-header">
+            <h1>Muslim Prayer Times Settings</h1>
+            <p>
+                <strong>Muslim Prayer Times</strong> is a free and open source WordPress plugin. The source code is available on 
+                <a href="https://github.com/stankovski/wp-prayer-times" target="_blank" class="github-link">GitHub</a>.
+            </p>
+            
+            <div class="prayer-times-steps">
+                <h2>Getting Started: How to Set Up Your Prayer Times</h2>
+                <ol>
+                    <li><strong>Step 1:</strong> First, provide general information about your location and select a prayer calculation method using the <strong>General Settings</strong> tab below.</li>
+                    <li><strong>Step 2:</strong> Configure the <strong>Iqama Rules</strong> to determine how Iqama times will be calculated based on Athan times. These rules are only used to generate the CSV file.</li>
+                    <li><strong>Step 3:</strong> Generate a CSV file with your prayer times using the Export/Import section, then review and adjust the times as necessary.</li>
+                    <li><strong>Step 4:</strong> Import the CSV file back into the plugin to use these times on your website.</li>
+                    <li><strong>Step 5:</strong> If you need to make changes to your prayer times in the future, you can export the existing data from the database, modify it, and re-import it. You can also re-generate the prayer times and re-import them. Note, each time you import the CSV file, it will only overwrite the days specified in the CSV file.</li>
+                </ol>
+            </div>
+            
+            <div class="available-blocks">
+                <h3>Available Prayer Times Blocks</h3>
+                <p>This plugin includes three blocks in the editor under the "Muslim Prayer Times" category:</p>
+                <ul>
+                    <li><strong>Daily Prayer Times Block:</strong> Show today's prayer times on your main page. This block is ideal for displaying the current day's prayers with scrolling capabilities to see upcoming days.</li>
+                    <li><strong>Monthly Prayer Times Block:</strong> Display a full table of prayer times for the month. Perfect for providing a comprehensive view of prayer schedules.</li>
+                    <li><strong>Live Prayer Times Block:</strong> Designed specifically for Digital Displays with automatic time updates and highlighting of the next prayer. Works best with the <a href="https://wordpress.org/plugins/digital-signage/" target="_blank">Digital Signage plugin</a>.</li>
+                </ul>
+                <p>Each block is highly customizable through the block editor interface. You can adjust colors, display options, and more to match your site's design.</p>
+            </div>
+        </div>
         
         <!-- Accordion Container -->
         <div class="prayertimes-accordion">
