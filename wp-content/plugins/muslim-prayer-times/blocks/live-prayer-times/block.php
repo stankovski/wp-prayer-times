@@ -33,6 +33,13 @@ function muslprti_register_live_prayer_times_block() {
         array(),
         filemtime(plugin_dir_path(__FILE__) . 'style.css')
     );
+    
+    // Register dynamic styles handle that will receive inline CSS
+    wp_register_style(
+        'muslprti-live-prayer-times-dynamic-style',
+        false // No actual CSS file
+    );
+    wp_enqueue_style('muslprti-live-prayer-times-dynamic-style');
 
     // Register the block
     register_block_type('prayer-times/live-prayer-times', array(
@@ -153,41 +160,46 @@ function muslprti_render_live_prayer_times_block($attributes) {
     $changeColor = isset($attributes['changeColor']) ? $attributes['changeColor'] : '#ff0000';
     $nextPrayerColor = isset($attributes['nextPrayerColor']) ? $attributes['nextPrayerColor'] : 'rgba(255, 255, 102, 0.3)';
     
-    // Create inline styles
-    $container_style = "text-align: {$align};";
-    if ($fontSize) {
-        $container_style .= "font-size: {$fontSize}px;";
-    }
+    // Create CSS for dynamic styling
+    $block_id = 'muslprti-live-prayer-times-' . uniqid();
     
-    $row_style = '';
-    if ($backgroundColor) {
-        $row_style .= "background-color: {$backgroundColor};";
-    }
-
-    $table_style = '';
-    if ($textColor) {
-        $table_style .= "color: {$textColor};";
-    }
+    // Build CSS rules
+    $dynamic_css = "
+        #{$block_id} {
+            text-align: {$align};
+            " . ($fontSize ? "font-size: {$fontSize}px;" : "") . "
+        }
+        
+        #{$block_id} .prayer-time-row {
+            " . ($backgroundColor ? "background-color: {$backgroundColor};" : "") . "
+        }
+        
+        #{$block_id} table {
+            " . ($textColor ? "color: {$textColor};" : "") . "
+        }
+        
+        #{$block_id} th,
+        #{$block_id} .prayer-times-header {
+            " . ($headerColor ? "background-color: {$headerColor};" : "") . "
+            " . ($headerTextColor ? "color: {$headerTextColor};" : "") . "
+        }
+        
+        #{$block_id} .highlight-time {
+            " . ($highlightColor ? "color: {$highlightColor};" : "") . "
+        }
+        
+        #{$block_id} .change-header {
+            color: {$changeColor};
+            " . ($headerColor ? "background-color: {$headerColor};" : "") . "
+        }
+        
+        #{$block_id} .prayer-times-next {
+            background-color: {$nextPrayerColor};
+        }
+    ";
     
-    $header_style = '';
-    if ($headerColor) {
-        $header_style .= "background-color: {$headerColor};";
-    }
-    if ($headerTextColor) {
-        $header_style .= "color: {$headerTextColor};";
-    }
-    
-    $highlight_style = '';
-    if ($highlightColor) {
-        $highlight_style .= "color: {$highlightColor};";
-    }
-
-    $change_header_style = "color: {$changeColor};";
-    if ($headerColor) {
-        $change_header_style .= "background-color: {$headerColor};";
-    }
-
-    $clock_style = '';
+    // Add the dynamic CSS to our registered style handle
+    wp_add_inline_style('muslprti-live-prayer-times-dynamic-style', $dynamic_css);
     if ($clockColor) {
         $clock_style .= "color: {$clockColor};";
     }
@@ -208,12 +220,10 @@ function muslprti_render_live_prayer_times_block($attributes) {
         'iqama' => $icons_dir . 'iqama.svg',
     );
     
-    // Generate a unique ID for this block instance
-    $block_id = 'muslprti-live-' . uniqid();
+    // Use the block ID that was defined above for CSS targeting
     
     // Build the HTML output
     $output = '<div id="' . esc_attr($block_id) . '" class="wp-block-prayer-times-live-prayer-times ' . esc_attr($className) . '" 
-               style="' . esc_attr($container_style) . '"
                data-show-seconds="' . esc_attr($showSeconds ? '1' : '0') . '"
                data-show-date="' . esc_attr($showDate ? '1' : '0') . '"
                data-show-hijri-date="' . esc_attr($showHijriDate ? '1' : '0') . '"
@@ -302,10 +312,10 @@ function muslprti_render_live_prayer_times_block($attributes) {
     
     // Jumuah structure - Fixed to be a properly separated section
     $output .= '<div class="prayer-times-jumuah">';
-    $output .= '<table class="jumuah-times-table ' . esc_attr('table-style-' . $tableStyle) . '" style="' . esc_attr($table_style) . '">';
-    $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
-    $output .= '<th style="' . esc_attr($header_style) . '">' . esc_html__('Khutbah', 'muslim-prayer-times') . '</th>';
-    $output .= '<th style="' . esc_attr($header_style) . '">' . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
+    $output .= '<table class="jumuah-times-table ' . esc_attr('table-style-' . $tableStyle) . '">';
+    $output .= '<thead><tr class="prayer-times-header">';
+    $output .= '<th>' . esc_html__('Khutbah', 'muslim-prayer-times') . '</th>';
+    $output .= '<th>' . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
     $output .= '</tr></thead>';
     $output .= '<tbody>';
     $output .= '</tbody>';

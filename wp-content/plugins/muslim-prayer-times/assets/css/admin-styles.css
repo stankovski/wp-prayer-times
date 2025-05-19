@@ -1,0 +1,95 @@
+/**
+ * Muslim Prayer Times - Admin Styles
+ * 
+ * This file contains styles for the admin interface of the Muslim Prayer Times plugin.
+ * These styles replace inline styles that were previously applied directly to HTML elements.
+ */
+
+/* Banner image */
+.muslprti-banner {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+/* Cards */
+.muslprti-card {
+    max-width: 600px;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.muslprti-card-top-margin {
+    max-width: 600px;
+    margin-top: 30px;
+    padding: 10px;
+}
+
+/* Geocoding and search results */
+.muslprti-geocode-results {
+    margin-top: 10px;
+}
+
+/* Iqama rule options */
+.muslprti-iqama-rule-option {
+    margin-bottom: 10px;
+}
+
+.muslprti-iqama-rule-option-top {
+    margin-top: 15px;
+}
+
+.muslprti-field-container {
+    margin-left: 25px;
+    margin-top: 5px;
+}
+
+/* Date picker elements */
+.muslprti-period-select {
+    width: 120px;
+}
+
+.muslprti-custom-date-range {
+    margin-top: 10px;
+    display: none;
+}
+
+.muslprti-date-input {
+    margin-right: 10px;
+}
+
+/* Table container for data preview */
+.muslprti-table-container {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.muslprti-table {
+    min-width: 100%;
+}
+
+/* Error messages */
+.muslprti-error-text {
+    color: red;
+}
+
+.muslprti-warning-notice {
+    margin-top: 10px;
+    padding: 10px;
+}
+
+/* Log display */
+.muslprti-log-container {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+}
+
+.muslprti-log-list {
+    margin: 0;
+    padding-left: 20px;
+}

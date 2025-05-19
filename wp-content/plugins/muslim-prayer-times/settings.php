@@ -42,6 +42,10 @@ function muslprti_get_timezone_list() {
 function muslprti_admin_scripts($hook) {
     if ($hook != 'settings_page_muslprti-settings') return;
     
+    // Register and enqueue admin CSS
+    wp_enqueue_style('muslprti-admin-styles', plugins_url('assets/css/admin-styles.css', __FILE__), array(), filemtime(plugin_dir_path(__FILE__) . 'assets/css/admin-styles.css'));
+    
+    // Register and enqueue main admin script
     wp_enqueue_script('muslprti-admin', plugins_url('js/admin.js', __FILE__), array('jquery'), '1.0', true);
     wp_localize_script('muslprti-admin', 'ptpAdmin', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
@@ -52,6 +56,93 @@ function muslprti_admin_scripts($hook) {
         'import_nonce' => wp_create_nonce('muslprti_import_nonce'),
         'hijri_preview_nonce' => wp_create_nonce('muslprti_hijri_preview_nonce') // Add new nonce for Hijri preview
     ));
+    
+    // Hijri date preview script
+    $hijri_script = "
+        jQuery(document).ready(function($) {
+            // Update Hijri date preview when offset changes
+            $('#muslprti_hijri_offset').change(function() {
+                var offset = $(this).val();
+                $('#hijri-date-preview').html('Loading...');
+                
+                $.ajax({
+                    url: ptpAdmin.ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'muslprti_preview_hijri',
+                        offset: offset,
+                        nonce: ptpAdmin.hijri_preview_nonce
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#hijri-date-preview').html(response.data);
+                        } else {
+                            $('#hijri-date-preview').html('Error: ' + response.data);
+                        }
+                    },
+                    error: function() {
+                        $('#hijri-date-preview').html('Error connecting to server');
+                    }
+                });
+            });
+        });
+    ";
+    wp_add_inline_script('muslprti-admin', $hijri_script);
+    
+    // Iqama rules visibility script
+    $iqama_rules_script = "
+        jQuery(document).ready(function($) {
+            // Handle conditional fields visibility
+            $('.rule-radio').change(function() {
+                var name = $(this).attr('name');
+                var value = $(this).val();
+                
+                // Hide all related containers first
+                $('div[data-parent=\"' + name + '\"]').hide();
+                
+                // Show the relevant container
+                $('div[data-parent=\"' + name + '\"][data-show-for=\"' + value + '\"]').show();
+            });
+            
+            // Initialize visibility
+            $('.rule-radio:checked').each(function() {
+                var name = $(this).attr('name');
+                var value = $(this).val();
+                
+                $('div[data-parent=\"' + name + '\"]').hide();
+                $('div[data-parent=\"' + name + '\"][data-show-for=\"' + value + '\"]').show();
+            });
+        });
+    ";
+    wp_add_inline_script('muslprti-admin', $iqama_rules_script);
+    
+    // Date range dropdown script
+    $date_range_script = "
+        jQuery(document).ready(function($) {
+            // Initialize on page load
+            if ($('#muslprti_period').val() === 'custom') {
+                $('#custom_date_range').show();
+            }
+            
+            // Set current dates as defaults for custom range
+            var today = new Date();
+            var nextMonth = new Date();
+            nextMonth.setMonth(today.getMonth() + 1);
+            
+            $('#muslprti_start_date').val(today.toISOString().split('T')[0]);
+            $('#muslprti_end_date').val(nextMonth.toISOString().split('T')[0]);
+            
+            // Handle changes
+            $('#muslprti_period').change(function() {
+                if ($(this).val() === 'custom') {
+                    $('#custom_date_range').show();
+                } else {
+                    $('#custom_date_range').hide();
+                }
+            });
+        });
+    ";
+    wp_add_inline_script('muslprti-admin', $date_range_script);
     
     // Add CSS for accordion
     wp_add_inline_style('admin-bar', '
@@ -336,7 +427,7 @@ function muslprti_settings_page() {
     <div class="wrap">
         <!-- Banner Image -->
         <div class="prayer-times-banner">
-            <img src="<?php echo esc_url(plugins_url('assets/banner-1544x500.png', __FILE__)); ?>" alt="Muslim Prayer Times Banner" style="max-width:100%; height:auto; margin-bottom:20px; border-radius:5px;">
+            <img src="<?php echo esc_url(plugins_url('assets/banner-1544x500.png', __FILE__)); ?>" alt="Muslim Prayer Times Banner" class="muslprti-banner">
         </div>
 
         <!-- New Header Section with Instructions -->
@@ -377,14 +468,14 @@ function muslprti_settings_page() {
             <div class="muslprti-accordion-content active">
                 <form method="post">
                     <?php wp_nonce_field('muslprti_save_general_settings', 'muslprti_general_settings_nonce'); ?>
-                    <div class="card" style="max-width:600px; margin-bottom:20px; padding:10px;">
+                    <div class="card muslprti-card">
                         <h2>Find Coordinates by Address</h2>
                         <p>Enter an address to automatically find the latitude and longitude.</p>
                         
                         <div class="geocode-container">
                             <input type="text" id="muslprti_address" placeholder="Enter address, city, or place name" class="regular-text">
                             <button type="button" id="muslprti_geocode_btn" class="button">Find Coordinates</button>
-                            <div id="muslprti_geocode_results" style="margin-top:10px;"></div>
+                            <div id="muslprti_geocode_results" class="muslprti-geocode-results"></div>
                         </div>
                     </div>
                     
@@ -454,35 +545,6 @@ function muslprti_settings_page() {
                                     ?>
                                 </span>
                                 <p class="description">Adjust the calculated Hijri date if needed to match local moon sighting.</p>
-                                <script>
-                                jQuery(document).ready(function($) {
-                                    // Update Hijri date preview when offset changes
-                                    $('#muslprti_hijri_offset').change(function() {
-                                        var offset = $(this).val();
-                                        $('#hijri-date-preview').html('Loading...');
-                                        
-                                        $.ajax({
-                                            url: ptpAdmin.ajaxurl,
-                                            type: 'POST',
-                                            data: {
-                                                action: 'muslprti_preview_hijri',
-                                                offset: offset,
-                                                nonce: ptpAdmin.hijri_preview_nonce
-                                            },
-                                            success: function(response) {
-                                                if (response.success) {
-                                                    $('#hijri-date-preview').html('Today: ' + response.data.hijri_date);
-                                                } else {
-                                                    $('#hijri-date-preview').html('Error loading preview');
-                                                }
-                                            },
-                                            error: function() {
-                                                $('#hijri-date-preview').html('Error loading preview');
-                                            }
-                                        });
-                                    });
-                                });
-                                </script>
                             </td>
                         </tr>
                         <tr>
@@ -567,7 +629,7 @@ function muslprti_settings_page() {
                     
                     <div class="iqama-rule-section">
                         <h3>Fajr Iqama Rules</h3>
-                        <div class="iqama-rule-option" style="margin-bottom:10px;">
+                        <div class="iqama-rule-option muslprti-iqama-rule-option">
                             <label>
                                 <input type="checkbox" name="muslprti_fajr_daily_change" value="1" <?php checked($fajr_daily_change, 1); ?>>
                                 Change Fajr times daily (overrides general setting for this prayer time)
@@ -586,15 +648,15 @@ function muslprti_settings_page() {
                         <div class="iqama-rule-option">
                             <label><input type="radio" name="muslprti_fajr_rule" value="after_athan" <?php checked($fajr_rule, 'after_athan'); ?> class="rule-radio fajr-rule"> 
                                 Minutes after Athan</label>
-                            <div class="field-container" style="margin-left: 25px; margin-top: 5px;">
+                            <div class="field-container muslprti-field-container">
                                 <input type="number" name="muslprti_fajr_minutes_after" id="muslprti_fajr_minutes_after" value="<?php echo esc_attr($fajr_minutes_after); ?>" min="0" max="120" class="fajr-input" <?php echo $fajr_rule !== 'after_athan' ? 'disabled' : ''; ?>> minutes after Athan
                             </div>
                         </div>
                         
-                        <div class="iqama-rule-option" style="margin-top: 15px;">
+                        <div class="iqama-rule-option muslprti-iqama-rule-option-top">
                             <label><input type="radio" name="muslprti_fajr_rule" value="before_shuruq" <?php checked($fajr_rule, 'before_shuruq'); ?> class="rule-radio fajr-rule">
                                 Minutes before Shuruq (sunrise)</label>
-                            <div class="field-container" style="margin-left: 25px; margin-top: 5px;">
+                            <div class="field-container muslprti-field-container">
                                 <input type="number" name="muslprti_fajr_minutes_before_shuruq" id="muslprti_fajr_minutes_before_shuruq" value="<?php echo esc_attr($fajr_minutes_before_shuruq); ?>" min="15" max="120" class="fajr-input" <?php echo $fajr_rule !== 'before_shuruq' ? 'disabled' : ''; ?>> 
                                 minutes before Shuruq
                                 <p class="description">Note: For safety, this will never be less than 15 minutes before sunrise.</p>
@@ -604,7 +666,7 @@ function muslprti_settings_page() {
                     
                     <div class="iqama-rule-section">
                         <h3>Dhuhr Iqama Rules</h3>
-                        <div class="iqama-rule-option" style="margin-bottom:10px;">
+                        <div class="iqama-rule-option muslprti-iqama-rule-option">
                             <label>
                                 <input type="checkbox" name="muslprti_dhuhr_daily_change" value="1" <?php checked($dhuhr_daily_change, 1); ?>>
                                 Change Dhuhr times daily (overrides general setting for this prayer time)
@@ -623,15 +685,15 @@ function muslprti_settings_page() {
                         <div class="iqama-rule-option">
                             <label><input type="radio" name="muslprti_dhuhr_rule" value="after_athan" <?php checked($dhuhr_rule, 'after_athan'); ?> class="rule-radio dhuhr-rule"> 
                                 Minutes after Athan</label>
-                            <div class="field-container" style="margin-left: 25px; margin-top: 5px;">
+                            <div class="field-container muslprti-field-container">
                                 <input type="number" name="muslprti_dhuhr_minutes_after" value="<?php echo esc_attr($dhuhr_minutes_after); ?>" min="0" max="120" class="dhuhr-input" <?php echo $dhuhr_rule !== 'after_athan' ? 'disabled' : ''; ?>> minutes after Athan
                             </div>
                         </div>
                         
-                        <div class="iqama-rule-option" style="margin-top: 15px;">
+                        <div class="iqama-rule-option muslprti-iqama-rule-option-top">
                             <label><input type="radio" name="muslprti_dhuhr_rule" value="fixed_time" <?php checked($dhuhr_rule, 'fixed_time'); ?> class="rule-radio dhuhr-rule">
                                 Fixed time (separate for Standard and DST)</label>
-                            <div class="field-container" style="margin-left: 25px; margin-top: 5px;">
+                            <div class="field-container muslprti-field-container">
                                 <label>Standard Time: <input type="time" name="muslprti_dhuhr_fixed_standard" value="<?php echo esc_attr($dhuhr_fixed_standard); ?>" class="dhuhr-input" <?php echo $dhuhr_rule !== 'fixed_time' ? 'disabled' : ''; ?>></label><br>
                                 <label>Daylight Saving Time: <input type="time" name="muslprti_dhuhr_fixed_dst" value="<?php echo esc_attr($dhuhr_fixed_dst); ?>" class="dhuhr-input" <?php echo $dhuhr_rule !== 'fixed_time' ? 'disabled' : ''; ?>></label>
                             </div>
@@ -640,7 +702,7 @@ function muslprti_settings_page() {
                     
                     <div class="iqama-rule-section">
                         <h3>Asr Iqama Rules</h3>
-                        <div class="iqama-rule-option" style="margin-bottom:10px;">
+                        <div class="iqama-rule-option muslprti-iqama-rule-option">
                             <label>
                                 <input type="checkbox" name="muslprti_asr_daily_change" value="1" <?php checked($asr_daily_change, 1); ?>>
                                 Change Asr times daily (overrides general setting for this prayer time)
@@ -659,15 +721,15 @@ function muslprti_settings_page() {
                         <div class="iqama-rule-option">
                             <label><input type="radio" name="muslprti_asr_rule" value="after_athan" <?php checked($asr_rule, 'after_athan'); ?> class="rule-radio asr-rule"> 
                                 Minutes after Athan</label>
-                            <div class="field-container" style="margin-left: 25px; margin-top: 5px;">
+                            <div class="field-container muslprti-field-container">
                                 <input type="number" name="muslprti_asr_minutes_after" value="<?php echo esc_attr($asr_minutes_after); ?>" min="0" max="120" class="asr-input" <?php echo $asr_rule !== 'after_athan' ? 'disabled' : ''; ?>> minutes after Athan
                             </div>
                         </div>
                         
-                        <div class="iqama-rule-option" style="margin-top: 15px;">
+                        <div class="iqama-rule-option muslprti-iqama-rule-option-top">
                             <label><input type="radio" name="muslprti_asr_rule" value="fixed_time" <?php checked($asr_rule, 'fixed_time'); ?> class="rule-radio asr-rule">
                                 Fixed time (separate for Standard and DST)</label>
-                            <div class="field-container" style="margin-left: 25px; margin-top: 5px;">
+                            <div class="field-container muslprti-field-container">
                                 <label>Standard Time: <input type="time" name="muslprti_asr_fixed_standard" value="<?php echo esc_attr($asr_fixed_standard); ?>" class="asr-input" <?php echo $asr_rule !== 'fixed_time' ? 'disabled' : ''; ?>></label><br>
                                 <label>Daylight Saving Time: <input type="time" name="muslprti_asr_fixed_dst" value="<?php echo esc_attr($asr_fixed_dst); ?>" class="asr-input" <?php echo $asr_rule !== 'fixed_time' ? 'disabled' : ''; ?>></label>
                             </div>
@@ -676,7 +738,7 @@ function muslprti_settings_page() {
                     
                     <div class="iqama-rule-section">
                         <h3>Maghrib Iqama Rules</h3>
-                        <div class="iqama-rule-option" style="margin-bottom:10px;">
+                        <div class="iqama-rule-option muslprti-iqama-rule-option">
                             <label>
                                 <input type="checkbox" name="muslprti_maghrib_daily_change" value="1" <?php checked($maghrib_daily_change, 1); ?>>
                                 Change Maghrib times daily (overrides general setting for this prayer time)
@@ -702,7 +764,7 @@ function muslprti_settings_page() {
                     
                     <div class="iqama-rule-section">
                         <h3>Isha Iqama Rules</h3>
-                        <div class="iqama-rule-option" style="margin-bottom:10px;">
+                        <div class="iqama-rule-option muslprti-iqama-rule-option">
                             <label>
                                 <input type="checkbox" name="muslprti_isha_daily_change" value="1" <?php checked($isha_daily_change, 1); ?>>
                                 Change Isha times daily (overrides general setting for this prayer time)
@@ -736,62 +798,6 @@ function muslprti_settings_page() {
                         </div>
                     </div>
                     
-                    <script>
-                    jQuery(document).ready(function($) {
-                        // Handle conditional fields visibility
-                        $('.rule-radio').change(function() {
-                            var name = $(this).attr('name');
-                            var value = $(this).val();
-                            
-                            // Hide all conditional fields for this rule type
-                            $('[id^=' + name.replace('muslprti_', '') + '_]').removeClass('active');
-                            
-                            // Show the selected one
-                            $('#' + name.replace('muslprti_', '') + '_' + value).addClass('active');
-                            
-                            // Handle Fajr input enabling/disabling
-                            if ($(this).hasClass('fajr-rule')) {
-                                // Disable all fajr inputs first
-                                $('.fajr-input').prop('disabled', true);
-                                
-                                // Enable only the relevant input based on selection
-                                if (value === 'after_athan') {
-                                    $('#muslprti_fajr_minutes_after').prop('disabled', false);
-                                } else if (value === 'before_shuruq') {
-                                    $('#muslprti_fajr_minutes_before_shuruq').prop('disabled', false);
-                                }
-                            }
-                            
-                            // Handle Dhuhr input enabling/disabling
-                            if ($(this).hasClass('dhuhr-rule')) {
-                                // Disable all dhuhr inputs first
-                                $('.dhuhr-input').prop('disabled', true);
-                                
-                                // Enable only the relevant input based on selection
-                                if (value === 'after_athan') {
-                                    $('input[name="muslprti_dhuhr_minutes_after"]').prop('disabled', false);
-                                } else if (value === 'fixed_time') {
-                                    $('input[name="muslprti_dhuhr_fixed_standard"]').prop('disabled', false);
-                                    $('input[name="muslprti_dhuhr_fixed_dst"]').prop('disabled', false);
-                                }
-                            }
-
-                            // Handle Asr input enabling/disabling
-                            if ($(this).hasClass('asr-rule')) {
-                                // Disable all asr inputs first
-                                $('.asr-input').prop('disabled', true);
-                                
-                                // Enable only the relevant input based on selection
-                                if (value === 'after_athan') {
-                                    $('input[name="muslprti_asr_minutes_after"]').prop('disabled', false);
-                                } else if (value === 'fixed_time') {
-                                    $('input[name="muslprti_asr_fixed_standard"]').prop('disabled', false);
-                                    $('input[name="muslprti_asr_fixed_dst"]').prop('disabled', false);
-                                }
-                            }
-                        });
-                    });
-                    </script>
                     
                     <?php submit_button('Save Iqama Rules', 'primary', 'submit_iqama'); ?>
                 </form>
@@ -799,55 +805,27 @@ function muslprti_settings_page() {
         </div>
         
         <!-- Export/Import Section (kept as is) -->
-        <div class="card" style="max-width:600px; margin-top:30px; padding:10px;">            
+        <div class="card muslprti-card-top-margin">            
             <h2>Export/Import Prayer Times</h2>
 
             <h3>1. Generate Prayer Times</h3>
             <p>Generate prayer times based on your location settings in CSV format.</p>
             <div>
                 <button type="button" id="muslprti_generate_btn" class="button">Generate Prayer Times</button>
-                <select id="muslprti_period" style="width:120px;">
+                <select id="muslprti_period" class="muslprti-period-select">
                     <option value="7">7 days</option>
                     <option value="30" selected>30 days</option>
                     <option value="90">90 days</option>
                     <option value="365">365 days</option>
                     <option value="custom">Custom range</option>
                 </select>
-                <div id="custom_date_range" style="margin-top: 10px; display: none;">
+                <div id="custom_date_range" class="muslprti-custom-date-range">
                     <label for="muslprti_start_date">Start date:</label>
-                    <input type="date" id="muslprti_start_date" style="margin-right: 10px;">
+                    <input type="date" id="muslprti_start_date" class="muslprti-date-input">
                     <label for="muslprti_end_date">End date:</label>
                     <input type="date" id="muslprti_end_date">
                 </div>
             </div>
-            
-            <script>
-            // Inline script to ensure the dropdown functionality works
-            jQuery(document).ready(function($) {
-                // Initialize on page load
-                if ($('#muslprti_period').val() === 'custom') {
-                    $('#custom_date_range').show();
-                }
-                
-                // Set current dates as defaults for custom range
-                var today = new Date();
-                var nextMonth = new Date();
-                nextMonth.setMonth(today.getMonth() + 1);
-                
-                $('#muslprti_start_date').val(today.toISOString().split('T')[0]);
-                $('#muslprti_end_date').val(nextMonth.toISOString().split('T')[0]);
-                
-                // Handle changes
-                $('#muslprti_period').on('change', function() {
-                    console.log('Period selection changed (inline):', $(this).val());
-                    if ($(this).val() === 'custom') {
-                        $('#custom_date_range').show();
-                    } else {
-                        $('#custom_date_range').hide();
-                    }
-                });
-            });
-            </script>
             
             <h3 style="margin-top:20px;">2. Import Prayer Times</h3>
             <p>Import prayer times from a CSV file. The file should match the format of the exported CSV.</p>
