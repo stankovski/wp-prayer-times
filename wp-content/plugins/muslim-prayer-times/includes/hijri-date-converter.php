@@ -23,7 +23,7 @@ $hjcosa = new HighJudiciaryCouncilOfSaudiArabia();
  * @param int $offset Day offset to add/subtract from calculated Hijri date (-2 to +2)
  * @return string|array Formatted Hijri date string or array with year, month, day
  */
-function prayertimes_convert_to_hijri($date, $formatted = true, $language = 'en', $offset = 0) {
+function muslprti_convert_to_hijri($date, $formatted = true, $language = 'en', $offset = 0) {
     global $hjcosa;
     
     // If the global variable is still null, create it within this function
@@ -33,7 +33,7 @@ function prayertimes_convert_to_hijri($date, $formatted = true, $language = 'en'
     
     // If string date provided, convert to DateTime
     if (is_string($date)) {
-        $date = new DateTime($date, new DateTimeZone(prayertimes_get_timezone()));
+        $date = new DateTime($date, new DateTimeZone(muslprti_get_timezone()));
     }
     
     // Format the date in the required format for gToH (dd-mm-YYYY)

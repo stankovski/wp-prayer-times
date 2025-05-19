@@ -8,10 +8,10 @@ if (!defined('ABSPATH')) exit;
 /**
  * Register the block
  */
-function prayertimes_register_daily_prayer_times_block() {
+function muslprti_register_daily_prayer_times_block() {
     // Register block script
     wp_register_script(
-        'prayertimes-daily-prayer-times-block',
+        'muslprti-daily-prayer-times-block',
         plugins_url('block.js', __FILE__),
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
         filemtime(plugin_dir_path(__FILE__) . 'block.js')
@@ -19,7 +19,7 @@ function prayertimes_register_daily_prayer_times_block() {
 
     // Register carousel script
     wp_register_script(
-        'prayertimes-prayer-times-carousel',
+        'muslprti-prayer-times-carousel',
         plugins_url('carousel.js', __FILE__),
         array(),
         filemtime(plugin_dir_path(__FILE__) . 'carousel.js'),
@@ -28,7 +28,7 @@ function prayertimes_register_daily_prayer_times_block() {
 
     // Register block styles
     wp_register_style(
-        'prayertimes-daily-prayer-times-style',
+        'muslprti-daily-prayer-times-style',
         plugins_url('style.css', __FILE__),
         array(),
         filemtime(plugin_dir_path(__FILE__) . 'style.css')
@@ -36,11 +36,11 @@ function prayertimes_register_daily_prayer_times_block() {
 
     // Register the block
     register_block_type('prayer-times/daily-prayer-times', array(
-        'editor_script' => 'prayertimes-daily-prayer-times-block',
-        'editor_style' => 'prayertimes-daily-prayer-times-style',
-        'style' => 'prayertimes-daily-prayer-times-style',
-        'script' => 'prayertimes-prayer-times-carousel',
-        'render_callback' => 'prayertimes_render_daily_prayer_times_block',
+        'editor_script' => 'muslprti-daily-prayer-times-block',
+        'editor_style' => 'muslprti-daily-prayer-times-style',
+        'style' => 'muslprti-daily-prayer-times-style',
+        'script' => 'muslprti-prayer-times-carousel',
+        'render_callback' => 'muslprti_render_daily_prayer_times_block',
         'attributes' => array(
             'className' => array(
                 'type' => 'string',
@@ -89,21 +89,21 @@ function prayertimes_register_daily_prayer_times_block() {
         ),
     ));
 }
-add_action('init', 'prayertimes_register_daily_prayer_times_block');
+add_action('init', 'muslprti_register_daily_prayer_times_block');
 
 /**
  * Render the Daily Muslim Prayer Times block on the frontend
  */
-function prayertimes_render_daily_prayer_times_block($attributes) {
+function muslprti_render_daily_prayer_times_block($attributes) {
     global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Load Hijri date converter
     require_once plugin_dir_path(dirname(dirname(__FILE__))) . 'includes/hijri-date-converter.php';
     
     // Get timezone from settings
-    $opts = get_option('prayertimes_settings', []);
-    $timezone = prayertimes_get_timezone();
+    $opts = get_option('muslprti_settings', []);
+    $timezone = muslprti_get_timezone();
     $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
     
     // Create DateTime object with timezone
@@ -191,7 +191,7 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
     $showArrows = isset($attributes['showArrows']) ? $attributes['showArrows'] : true;
     
     // Get time format from settings
-    $opts = get_option('prayertimes_settings', []);
+    $opts = get_option('muslprti_settings', []);
     $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
     
     // Create inline styles
@@ -242,7 +242,7 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         // If no prayer times for this day, create an empty slide with a message
         if (!$prayer_times) {
             $output .= '<div class="prayer-times-carousel-item">';
-            $output .= '<p>No prayer times available for ' . prayertimes_date('l, F j, Y', strtotime($current_date)) . '</p>';
+            $output .= '<p>No prayer times available for ' . muslprti_date('l, F j, Y', strtotime($current_date)) . '</p>';
             $output .= '</div>';
             continue;
         }
@@ -273,9 +273,9 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
                 $time = strtotime($prayer_times[$column]);
                 // Format the time based on the global time format setting
                 if ($time_format === '24hour') {
-                    $formatted_times[$column] = prayertimes_date('H:i', $time);
+                    $formatted_times[$column] = muslprti_date('H:i', $time);
                 } else {
-                    $formatted_times[$column] = prayertimes_date('g:i A', $time);
+                    $formatted_times[$column] = muslprti_date('g:i A', $time);
                 }
             }
         }
@@ -284,15 +284,15 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         $output .= '<div class="prayer-times-carousel-item">';
         
         // Format date for display
-        $display_date = prayertimes_date('l, F j, Y', strtotime($current_date));
+        $display_date = muslprti_date('l, F j, Y', strtotime($current_date));
         
         // Get Hijri date
         $hijri_date = '';
         if ($showHijriDate) {
             // Get hijri offset from settings
-            $opts = get_option('prayertimes_settings', []);
+            $opts = get_option('muslprti_settings', []);
             $hijri_offset = isset($opts['hijri_offset']) ? intval($opts['hijri_offset']) : 0;
-            $hijri_date = prayertimes_convert_to_hijri($current_date, true, 'en', $hijri_offset);
+            $hijri_date = muslprti_convert_to_hijri($current_date, true, 'en', $hijri_offset);
         }
         
         // Add date if enabled
@@ -362,7 +362,7 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         $output .= '</tbody></table>';
         
         // Add Jumuah times if available in settings
-        $opts = get_option('prayertimes_settings', []);
+        $opts = get_option('muslprti_settings', []);
         $jumuah1 = isset($opts['jumuah1']) && !empty($opts['jumuah1']) ? $opts['jumuah1'] : '';
         $jumuah2 = isset($opts['jumuah2']) && !empty($opts['jumuah2']) ? $opts['jumuah2'] : '';
         $jumuah3 = isset($opts['jumuah3']) && !empty($opts['jumuah3']) ? $opts['jumuah3'] : '';
@@ -376,25 +376,25 @@ function prayertimes_render_daily_prayer_times_block($attributes) {
         if (!empty($jumuah1)) {
             $jumuah1_time = strtotime($jumuah1);
             if ($time_format === '24hour') {
-                $jumuah1 = prayertimes_date('H:i', $jumuah1_time);
+                $jumuah1 = muslprti_date('H:i', $jumuah1_time);
             } else {
-                $jumuah1 = prayertimes_date('g:i A', $jumuah1_time);
+                $jumuah1 = muslprti_date('g:i A', $jumuah1_time);
             }
         }
         if (!empty($jumuah2)) {
             $jumuah2_time = strtotime($jumuah2);
             if ($time_format === '24hour') {
-                $jumuah2 = prayertimes_date('H:i', $jumuah2_time);
+                $jumuah2 = muslprti_date('H:i', $jumuah2_time);
             } else {
-                $jumuah2 = prayertimes_date('g:i A', $jumuah2_time);
+                $jumuah2 = muslprti_date('g:i A', $jumuah2_time);
             }
         }
         if (!empty($jumuah3)) {
             $jumuah3_time = strtotime($jumuah3);
             if ($time_format === '24hour') {
-                $jumuah3 = prayertimes_date('H:i', $jumuah3_time);
+                $jumuah3 = muslprti_date('H:i', $jumuah3_time);
             } else {
-                $jumuah3 = prayertimes_date('g:i A', $jumuah3_time);
+                $jumuah3 = muslprti_date('g:i A', $jumuah3_time);
             }
         }
 

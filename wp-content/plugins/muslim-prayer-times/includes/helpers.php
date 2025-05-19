@@ -3,7 +3,7 @@
 if (!defined('ABSPATH')) exit;
 
 // Helper function to convert DateTime to minutes since midnight
-function prayertimes_time_to_minutes(DateTime $time) {
+function muslprti_time_to_minutes(DateTime $time) {
     // Get hours and minutes
     $hours = (int)$time->format('G');   // 24-hour format without leading zeros
     $minutes = (int)$time->format('i');
@@ -23,7 +23,7 @@ function prayertimes_time_to_minutes(DateTime $time) {
 }
 
 // Helper function to normalize time by subtracting one hour if date is in DST
-function prayertimes_normalize_time_for_dst(DateTime $time) {
+function muslprti_normalize_time_for_dst(DateTime $time) {
     $normalized_time = clone $time;
     
     // Check if DST is in effect
@@ -38,7 +38,7 @@ function prayertimes_normalize_time_for_dst(DateTime $time) {
 }
 
 // Helper function to denormalize time by adding one hour if date is in DST
-function prayertimes_denormalize_time_for_dst(DateTime $time) {
+function muslprti_denormalize_time_for_dst(DateTime $time) {
     $denormalized_time = clone $time;
     
     // Check if DST is in effect
@@ -53,7 +53,7 @@ function prayertimes_denormalize_time_for_dst(DateTime $time) {
 }
 
 // Helper function to normalize all athan times in the days_data array
-function prayertimes_normalize_times_for_dst($days_data) {
+function muslprti_normalize_times_for_dst($days_data) {
     $normalized_days_data = [];
     foreach ($days_data as $day_index => $day_data) {
         $normalized_days_data[$day_index] = [
@@ -63,7 +63,7 @@ function prayertimes_normalize_times_for_dst($days_data) {
         
         // Normalize all available athan times
         foreach ($day_data['athan'] as $prayer => $time) {
-            $normalized_days_data[$day_index]['athan'][$prayer] = prayertimes_normalize_time_for_dst($time);
+            $normalized_days_data[$day_index]['athan'][$prayer] = muslprti_normalize_time_for_dst($time);
         }
     }
     
@@ -77,8 +77,8 @@ function prayertimes_normalize_times_for_dst($days_data) {
  * @param int|null $timestamp Optional Unix timestamp (current time if null)
  * @return string Formatted date/time string with correct timezone
  */
-function prayertimes_date($format, $timestamp = null) {
-    $timezone = prayertimes_get_timezone();
+function muslprti_date($format, $timestamp = null) {
+    $timezone = muslprti_get_timezone();
     $tz_object = new DateTimeZone($timezone);
     
     if ($timestamp === null) {
@@ -91,14 +91,14 @@ function prayertimes_date($format, $timestamp = null) {
 }
 
 // Helper function to round a time down to the nearest X minutes
-function prayertimes_round_down(DateTime $time, $rounding_minutes = 1) {
+function muslprti_round_down(DateTime $time, $rounding_minutes = 1) {
     if ($rounding_minutes <= 1) {
         return $time; // No need to round if rounding is set to 1 minute
     }
     
     $timestamp = $time->getTimestamp();
-    $minutes = prayertimes_date('i', $timestamp);
-    $seconds = prayertimes_date('s', $timestamp);
+    $minutes = muslprti_date('i', $timestamp);
+    $seconds = muslprti_date('s', $timestamp);
     $total_seconds = ($minutes * 60) + $seconds;
     
     // Convert rounding_minutes to seconds
@@ -127,14 +127,14 @@ function prayertimes_round_down(DateTime $time, $rounding_minutes = 1) {
 }
 
 // Helper function to round a time up to the nearest X minutes
-function prayertimes_round_up(DateTime $time, $rounding_minutes = 1) {
+function muslprti_round_up(DateTime $time, $rounding_minutes = 1) {
     if ($rounding_minutes <= 1) {
         return $time; // No need to round if rounding is set to 1 minute
     }
     
     $timestamp = $time->getTimestamp();
-    $minutes = prayertimes_date('i', $timestamp);
-    $seconds = prayertimes_date('s', $timestamp);
+    $minutes = muslprti_date('i', $timestamp);
+    $seconds = muslprti_date('s', $timestamp);
     $total_seconds = ($minutes * 60) + $seconds;
     
     // Convert rounding_minutes to seconds
@@ -168,11 +168,11 @@ function prayertimes_round_up(DateTime $time, $rounding_minutes = 1) {
 }
 
 // Helper function to calculate Fajr Iqama times for a collection of days
-function prayertimes_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_after, $fajr_minutes_before_shuruq, $is_weekly, $fajr_rounding) {
+function muslprti_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_after, $fajr_minutes_before_shuruq, $is_weekly, $fajr_rounding) {
     $results = [];
     
     // Use the new helper function to normalize all times
-    $normalized_days_data = prayertimes_normalize_times_for_dst($days_data);
+    $normalized_days_data = muslprti_normalize_times_for_dst($days_data);
     
     // Find latest Athan for weekly calculation
     $latest_fajr = null;
@@ -181,18 +181,18 @@ function prayertimes_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_
     if ($is_weekly) {
         foreach ($normalized_days_data as $day_data) {
             if ($latest_fajr === null || 
-                prayertimes_time_to_minutes($day_data['athan']['fajr']) > prayertimes_time_to_minutes($latest_fajr)) {
+                muslprti_time_to_minutes($day_data['athan']['fajr']) > muslprti_time_to_minutes($latest_fajr)) {
                 $latest_fajr = clone $day_data['athan']['fajr'];
             }
             if ($latest_sunrise === null || 
-                prayertimes_time_to_minutes($day_data['athan']['sunrise']) > prayertimes_time_to_minutes($latest_sunrise)) {
+                muslprti_time_to_minutes($day_data['athan']['sunrise']) > muslprti_time_to_minutes($latest_sunrise)) {
                 $latest_sunrise = clone $day_data['athan']['sunrise'];
             }
         }
         
         // Apply rounding to the latest times
-        $latest_fajr = prayertimes_round_up($latest_fajr, $fajr_rounding);
-        $latest_sunrise = prayertimes_round_down($latest_sunrise, $fajr_rounding);
+        $latest_fajr = muslprti_round_up($latest_fajr, $fajr_rounding);
+        $latest_sunrise = muslprti_round_down($latest_sunrise, $fajr_rounding);
     }
     
     // Process each day
@@ -232,7 +232,7 @@ function prayertimes_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_
         
         // Denormalize the result to account for DST before storing
         // Use the original date for denormalization to maintain correct DST information
-        $day_fajr_iqama = prayertimes_denormalize_time_for_dst($day_fajr_iqama);
+        $day_fajr_iqama = muslprti_denormalize_time_for_dst($day_fajr_iqama);
         
         $results[$day_index] = $day_fajr_iqama;
     }
@@ -241,11 +241,11 @@ function prayertimes_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_
 }
 
 // Helper function to calculate Dhuhr Iqama times for a collection of days
-function prayertimes_calculate_dhuhr_iqama($days_data, $dhuhr_rule, $dhuhr_minutes_after, $dhuhr_fixed_standard, $dhuhr_fixed_dst, $is_weekly, $dhuhr_rounding) {
+function muslprti_calculate_dhuhr_iqama($days_data, $dhuhr_rule, $dhuhr_minutes_after, $dhuhr_fixed_standard, $dhuhr_fixed_dst, $is_weekly, $dhuhr_rounding) {
     $results = [];
     
     // Use the new helper function to normalize all times
-    $normalized_days_data = prayertimes_normalize_times_for_dst($days_data);
+    $normalized_days_data = muslprti_normalize_times_for_dst($days_data);
     
     // Find latest Athan for weekly calculation
     $latest_dhuhr = null;
@@ -253,13 +253,13 @@ function prayertimes_calculate_dhuhr_iqama($days_data, $dhuhr_rule, $dhuhr_minut
     if ($is_weekly) {
         foreach ($normalized_days_data as $day_data) {
             if ($latest_dhuhr === null || 
-                prayertimes_time_to_minutes($day_data['athan']['dhuhr']) > prayertimes_time_to_minutes($latest_dhuhr)) {
+                muslprti_time_to_minutes($day_data['athan']['dhuhr']) > muslprti_time_to_minutes($latest_dhuhr)) {
                 $latest_dhuhr = clone $day_data['athan']['dhuhr'];
             }
         }
         
         // Apply rounding to the latest time
-        $latest_dhuhr = prayertimes_round_up($latest_dhuhr, $dhuhr_rounding);
+        $latest_dhuhr = muslprti_round_up($latest_dhuhr, $dhuhr_rounding);
     }
     
     // Process each day
@@ -282,7 +282,7 @@ function prayertimes_calculate_dhuhr_iqama($days_data, $dhuhr_rule, $dhuhr_minut
                 list($hours, $minutes) = explode(':', $fixed_time);
                 $day_dhuhr_iqama = clone $day_date;
                 $day_dhuhr_iqama->setTime((int)$hours, (int)$minutes);
-                $day_dhuhr_iqama = prayertimes_normalize_time_for_dst($day_dhuhr_iqama);
+                $day_dhuhr_iqama = muslprti_normalize_time_for_dst($day_dhuhr_iqama);
             }
         } else {
             // Daily calculation
@@ -294,13 +294,13 @@ function prayertimes_calculate_dhuhr_iqama($days_data, $dhuhr_rule, $dhuhr_minut
                 list($hours, $minutes) = explode(':', $fixed_time);
                 $day_dhuhr_iqama = clone $day_date;
                 $day_dhuhr_iqama->setTime((int)$hours, (int)$minutes);
-                $day_dhuhr_iqama = prayertimes_normalize_time_for_dst($day_dhuhr_iqama);
+                $day_dhuhr_iqama = muslprti_normalize_time_for_dst($day_dhuhr_iqama);
             }
         }
         
         // Denormalize the result to account for DST before storing
         // Use the original date for denormalization to maintain correct DST information
-        $day_dhuhr_iqama = prayertimes_denormalize_time_for_dst($day_dhuhr_iqama);
+        $day_dhuhr_iqama = muslprti_denormalize_time_for_dst($day_dhuhr_iqama);
         
         $results[$day_index] = $day_dhuhr_iqama;
     }
@@ -309,11 +309,11 @@ function prayertimes_calculate_dhuhr_iqama($days_data, $dhuhr_rule, $dhuhr_minut
 }
 
 // Helper function to calculate Asr Iqama times for a collection of days
-function prayertimes_calculate_asr_iqama($days_data, $asr_rule, $asr_minutes_after, $asr_fixed_standard, $asr_fixed_dst, $is_weekly, $asr_rounding) {
+function muslprti_calculate_asr_iqama($days_data, $asr_rule, $asr_minutes_after, $asr_fixed_standard, $asr_fixed_dst, $is_weekly, $asr_rounding) {
     $results = [];
     
     // Use the new helper function to normalize all times
-    $normalized_days_data = prayertimes_normalize_times_for_dst($days_data);
+    $normalized_days_data = muslprti_normalize_times_for_dst($days_data);
     
     // Find latest Athan for weekly calculation
     $latest_asr = null;
@@ -321,13 +321,13 @@ function prayertimes_calculate_asr_iqama($days_data, $asr_rule, $asr_minutes_aft
     if ($is_weekly) {
         foreach ($normalized_days_data as $day_data) {
             if ($latest_asr === null || 
-                prayertimes_time_to_minutes($day_data['athan']['asr']) > prayertimes_time_to_minutes($latest_asr)) {
+                muslprti_time_to_minutes($day_data['athan']['asr']) > muslprti_time_to_minutes($latest_asr)) {
                 $latest_asr = clone $day_data['athan']['asr'];
             }
         }
         
         // Apply rounding to the latest time
-        $latest_asr = prayertimes_round_up($latest_asr, $asr_rounding);
+        $latest_asr = muslprti_round_up($latest_asr, $asr_rounding);
     }
     
     // Process each day
@@ -350,7 +350,7 @@ function prayertimes_calculate_asr_iqama($days_data, $asr_rule, $asr_minutes_aft
                 list($hours, $minutes) = explode(':', $fixed_time);
                 $day_asr_iqama = clone $day_date;
                 $day_asr_iqama->setTime((int)$hours, (int)$minutes);
-                $day_asr_iqama = prayertimes_normalize_time_for_dst($day_asr_iqama);    
+                $day_asr_iqama = muslprti_normalize_time_for_dst($day_asr_iqama);    
             }
         } else {
             // Daily calculation
@@ -362,13 +362,13 @@ function prayertimes_calculate_asr_iqama($days_data, $asr_rule, $asr_minutes_aft
                 list($hours, $minutes) = explode(':', $fixed_time);
                 $day_asr_iqama = clone $day_date;
                 $day_asr_iqama->setTime((int)$hours, (int)$minutes);
-                $day_asr_iqama = prayertimes_normalize_time_for_dst($day_asr_iqama);
+                $day_asr_iqama = muslprti_normalize_time_for_dst($day_asr_iqama);
             }
         }
         
         // Denormalize the result to account for DST before storing
         // Use the original date for denormalization to maintain correct DST information
-        $day_asr_iqama = prayertimes_denormalize_time_for_dst($day_asr_iqama);
+        $day_asr_iqama = muslprti_denormalize_time_for_dst($day_asr_iqama);
         
         $results[$day_index] = $day_asr_iqama;
     }
@@ -377,11 +377,11 @@ function prayertimes_calculate_asr_iqama($days_data, $asr_rule, $asr_minutes_aft
 }
 
 // Helper function to calculate Maghrib Iqama times for a collection of days
-function prayertimes_calculate_maghrib_iqama($days_data, $maghrib_minutes_after, $is_weekly, $maghrib_rounding) {
+function muslprti_calculate_maghrib_iqama($days_data, $maghrib_minutes_after, $is_weekly, $maghrib_rounding) {
     $results = [];
     
     // Use the new helper function to normalize all times
-    $normalized_days_data = prayertimes_normalize_times_for_dst($days_data);
+    $normalized_days_data = muslprti_normalize_times_for_dst($days_data);
     
     // Find latest Athan for weekly calculation
     $latest_maghrib = null;
@@ -389,13 +389,13 @@ function prayertimes_calculate_maghrib_iqama($days_data, $maghrib_minutes_after,
     if ($is_weekly) {
         foreach ($normalized_days_data as $day_data) {
             if ($latest_maghrib === null || 
-                prayertimes_time_to_minutes($day_data['athan']['maghrib']) > prayertimes_time_to_minutes($latest_maghrib)) {
+                muslprti_time_to_minutes($day_data['athan']['maghrib']) > muslprti_time_to_minutes($latest_maghrib)) {
                 $latest_maghrib = clone $day_data['athan']['maghrib'];
             }
         }
         
         // Apply rounding to the latest time
-        $latest_maghrib = prayertimes_round_up($latest_maghrib, $maghrib_rounding);
+        $latest_maghrib = muslprti_round_up($latest_maghrib, $maghrib_rounding);
     }
     
     // Process each day
@@ -418,7 +418,7 @@ function prayertimes_calculate_maghrib_iqama($days_data, $maghrib_minutes_after,
         
         // Denormalize the result to account for DST before storing
         // Use the original date for denormalization to maintain correct DST information
-        $day_maghrib_iqama = prayertimes_denormalize_time_for_dst($day_maghrib_iqama);
+        $day_maghrib_iqama = muslprti_denormalize_time_for_dst($day_maghrib_iqama);
         
         $results[$day_index] = $day_maghrib_iqama;
     }
@@ -427,11 +427,11 @@ function prayertimes_calculate_maghrib_iqama($days_data, $maghrib_minutes_after,
 }
 
 // Helper function to calculate Isha Iqama times for a collection of days
-function prayertimes_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_after, $isha_min_time, $isha_max_time, $is_weekly, $isha_rounding) {
+function muslprti_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_after, $isha_min_time, $isha_max_time, $is_weekly, $isha_rounding) {
     $results = [];
     
     // Use the new helper function to normalize all times
-    $normalized_days_data = prayertimes_normalize_times_for_dst($days_data);
+    $normalized_days_data = muslprti_normalize_times_for_dst($days_data);
     
     // Find latest Athan for weekly calculation
     $latest_isha = null;
@@ -439,13 +439,13 @@ function prayertimes_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_
     if ($is_weekly) {
         foreach ($normalized_days_data as $day_data) {
             if ($latest_isha === null || 
-                prayertimes_time_to_minutes($day_data['athan']['isha']) > prayertimes_time_to_minutes($latest_isha)) {
+                muslprti_time_to_minutes($day_data['athan']['isha']) > muslprti_time_to_minutes($latest_isha)) {
                 $latest_isha = clone $day_data['athan']['isha'];
             }
         }
         
         // Apply rounding to the latest time
-        $latest_isha = prayertimes_round_up($latest_isha, $isha_rounding);
+        $latest_isha = muslprti_round_up($latest_isha, $isha_rounding);
     }
     
     // Process each day
@@ -475,26 +475,26 @@ function prayertimes_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_
         $min_isha_time = clone $day_date;
         list($hours, $minutes) = explode(':', $isha_min_time);
         $min_isha_time->setTime((int)$hours, (int)$minutes);
-        $min_isha_time = prayertimes_normalize_time_for_dst($min_isha_time);
+        $min_isha_time = muslprti_normalize_time_for_dst($min_isha_time);
         
         $max_isha_time = clone $day_date;
         list($hours, $minutes) = explode(':', $isha_max_time);
         $max_isha_time->setTime((int)$hours, (int)$minutes);
-        $max_isha_time = prayertimes_normalize_time_for_dst($max_isha_time);
+        $max_isha_time = muslprti_normalize_time_for_dst($max_isha_time);
         
         // Use the greater of either athan+minutes or min_isha_time
-        if (prayertimes_time_to_minutes($day_isha_iqama) < prayertimes_time_to_minutes($min_isha_time)) {
+        if (muslprti_time_to_minutes($day_isha_iqama) < muslprti_time_to_minutes($min_isha_time)) {
             $day_isha_iqama = $min_isha_time;
         }
         
         // Apply max time constraint
-        if (prayertimes_time_to_minutes($day_isha_iqama) > prayertimes_time_to_minutes($max_isha_time)) {
+        if (muslprti_time_to_minutes($day_isha_iqama) > muslprti_time_to_minutes($max_isha_time)) {
             $day_isha_iqama = $max_isha_time;
         }
         
         // Denormalize the result to account for DST before storing
         // Use the original date for denormalization to maintain correct DST information
-        $day_isha_iqama = prayertimes_denormalize_time_for_dst($day_isha_iqama);
+        $day_isha_iqama = muslprti_denormalize_time_for_dst($day_isha_iqama);
         
         $results[$day_index] = $day_isha_iqama;
     }
@@ -508,7 +508,7 @@ function prayertimes_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_
  * @param string|int|float $number The number or string containing numbers to convert
  * @return string The input with Western numerals converted to Arabic numerals
  */
-function prayertimes_convert_to_arabic_numerals($number) {
+function muslprti_convert_to_arabic_numerals($number) {
     // Define mapping of Western to Arabic numerals
     $western_numerals = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     $arabic_numerals  = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -525,9 +525,9 @@ function prayertimes_convert_to_arabic_numerals($number) {
  * 
  * @return string The timezone identifier
  */
-function prayertimes_get_timezone() {
+function muslprti_get_timezone() {
     // Get timezone from options
-    $opts = get_option('prayertimes_settings', []);
+    $opts = get_option('muslprti_settings', []);
     $tz = isset($opts['tz']) ? $opts['tz'] : null;
     
     // If timezone is not set in options, use WordPress timezone

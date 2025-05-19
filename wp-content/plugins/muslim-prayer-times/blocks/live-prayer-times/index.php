@@ -11,33 +11,33 @@ require_once plugin_dir_path(dirname(dirname(__FILE__))) . 'includes/hijri-date-
 /**
  * Enqueues the block editor script and adds plugin URL data
  */
-function prayertimes_live_prayer_times_editor_assets() {
+function muslprti_live_prayer_times_editor_assets() {
     // Get the block script
     $block_script = plugins_url('block.js', __FILE__);
     
     // Register the script with WordPress
     wp_register_script(
-        'prayertimes-live-prayer-times-block',
+        'muslprti-live-prayer-times-block',
         $block_script,
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
         filemtime(plugin_dir_path(__FILE__) . 'block.js')
     );
     
     // Add plugin URL data to be used in JavaScript
-    wp_localize_script('prayertimes-live-prayer-times-block', 'wpPrayerTimesData', array(
+    wp_localize_script('muslprti-live-prayer-times-block', 'wpPrayerTimesData', array(
         'pluginUrl' => plugins_url('', dirname(dirname(__FILE__)))
     ));
 }
-add_action('enqueue_block_editor_assets', 'prayertimes_live_prayer_times_editor_assets');
+add_action('enqueue_block_editor_assets', 'muslprti_live_prayer_times_editor_assets');
 
 /**
  * Enqueues frontend scripts for the block
  */
-function prayertimes_live_prayer_times_frontend_assets() {
+function muslprti_live_prayer_times_frontend_assets() {
     // Only enqueue on frontend, not in admin
     if (!is_admin()) {
         wp_enqueue_script(
-            'prayertimes-live-prayer-times-frontend',
+            'muslprti-live-prayer-times-frontend',
             plugins_url('frontend.js', __FILE__),
             array('jquery'),
             filemtime(plugin_dir_path(__FILE__) . 'frontend.js'),
@@ -45,22 +45,22 @@ function prayertimes_live_prayer_times_frontend_assets() {
         );
         
         // Add AJAX URL and nonce for frontend use
-        wp_localize_script('prayertimes-live-prayer-times-frontend', 'prayerTimesLiveData', array(
+        wp_localize_script('muslprti-live-prayer-times-frontend', 'prayerTimesLiveData', array(
             'ajaxUrl' => rest_url('prayer-times/v1/times'),
             'nonce' => wp_create_nonce('wp_rest'),
             'timezone' => wp_timezone_string()
         ));
     }
 }
-add_action('wp_enqueue_scripts', 'prayertimes_live_prayer_times_frontend_assets');
+add_action('wp_enqueue_scripts', 'muslprti_live_prayer_times_frontend_assets');
 
 /**
  * Register REST API endpoint for prayer times
  */
-function prayertimes_register_prayer_times_endpoints() {
+function muslprti_register_prayer_times_endpoints() {
     register_rest_route('prayer-times/v1', '/times/(?P<date>\d{4}-\d{2}-\d{2})', array(
         'methods' => 'GET',
-        'callback' => 'prayertimes_get_times_for_date',
+        'callback' => 'muslprti_get_times_for_date',
         'permission_callback' => '__return_true',
         'args' => array(
             'date' => array(
@@ -71,20 +71,20 @@ function prayertimes_register_prayer_times_endpoints() {
         ),
     ));
 }
-add_action('rest_api_init', 'prayertimes_register_prayer_times_endpoints');
+add_action('rest_api_init', 'muslprti_register_prayer_times_endpoints');
 
 /**
  * Handle the REST API request for prayer times
  */
-function prayertimes_get_times_for_date($request) {
+function muslprti_get_times_for_date($request) {
     global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Get requested date
     $date = $request->get_param('date');
     
     // Get settings
-    $opts = get_option('prayertimes_settings', []);
+    $opts = get_option('muslprti_settings', []);
     $timeFormat = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
     
     // Get prayer times for the requested date
@@ -131,9 +131,9 @@ function prayertimes_get_times_for_date($request) {
             $time = strtotime($prayer_times[$column]);
             
             if ($timeFormat === '24hour') {
-                $formatted_times[$column] = prayertimes_date('H:i', $time);
+                $formatted_times[$column] = muslprti_date('H:i', $time);
             } else {
-                $formatted_times[$column] = prayertimes_date('g:i A', $time);
+                $formatted_times[$column] = muslprti_date('g:i A', $time);
             }
         } else {
             $formatted_times[$column] = '-';
@@ -146,9 +146,9 @@ function prayertimes_get_times_for_date($request) {
     // Get hijri offset from settings
     $hijri_offset = isset($opts['hijri_offset']) ? intval($opts['hijri_offset']) : 0;
     
-    if (function_exists('prayertimes_convert_to_hijri')) {
-        $hijri_date = prayertimes_convert_to_hijri($prayer_times['day'], true, 'en', $hijri_offset);
-        $hijri_date_arabic = prayertimes_convert_to_hijri($prayer_times['day'], true, 'ar', $hijri_offset);
+    if (function_exists('muslprti_convert_to_hijri')) {
+        $hijri_date = muslprti_convert_to_hijri($prayer_times['day'], true, 'en', $hijri_offset);
+        $hijri_date_arabic = muslprti_convert_to_hijri($prayer_times['day'], true, 'ar', $hijri_offset);
     }
     
     // Check for upcoming changes in the next 3 days
@@ -164,7 +164,7 @@ function prayertimes_get_times_for_date($request) {
     if ($next_days) {
         foreach ($next_days as $next_day) {
             $changes_for_day = array();
-            $date_formatted = prayertimes_date('D, M j', strtotime($next_day['day']));
+            $date_formatted = muslprti_date('D, M j', strtotime($next_day['day']));
             
             // Loop through each prayer time column
             foreach ($next_day as $column => $value) {
@@ -183,9 +183,9 @@ function prayertimes_get_times_for_date($request) {
                     $time = strtotime($value);
                     
                     if ($timeFormat === '24hour') {
-                        $formatted_time = prayertimes_date('H:i', $time);
+                        $formatted_time = muslprti_date('H:i', $time);
                     } else {
-                        $formatted_time = prayertimes_date('g:i A', $time);
+                        $formatted_time = muslprti_date('g:i A', $time);
                     }
                     
                     $changes_for_day[$column] = array(
@@ -207,7 +207,7 @@ function prayertimes_get_times_for_date($request) {
     }
     
     // Format date for display
-    $display_date = prayertimes_date('l, F j, Y', strtotime($prayer_times['day']));
+    $display_date = muslprti_date('l, F j, Y', strtotime($prayer_times['day']));
     
     // Get Jumuah times from settings
     $jumuah_times = array();
@@ -225,12 +225,12 @@ function prayertimes_get_times_for_date($request) {
         if ($timeFormat === '24hour') {
             $jumuah_times[] = array(
                 'name' => $jumuah1_name,
-                'time' => prayertimes_date('H:i', $jumuah1_time)
+                'time' => muslprti_date('H:i', $jumuah1_time)
             );
         } else {
             $jumuah_times[] = array(
                 'name' => $jumuah1_name,
-                'time' => prayertimes_date('g:i A', $jumuah1_time)
+                'time' => muslprti_date('g:i A', $jumuah1_time)
             );
         }
     }
@@ -240,12 +240,12 @@ function prayertimes_get_times_for_date($request) {
         if ($timeFormat === '24hour') {
             $jumuah_times[] = array(
                 'name' => $jumuah2_name,
-                'time' => prayertimes_date('H:i', $jumuah2_time)
+                'time' => muslprti_date('H:i', $jumuah2_time)
             );
         } else {
             $jumuah_times[] = array(
                 'name' => $jumuah2_name,
-                'time' => prayertimes_date('g:i A', $jumuah2_time)
+                'time' => muslprti_date('g:i A', $jumuah2_time)
             );
         }
     }
@@ -255,12 +255,12 @@ function prayertimes_get_times_for_date($request) {
         if ($timeFormat === '24hour') {
             $jumuah_times[] = array(
                 'name' => $jumuah3_name,
-                'time' => prayertimes_date('H:i', $jumuah3_time)
+                'time' => muslprti_date('H:i', $jumuah3_time)
             );
         } else {
             $jumuah_times[] = array(
                 'name' => $jumuah3_name,
-                'time' => prayertimes_date('g:i A', $jumuah3_time)
+                'time' => muslprti_date('g:i A', $jumuah3_time)
             );
         }
     }

@@ -8,8 +8,8 @@ use IslamicNetwork\PrayerTimes\PrayerTimes;
 require_once __DIR__ . '/includes/helpers.php';
 
 // AJAX handler for geocoding
-function prayertimes_handle_geocode() {
-    check_ajax_referer('prayertimes_geocode_nonce', 'nonce');
+function muslprti_handle_geocode() {
+    check_ajax_referer('muslprti_geocode_nonce', 'nonce');
     
     $address = isset($_POST['address']) ? sanitize_text_field($_POST['address']) : '';
     
@@ -53,11 +53,11 @@ function prayertimes_handle_geocode() {
     
     wp_send_json_success($result);
 }
-add_action('wp_ajax_prayertimes_geocode', 'prayertimes_handle_geocode');
+add_action('wp_ajax_muslprti_geocode', 'muslprti_handle_geocode');
 
 // AJAX handler for prayer times generation - refactored version
-function prayertimes_handle_generate() {
-    check_ajax_referer('prayertimes_generate_nonce', 'nonce');
+function muslprti_handle_generate() {
+    check_ajax_referer('muslprti_generate_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error('You do not have permission to generate prayer times');
@@ -74,7 +74,7 @@ function prayertimes_handle_generate() {
         }
         
         // Get saved settings
-        $opts = get_option('prayertimes_settings', []);
+        $opts = get_option('muslprti_settings', []);
         $latitude = isset($opts['lat']) ? $opts['lat'] : 47.7623;
         $longitude = isset($opts['lng']) ? $opts['lng'] : -122.2054;
         $timezone = isset($opts['tz']) ? $opts['tz'] : 'America/Los_Angeles';
@@ -252,7 +252,7 @@ function prayertimes_handle_generate() {
                 // Process the current batch of days
                 
                 // Calculate iqama times using our helper functions
-                $fajr_iqamas = prayertimes_calculate_fajr_iqama(
+                $fajr_iqamas = muslprti_calculate_fajr_iqama(
                     $week_days_data, 
                     $fajr_rule, 
                     $fajr_minutes_after, 
@@ -261,7 +261,7 @@ function prayertimes_handle_generate() {
                     $fajr_rounding
                 );
                 
-                $dhuhr_iqamas = prayertimes_calculate_dhuhr_iqama(
+                $dhuhr_iqamas = muslprti_calculate_dhuhr_iqama(
                     $week_days_data, 
                     $dhuhr_rule, 
                     $dhuhr_minutes_after, 
@@ -271,7 +271,7 @@ function prayertimes_handle_generate() {
                     $dhuhr_rounding
                 );
                 
-                $asr_iqamas = prayertimes_calculate_asr_iqama(
+                $asr_iqamas = muslprti_calculate_asr_iqama(
                     $week_days_data, 
                     $asr_rule, 
                     $asr_minutes_after, 
@@ -281,14 +281,14 @@ function prayertimes_handle_generate() {
                     $asr_rounding
                 );
                 
-                $maghrib_iqamas = prayertimes_calculate_maghrib_iqama(
+                $maghrib_iqamas = muslprti_calculate_maghrib_iqama(
                     $week_days_data, 
                     $maghrib_minutes_after, 
                     $is_weekly && !$maghrib_daily_change,
                     $maghrib_rounding
                 );
                 
-                $isha_iqamas = prayertimes_calculate_isha_iqama(
+                $isha_iqamas = muslprti_calculate_isha_iqama(
                     $week_days_data, 
                     $isha_rule, 
                     $isha_minutes_after, 
@@ -362,7 +362,7 @@ function prayertimes_handle_generate() {
         error_log('Muslim Prayer Times Generate: Generated ' . count($csv_data) . ' rows');
         
         wp_send_json_success([
-            'filename' => 'prayer_times_' . prayertimes_date('Y-m-d') . '.csv',
+            'filename' => 'prayer_times_' . muslprti_date('Y-m-d') . '.csv',
             'content' => $csv_content
         ]);
         
@@ -371,11 +371,11 @@ function prayertimes_handle_generate() {
         wp_send_json_error('Error generating prayer times: ' . $e->getMessage());
     }
 }
-add_action('wp_ajax_prayertimes_generate_times', 'prayertimes_handle_generate');
+add_action('wp_ajax_muslprti_generate_times', 'muslprti_handle_generate');
 
 // Add new AJAX handler for exporting prayer times from database
-function prayertimes_handle_export_db() {
-    check_ajax_referer('prayertimes_export_db_nonce', 'nonce');
+function muslprti_handle_export_db() {
+    check_ajax_referer('muslprti_export_db_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error('You do not have permission to export prayer times');
@@ -383,11 +383,11 @@ function prayertimes_handle_export_db() {
     }
     
     global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     try {
         // Get the current date
-        $now = new DateTime('now', new DateTimeZone(prayertimes_get_timezone()));
+        $now = new DateTime('now', new DateTimeZone(muslprti_get_timezone()));
         $start_date = $now->format('Y-m-d');
         
         // Get the date 365 days from now
@@ -422,17 +422,17 @@ function prayertimes_handle_export_db() {
                 $row = $existing_days[$date_str];
                 $csv_data[] = [
                     $row['day'],
-                    $row['fajr_athan'] ? prayertimes_date('g:i A', strtotime($row['fajr_athan'])) : '',
-                    $row['fajr_iqama'] ? prayertimes_date('g:i A', strtotime($row['fajr_iqama'])) : '',
-                    $row['sunrise'] ? prayertimes_date('g:i A', strtotime($row['sunrise'])) : '',
-                    $row['dhuhr_athan'] ? prayertimes_date('g:i A', strtotime($row['dhuhr_athan'])) : '',
-                    $row['dhuhr_iqama'] ? prayertimes_date('g:i A', strtotime($row['dhuhr_iqama'])) : '',
-                    $row['asr_athan'] ? prayertimes_date('g:i A', strtotime($row['asr_athan'])) : '',
-                    $row['asr_iqama'] ? prayertimes_date('g:i A', strtotime($row['asr_iqama'])) : '',
-                    $row['maghrib_athan'] ? prayertimes_date('g:i A', strtotime($row['maghrib_athan'])) : '',
-                    $row['maghrib_iqama'] ? prayertimes_date('g:i A', strtotime($row['maghrib_iqama'])) : '',
-                    $row['isha_athan'] ? prayertimes_date('g:i A', strtotime($row['isha_athan'])) : '',
-                    $row['isha_iqama'] ? prayertimes_date('g:i A', strtotime($row['isha_iqama'])) : ''
+                    $row['fajr_athan'] ? muslprti_date('g:i A', strtotime($row['fajr_athan'])) : '',
+                    $row['fajr_iqama'] ? muslprti_date('g:i A', strtotime($row['fajr_iqama'])) : '',
+                    $row['sunrise'] ? muslprti_date('g:i A', strtotime($row['sunrise'])) : '',
+                    $row['dhuhr_athan'] ? muslprti_date('g:i A', strtotime($row['dhuhr_athan'])) : '',
+                    $row['dhuhr_iqama'] ? muslprti_date('g:i A', strtotime($row['dhuhr_iqama'])) : '',
+                    $row['asr_athan'] ? muslprti_date('g:i A', strtotime($row['asr_athan'])) : '',
+                    $row['asr_iqama'] ? muslprti_date('g:i A', strtotime($row['asr_iqama'])) : '',
+                    $row['maghrib_athan'] ? muslprti_date('g:i A', strtotime($row['maghrib_athan'])) : '',
+                    $row['maghrib_iqama'] ? muslprti_date('g:i A', strtotime($row['maghrib_iqama'])) : '',
+                    $row['isha_athan'] ? muslprti_date('g:i A', strtotime($row['isha_athan'])) : '',
+                    $row['isha_iqama'] ? muslprti_date('g:i A', strtotime($row['isha_iqama'])) : ''
                 ];
             } else {
                 // Day doesn't exist, add empty row with just the date
@@ -452,7 +452,7 @@ function prayertimes_handle_export_db() {
         }
         
         wp_send_json_success([
-            'filename' => 'prayer_times_db_' . prayertimes_date('Y-m-d') . '.csv',
+            'filename' => 'prayer_times_db_' . muslprti_date('Y-m-d') . '.csv',
             'content' => $csv_content
         ]);
         
@@ -460,11 +460,11 @@ function prayertimes_handle_export_db() {
         wp_send_json_error('Error exporting prayer times: ' . $e->getMessage());
     }
 }
-add_action('wp_ajax_prayertimes_export_db', 'prayertimes_handle_export_db');
+add_action('wp_ajax_muslprti_export_db', 'muslprti_handle_export_db');
 
 // AJAX handler for import preview
-function prayertimes_handle_import_preview() {
-    check_ajax_referer('prayertimes_import_preview_nonce', 'nonce');
+function muslprti_handle_import_preview() {
+    check_ajax_referer('muslprti_import_preview_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Permission denied');
@@ -580,11 +580,11 @@ function prayertimes_handle_import_preview() {
         'total_rows' => count($rows) 
     ));
 }
-add_action('wp_ajax_prayertimes_import_preview', 'prayertimes_handle_import_preview');
+add_action('wp_ajax_muslprti_import_preview', 'muslprti_handle_import_preview');
 
 // AJAX handler for the actual import
-function prayertimes_handle_import() {
-    check_ajax_referer('prayertimes_import_nonce', 'nonce');
+function muslprti_handle_import() {
+    check_ajax_referer('muslprti_import_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Permission denied');
@@ -597,7 +597,7 @@ function prayertimes_handle_import() {
     }
     
     global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     $file = $_FILES['import_file'];
     
@@ -722,11 +722,11 @@ function prayertimes_handle_import() {
         'errors' => $errors
     ));
 }
-add_action('wp_ajax_prayertimes_import', 'prayertimes_handle_import');
+add_action('wp_ajax_muslprti_import', 'muslprti_handle_import');
 
 // Add AJAX handler for Hijri date preview
-function prayertimes_handle_hijri_preview() {
-    check_ajax_referer('prayertimes_hijri_preview_nonce', 'nonce');
+function muslprti_handle_hijri_preview() {
+    check_ajax_referer('muslprti_hijri_preview_nonce', 'nonce');
     
     // Get the offset from the request
     $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
@@ -738,11 +738,11 @@ function prayertimes_handle_hijri_preview() {
     require_once __DIR__ . '/includes/hijri-date-converter.php';
     
     // Get today's date and convert to Hijri with the offset
-    $today = prayertimes_date('Y-m-d');
-    $hijri_date = prayertimes_convert_to_hijri($today, true, 'en', $offset);
+    $today = muslprti_date('Y-m-d');
+    $hijri_date = muslprti_convert_to_hijri($today, true, 'en', $offset);
     
     wp_send_json_success([
         'hijri_date' => $hijri_date
     ]);
 }
-add_action('wp_ajax_prayertimes_preview_hijri', 'prayertimes_handle_hijri_preview');
+add_action('wp_ajax_muslprti_preview_hijri', 'muslprti_handle_hijri_preview');

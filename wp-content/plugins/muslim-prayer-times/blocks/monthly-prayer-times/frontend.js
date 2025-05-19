@@ -102,11 +102,11 @@ jQuery(document).ready(function($) {
         // Function to check if a month has prayer times
         function checkMonthAvailability(month, year, callback) {
             $.ajax({
-                url: prayertimes_monthly_ajax.ajax_url,
+                url: muslprti_monthly_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'prayertimes_check_month_availability',
-                    nonce: prayertimes_monthly_ajax.nonce,
+                    action: 'muslprti_check_month_availability',
+                    nonce: muslprti_monthly_ajax.nonce,
                     month: month,
                     year: year
                 },
@@ -132,11 +132,11 @@ jQuery(document).ready(function($) {
             
             // Make AJAX request
             $.ajax({
-                url: prayertimes_monthly_ajax.ajax_url,
+                url: muslprti_monthly_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'prayertimes_monthly_prayer_times_pagination',
-                    nonce: prayertimes_monthly_ajax.nonce,
+                    action: 'muslprti_monthly_prayer_times_pagination',
+                    nonce: muslprti_monthly_ajax.nonce,
                     month: month,
                     year: year,
                     show_sunrise: showSunrise ? '1' : '0',

@@ -16,21 +16,21 @@ if (!defined('ABSPATH')) exit;
 use IslamicNetwork\PrayerTimes\PrayerTimes;
 
 // Define table name as a constant
-define('PRAYERTIMES_IQAMA_TABLE', 'prayertimes_iqama_times');
+define('MUSLPRTI_IQAMA_TABLE', 'muslprti_iqama_times');
 
 // Define version for database upgrades
-define('PRAYERTIMES_DB_VERSION', '1.1');
+define('MUSLPRTI_DB_VERSION', '1.1');
 
 // Include the upgrade script
 require_once __DIR__ . '/includes/upgrade.php';
 
 // Add this after the plugin activation function or near the end of the file
-function prayertimes_check_for_upgrades() {
-    $current_db_version = get_option('prayertimes_db_version', '1.0');
+function muslprti_check_for_upgrades() {
+    $current_db_version = get_option('muslprti_db_version', '1.0');
     
     // If the database version is outdated, run upgrades
-    if (version_compare($current_db_version, PRAYERTIMES_DB_VERSION, '<')) {
-        $result = prayertimes_upgrade_database();
+    if (version_compare($current_db_version, MUSLPRTI_DB_VERSION, '<')) {
+        $result = muslprti_upgrade_database();
         if ($result) {
             // Optionally show an admin notice that upgrade was successful
             add_action('admin_notices', function() {
@@ -39,16 +39,16 @@ function prayertimes_check_for_upgrades() {
         }
     }
 }
-add_action('plugins_loaded', 'prayertimes_check_for_upgrades');
+add_action('plugins_loaded', 'muslprti_check_for_upgrades');
 
 // Plugin activation hook
-register_activation_hook(__FILE__, 'prayertimes_plugin_activate');
+register_activation_hook(__FILE__, 'muslprti_plugin_activate');
 
 // Setup database tables and initial data
-function prayertimes_plugin_activate() {
+function muslprti_plugin_activate() {
     global $wpdb;
     
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     $charset_collate = $wpdb->get_charset_collate();
     
     // SQL to create the iqama times table
@@ -76,7 +76,7 @@ function prayertimes_plugin_activate() {
 }
 
 // Admin notice for missing dependencies
-function prayertimes_missing_dependencies_notice() {
+function muslprti_missing_dependencies_notice() {
     ?>
     <div class="notice notice-error">
         <p>
@@ -88,15 +88,15 @@ function prayertimes_missing_dependencies_notice() {
 }
 
 // Settings defaults
-function prayertimes_get_option($key, $default) {
-    $opts = get_option('prayertimes_settings', []);
+function muslprti_get_option($key, $default) {
+    $opts = get_option('muslprti_settings', []);
     return isset($opts[$key]) ? $opts[$key] : $default;
 }
 
 /**
  * Register custom block category for Muslim Prayer Times blocks
  */
-function prayer_times_register_block_category($categories) {
+function muslprti_register_block_category($categories) {
     return array_merge(
         $categories,
         [
@@ -109,9 +109,9 @@ function prayer_times_register_block_category($categories) {
     );
 }
 // For WordPress 5.8+
-add_filter('block_categories_all', 'prayer_times_register_block_category');
+add_filter('block_categories_all', 'muslprti_register_block_category');
 // For backwards compatibility (pre WordPress 5.8)
-add_filter('block_categories', 'prayer_times_register_block_category');
+add_filter('block_categories', 'muslprti_register_block_category');
 
 
 // --- Settings Page ---

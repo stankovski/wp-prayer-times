@@ -60,17 +60,17 @@ class HelpersTest extends TestCase {
         $time4 = new DateTime('2023-01-01 00:00:00', new DateTimeZone('UTC')); // Midnight
 
         // Test with standard time (non-DST)
-        $this->assertEquals(330, prayertimes_time_to_minutes($time1)); // 5:30 = (5*60) + 30 = 330
-        $this->assertEquals(825, prayertimes_time_to_minutes($time2)); // 13:45 = (13*60) + 45 = 825
-        $this->assertEquals(1395, prayertimes_time_to_minutes($time3)); // 23:15 = (23*60) + 15 = 1395
-        $this->assertEquals(0, prayertimes_time_to_minutes($time4)); // 00:00 = 0
+        $this->assertEquals(330, muslprti_time_to_minutes($time1)); // 5:30 = (5*60) + 30 = 330
+        $this->assertEquals(825, muslprti_time_to_minutes($time2)); // 13:45 = (13*60) + 45 = 825
+        $this->assertEquals(1395, muslprti_time_to_minutes($time3)); // 23:15 = (23*60) + 15 = 1395
+        $this->assertEquals(0, muslprti_time_to_minutes($time4)); // 00:00 = 0
 
         // Create a DateTime with DST in effect
         $dst_time = new DateTime('2023-07-01 14:30:00', new DateTimeZone('America/New_York'));
         
         // Mock the actual DST check by replacing the real function
         if (function_exists('runkit7_function_redefine')) {
-            runkit7_function_redefine('prayertimes_time_to_minutes', function($time) {
+            runkit7_function_redefine('muslprti_time_to_minutes', function($time) {
                 $hours = (int)$time->format('G');
                 $minutes = (int)$time->format('i');
                 $total_minutes = ($hours * 60) + $minutes;
@@ -83,7 +83,7 @@ class HelpersTest extends TestCase {
             });
             
             // With DST, 14:30 should return (14*60)+30-60 = 810
-            $this->assertEquals(810, prayertimes_time_to_minutes($dst_time));
+            $this->assertEquals(810, muslprti_time_to_minutes($dst_time));
         }
     }
 
@@ -93,29 +93,29 @@ class HelpersTest extends TestCase {
     public function testRoundDown() {
         // Test with no rounding (default 1 minute)
         $time = new DateTime('2023-01-01 13:45:30', new DateTimeZone('UTC'));
-        $result = prayertimes_round_down($time);
+        $result = muslprti_round_down($time);
         $this->assertEquals('13:45:30', $result->format('H:i:s'));
         $this->assertEquals($time->format('Y-m-d'), $result->format('Y-m-d')); // Date unchanged
         $this->assertEquals($time->getTimezone()->getName(), $result->getTimezone()->getName()); // Timezone unchanged
 
         // Test with 5 minute rounding
         $time = new DateTime('2023-01-01 13:47:30');
-        $result = prayertimes_round_down($time, 5);
+        $result = muslprti_round_down($time, 5);
         $this->assertEquals('13:45:00', $result->format('H:i:s'));
 
         // Test with 15 minute rounding
         $time = new DateTime('2023-01-01 13:59:59');
-        $result = prayertimes_round_down($time, 15);
+        $result = muslprti_round_down($time, 15);
         $this->assertEquals('13:45:00', $result->format('H:i:s'));
 
         // Test exact match to interval (should stay the same)
         $time = new DateTime('2023-01-01 13:45:00');
-        $result = prayertimes_round_down($time, 15);
+        $result = muslprti_round_down($time, 15);
         $this->assertEquals('13:45:00', $result->format('H:i:s'));
 
         // Test hour change
         $time = new DateTime('2023-01-01 14:01:30');
-        $result = prayertimes_round_down($time, 30);
+        $result = muslprti_round_down($time, 30);
         $this->assertEquals('14:00:00', $result->format('H:i:s'));
     }
 
@@ -125,29 +125,29 @@ class HelpersTest extends TestCase {
     public function testRoundUp() {
         // Test with no rounding (default 1 minute)
         $time = new DateTime('2023-01-01 13:45:30', new DateTimeZone('UTC'));
-        $result = prayertimes_round_up($time);
+        $result = muslprti_round_up($time);
         $this->assertEquals('13:45:30', $result->format('H:i:s')); // No change
         $this->assertEquals($time->format('Y-m-d'), $result->format('Y-m-d')); // Date unchanged
         $this->assertEquals($time->getTimezone()->getName(), $result->getTimezone()->getName()); // Timezone unchanged
 
         // Test with 5 minute rounding
         $time = new DateTime('2023-01-01 13:42:01');
-        $result = prayertimes_round_up($time, 5);
+        $result = muslprti_round_up($time, 5);
         $this->assertEquals('13:45:00', $result->format('H:i:s'));
 
         // Test with 15 minute rounding
         $time = new DateTime('2023-01-01 13:31:00');
-        $result = prayertimes_round_up($time, 15);
+        $result = muslprti_round_up($time, 15);
         $this->assertEquals('13:45:00', $result->format('H:i:s'));
 
         // Test exact match to interval (should stay the same)
         $time = new DateTime('2023-01-01 13:45:00');
-        $result = prayertimes_round_up($time, 15);
+        $result = muslprti_round_up($time, 15);
         $this->assertEquals('13:45:00', $result->format('H:i:s'));
 
         // Test hour change
         $time = new DateTime('2023-01-01 13:59:30');
-        $result = prayertimes_round_up($time, 5);
+        $result = muslprti_round_up($time, 5);
         $this->assertEquals('14:00:00', $result->format('H:i:s'));
     }
 
@@ -174,7 +174,7 @@ class HelpersTest extends TestCase {
         ];
 
         // Test after_athan rule with daily calculation
-        $results = prayertimes_calculate_fajr_iqama(
+        $results = muslprti_calculate_fajr_iqama(
             $days_data, 'after_athan', 20, 0, false, 5
         );
         
@@ -182,7 +182,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('05:51:00', $results[1]->format('H:i:s'));
 
         // Test after_athan rule with weekly calculation
-        $results = prayertimes_calculate_fajr_iqama(
+        $results = muslprti_calculate_fajr_iqama(
             $days_data, 'after_athan', 20, 0, true, 5
         );
         
@@ -190,7 +190,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('05:55:00', $results[1]->format('H:i:s'));
 
         // Test before_shuruq rule with daily calculation
-        $results = prayertimes_calculate_fajr_iqama(
+        $results = muslprti_calculate_fajr_iqama(
             $days_data, 'before_shuruq', 0, 45, false, 5
         );
         
@@ -198,7 +198,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('06:31:00', $results[1]->format('H:i:s'));
 
         // Test before_shuruq rule with weekly calculation
-        $results = prayertimes_calculate_fajr_iqama(
+        $results = muslprti_calculate_fajr_iqama(
             $days_data, 'before_shuruq', 0, 45, true, 5
         );
         
@@ -236,7 +236,7 @@ class HelpersTest extends TestCase {
         ];
 
         // Test after_athan rule with daily calculation
-        $results = prayertimes_calculate_fajr_iqama(
+        $results = muslprti_calculate_fajr_iqama(
             $days_data, 'after_athan', 20, 0, false, 5
         );
         
@@ -248,7 +248,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('06:52:00', $results[2]->format('H:i:s'));
 
         // Test after_athan rule with weekly calculation
-        $results = prayertimes_calculate_fajr_iqama(
+        $results = muslprti_calculate_fajr_iqama(
             $days_data, 'after_athan', 20, 0, true, 5
         );
         
@@ -257,7 +257,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('06:50:00', $results[2]->format('H:i:s'));
 
         // Test before_shuruq rule with daily calculation
-        $results = prayertimes_calculate_fajr_iqama(
+        $results = muslprti_calculate_fajr_iqama(
             $days_data, 'before_shuruq', 0, 45, false, 5
         );
         
@@ -266,7 +266,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('07:32:00', $results[2]->format('H:i:s'));
 
         // Test before_shuruq rule with weekly calculation
-        $results = prayertimes_calculate_fajr_iqama(
+        $results = muslprti_calculate_fajr_iqama(
             $days_data, 'before_shuruq', 0, 45, true, 5
         );
         
@@ -296,7 +296,7 @@ class HelpersTest extends TestCase {
         ];
 
         // Test after_athan rule with daily calculation
-        $results = prayertimes_calculate_dhuhr_iqama(
+        $results = muslprti_calculate_dhuhr_iqama(
             $days_data, 'after_athan', 15, '13:30', '14:30', false, 5
         );
         
@@ -304,7 +304,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('12:46:00', $results[1]->format('H:i:s'));
 
         // Test with weekly calculation
-        $results = prayertimes_calculate_dhuhr_iqama(
+        $results = muslprti_calculate_dhuhr_iqama(
             $days_data, 'after_athan', 15, '13:30', '14:30', true, 15
         );
         
@@ -312,7 +312,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('14:00:00', $results[1]->format('H:i:s'));
 
         // Test fixed_time rule
-        $results = prayertimes_calculate_dhuhr_iqama(
+        $results = muslprti_calculate_dhuhr_iqama(
             $days_data, 'fixed_time', 0, '13:30', '14:30', false, 5
         );
         
@@ -354,7 +354,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals(1, $days_data[2]['athan']['dhuhr']->format('I'));  // March 13 - DST
 
         // Test after_athan rule with daily calculation
-        $results = prayertimes_calculate_dhuhr_iqama(
+        $results = muslprti_calculate_dhuhr_iqama(
             $days_data, 'after_athan', 15, '13:30', '14:30', false, 5
         );
         
@@ -363,7 +363,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('13:47:00', $results[2]->format('H:i:s'));
 
         // Test after_athan rule with weekly calculation
-        $results = prayertimes_calculate_dhuhr_iqama(
+        $results = muslprti_calculate_dhuhr_iqama(
             $days_data, 'after_athan', 15, '13:30', '14:30', true, 5
         );
         
@@ -372,7 +372,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('13:45:00', $results[2]->format('H:i:s'));
 
         // Test fixed_time rule
-        $results = prayertimes_calculate_dhuhr_iqama(
+        $results = muslprti_calculate_dhuhr_iqama(
             $days_data, 'fixed_time', 0, '13:00', '14:00', false, 5
         );
         
@@ -402,14 +402,14 @@ class HelpersTest extends TestCase {
         ];
 
         // Test with daily calculation
-        $results = prayertimes_calculate_maghrib_iqama(
+        $results = muslprti_calculate_maghrib_iqama(
             $days_data, 10, false, 5
         );
         
         $this->assertEquals('17:55:00', $results[0]->format('H:i:s'));
         $this->assertEquals('17:57:00', $results[1]->format('H:i:s'));
 
-        $results = prayertimes_calculate_maghrib_iqama(
+        $results = muslprti_calculate_maghrib_iqama(
             $days_data, 10, true, 5
         );
         
@@ -449,7 +449,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals(1, $days_data[2]['athan']['maghrib']->format('I'));  // March 13 - DST
 
         // Test with daily calculation
-        $results = prayertimes_calculate_maghrib_iqama(
+        $results = muslprti_calculate_maghrib_iqama(
             $days_data, 10, false, 5
         );
         
@@ -458,7 +458,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('19:17:00', $results[2]->format('H:i:s'));
 
         // Test with weekly calculation
-        $results = prayertimes_calculate_maghrib_iqama(
+        $results = muslprti_calculate_maghrib_iqama(
             $days_data, 10, true, 5
         );
         
@@ -489,7 +489,7 @@ class HelpersTest extends TestCase {
         ];
 
         // Test after_athan rule with daily calculation
-        $results = prayertimes_calculate_isha_iqama(
+        $results = muslprti_calculate_isha_iqama(
             $days_data, 'after_athan', 15, '19:30', '21:00', false, 5
         );
         
@@ -497,7 +497,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('19:32:00', $results[1]->format('H:i:s'));
 
         // Test with minimum time constraint
-        $results = prayertimes_calculate_isha_iqama(
+        $results = muslprti_calculate_isha_iqama(
             $days_data, 'after_athan', 15, '19:30', '21:00', false, 5
         );
         
@@ -505,7 +505,7 @@ class HelpersTest extends TestCase {
 
         // Test with maximum time constraint
         $days_data[1]['athan']['isha'] = new DateTime('2023-01-02 20:55:00');
-        $results = prayertimes_calculate_isha_iqama(
+        $results = muslprti_calculate_isha_iqama(
             $days_data, 'after_athan', 15, '19:30', '21:00', false, 5
         );
         
@@ -514,7 +514,7 @@ class HelpersTest extends TestCase {
         // Test with weekly calculation
         $days_data[0]['athan']['isha'] = new DateTime('2023-01-01 19:16:00');
         $days_data[1]['athan']['isha'] = new DateTime('2023-01-02 19:20:00');
-        $results = prayertimes_calculate_isha_iqama(
+        $results = muslprti_calculate_isha_iqama(
             $days_data, 'after_athan', 15, '19:30', '21:00', true, 5
         );
         
@@ -554,7 +554,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals(1, $days_data[2]['athan']['isha']->format('I'));  // March 13 - DST
 
         // Test after_athan rule with daily calculation and min/max constraints
-        $results = prayertimes_calculate_isha_iqama(
+        $results = muslprti_calculate_isha_iqama(
             $days_data, 'after_athan', 15, '19:30', '21:00', false, 5
         );
         
@@ -564,7 +564,7 @@ class HelpersTest extends TestCase {
 
         // Test with minimum time constraint
         $days_data[0]['athan']['isha'] = new DateTime('2023-03-11 19:15:00', new DateTimeZone('America/New_York'));
-        $results = prayertimes_calculate_isha_iqama(
+        $results = muslprti_calculate_isha_iqama(
             $days_data, 'after_athan', 15, '19:35', '21:00', false, 5
         );
         
@@ -572,7 +572,7 @@ class HelpersTest extends TestCase {
 
         // Test with maximum time constraint
         $days_data[2]['athan']['isha'] = new DateTime('2023-03-13 20:55:00', new DateTimeZone('America/New_York'));
-        $results = prayertimes_calculate_isha_iqama(
+        $results = muslprti_calculate_isha_iqama(
             $days_data, 'after_athan', 15, '19:35', '21:00', false, 5
         );
         
@@ -583,7 +583,7 @@ class HelpersTest extends TestCase {
         $days_data[1]['athan']['isha'] = new DateTime('2023-03-12 20:26:00', new DateTimeZone('America/New_York'));
         $days_data[2]['athan']['isha'] = new DateTime('2023-03-13 20:27:00', new DateTimeZone('America/New_York'));
         
-        $results = prayertimes_calculate_isha_iqama(
+        $results = muslprti_calculate_isha_iqama(
             $days_data, 'after_athan', 15, '19:35', '21:00', true, 5
         );
         
@@ -614,7 +614,7 @@ class HelpersTest extends TestCase {
         ];
 
         // Test after_athan rule with daily calculation
-        $results = prayertimes_calculate_asr_iqama(
+        $results = muslprti_calculate_asr_iqama(
             $days_data, 'after_athan', 15, '16:00', '17:00', false, 5
         );
         
@@ -622,7 +622,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('15:47:00', $results[1]->format('H:i:s'));
 
         // Test fixed_time rule
-        $results = prayertimes_calculate_asr_iqama(
+        $results = muslprti_calculate_asr_iqama(
             $days_data, 'fixed_time', 0, '16:00', '17:00', false, 5
         );
         
@@ -630,7 +630,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('17:00:00', $results[1]->format('H:i:s'));
 
         // Test with weekly calculation
-        $results = prayertimes_calculate_asr_iqama(
+        $results = muslprti_calculate_asr_iqama(
             $days_data, 'after_athan', 15, '16:00', '17:00', true, 5
         );
         
@@ -671,7 +671,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals(1, $days_data[2]['athan']['asr']->format('I'));  // March 13 - DST
 
         // Test after_athan rule with daily calculation
-        $results = prayertimes_calculate_asr_iqama(
+        $results = muslprti_calculate_asr_iqama(
             $days_data, 'after_athan', 15, '16:00', '17:00', false, 5
         );
         
@@ -680,7 +680,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('16:47:00', $results[2]->format('H:i:s'));
 
         // Test fixed_time rule
-        $results = prayertimes_calculate_asr_iqama(
+        $results = muslprti_calculate_asr_iqama(
             $days_data, 'fixed_time', 0, '16:00', '17:00', false, 5
         );
         
@@ -689,7 +689,7 @@ class HelpersTest extends TestCase {
         $this->assertEquals('17:00:00', $results[2]->format('H:i:s'));  // DST
 
         // Test with weekly calculation
-        $results = prayertimes_calculate_asr_iqama(
+        $results = muslprti_calculate_asr_iqama(
             $days_data, 'after_athan', 15, '16:00', '17:00', true, 5
         );
         
@@ -707,7 +707,7 @@ class HelpersTest extends TestCase {
         $standard_time = new DateTime('2023-01-15 13:30:00', new DateTimeZone('America/New_York'));
         $this->assertEquals(0, $standard_time->format('I')); // Verify it's not DST
         
-        $result = prayertimes_normalize_time_for_dst($standard_time);
+        $result = muslprti_normalize_time_for_dst($standard_time);
         $this->assertEquals('13:30:00', $result->format('H:i:s')); // No change for non-DST
         $this->assertEquals($standard_time->format('Y-m-d'), $result->format('Y-m-d')); // Date unchanged
         $this->assertEquals($standard_time->getTimezone()->getName(), $result->getTimezone()->getName()); // Timezone unchanged
@@ -716,7 +716,7 @@ class HelpersTest extends TestCase {
         $dst_time = new DateTime('2023-07-15 13:30:00', new DateTimeZone('America/New_York'));
         $this->assertEquals(1, $dst_time->format('I')); // Verify it's DST
         
-        $result = prayertimes_normalize_time_for_dst($dst_time);
+        $result = muslprti_normalize_time_for_dst($dst_time);
         $this->assertEquals('12:30:00', $result->format('H:i:s')); // Should subtract 1 hour
         $this->assertEquals($dst_time->format('Y-m-d'), $result->format('Y-m-d')); // Date unchanged
         $this->assertEquals($dst_time->getTimezone()->getName(), $result->getTimezone()->getName()); // Timezone unchanged
@@ -730,7 +730,7 @@ class HelpersTest extends TestCase {
         $standard_time = new DateTime('2023-01-15 13:30:00', new DateTimeZone('America/New_York'));
         $this->assertEquals(0, $standard_time->format('I')); // Verify it's not DST
         
-        $result = prayertimes_denormalize_time_for_dst($standard_time);
+        $result = muslprti_denormalize_time_for_dst($standard_time);
         $this->assertEquals('13:30:00', $result->format('H:i:s')); // No change for non-DST
         $this->assertEquals($standard_time->format('Y-m-d'), $result->format('Y-m-d')); // Date unchanged
         $this->assertEquals($standard_time->getTimezone()->getName(), $result->getTimezone()->getName()); // Timezone unchanged
@@ -739,7 +739,7 @@ class HelpersTest extends TestCase {
         $dst_time = new DateTime('2023-07-15 13:30:00', new DateTimeZone('America/New_York'));
         $this->assertEquals(1, $dst_time->format('I')); // Verify it's DST
         
-        $result = prayertimes_denormalize_time_for_dst($dst_time);
+        $result = muslprti_denormalize_time_for_dst($dst_time);
         $this->assertEquals('14:30:00', $result->format('H:i:s')); // Should add 1 hour
         $this->assertEquals($dst_time->format('Y-m-d'), $result->format('Y-m-d')); // Date unchanged
         $this->assertEquals($dst_time->getTimezone()->getName(), $result->getTimezone()->getName()); // Timezone unchanged
@@ -754,11 +754,11 @@ class HelpersTest extends TestCase {
         $this->assertEquals(1, $original_time->format('I')); // Verify it's DST
         
         // Normalize (subtract hour)
-        $normalized = prayertimes_normalize_time_for_dst($original_time);
+        $normalized = muslprti_normalize_time_for_dst($original_time);
         $this->assertEquals('12:30:00', $normalized->format('H:i:s'));
         
         // Denormalize (add hour back)
-        $denormalized = prayertimes_denormalize_time_for_dst($normalized);
+        $denormalized = muslprti_denormalize_time_for_dst($normalized);
         $this->assertEquals('13:30:00', $denormalized->format('H:i:s'));
         $this->assertEquals($original_time->format('H:i:s'), $denormalized->format('H:i:s')); // Should match original
     }
@@ -786,15 +786,15 @@ class HelpersTest extends TestCase {
         ];
         
         // Manually normalize and check
-        $normalized_day0_fajr = prayertimes_normalize_time_for_dst($days_data[0]['athan']['fajr']);
-        $normalized_day1_fajr = prayertimes_normalize_time_for_dst($days_data[1]['athan']['fajr']);
+        $normalized_day0_fajr = muslprti_normalize_time_for_dst($days_data[0]['athan']['fajr']);
+        $normalized_day1_fajr = muslprti_normalize_time_for_dst($days_data[1]['athan']['fajr']);
         
         $this->assertEquals('06:30:00', $normalized_day0_fajr->format('H:i:s')); // No change for non-DST
         $this->assertEquals('05:30:00', $normalized_day1_fajr->format('H:i:s')); // -1 hour for DST
         
         // Denormalize and check
-        $denormalized_day0_fajr = prayertimes_denormalize_time_for_dst($normalized_day0_fajr);
-        $denormalized_day1_fajr = prayertimes_denormalize_time_for_dst($normalized_day1_fajr);
+        $denormalized_day0_fajr = muslprti_denormalize_time_for_dst($normalized_day0_fajr);
+        $denormalized_day1_fajr = muslprti_denormalize_time_for_dst($normalized_day1_fajr);
         
         $this->assertEquals('06:30:00', $denormalized_day0_fajr->format('H:i:s')); // No change for non-DST
         $this->assertEquals('06:30:00', $denormalized_day1_fajr->format('H:i:s')); // Should match original
@@ -805,29 +805,29 @@ class HelpersTest extends TestCase {
      */
     public function testConvertToArabicNumerals() {
         // Test with integer
-        $this->assertEquals('١٢٣٤٥', prayertimes_convert_to_arabic_numerals(12345));
+        $this->assertEquals('١٢٣٤٥', muslprti_convert_to_arabic_numerals(12345));
         
         // Test with string
-        $this->assertEquals('٦٧٨٩٠', prayertimes_convert_to_arabic_numerals('67890'));
+        $this->assertEquals('٦٧٨٩٠', muslprti_convert_to_arabic_numerals('67890'));
         
         // Test with mixed string
-        $this->assertEquals('Prayer time: ٥:٣٠', prayertimes_convert_to_arabic_numerals('Prayer time: 5:30'));
+        $this->assertEquals('Prayer time: ٥:٣٠', muslprti_convert_to_arabic_numerals('Prayer time: 5:30'));
         
         // Test with floating point number
-        $this->assertEquals('٣.١٤', prayertimes_convert_to_arabic_numerals(3.14));
+        $this->assertEquals('٣.١٤', muslprti_convert_to_arabic_numerals(3.14));
         
         // Test with string containing non-numeric characters
         $this->assertEquals('Fajr: ٠٥:١٥, Dhuhr: ١٢:٣٠', 
-            prayertimes_convert_to_arabic_numerals('Fajr: 05:15, Dhuhr: 12:30'));
+            muslprti_convert_to_arabic_numerals('Fajr: 05:15, Dhuhr: 12:30'));
         
         // Test with empty string
-        $this->assertEquals('', prayertimes_convert_to_arabic_numerals(''));
+        $this->assertEquals('', muslprti_convert_to_arabic_numerals(''));
         
         // Test with string containing no numerals
-        $this->assertEquals('No numbers here', prayertimes_convert_to_arabic_numerals('No numbers here'));
+        $this->assertEquals('No numbers here', muslprti_convert_to_arabic_numerals('No numbers here'));
         
         // Test with zero
-        $this->assertEquals('٠', prayertimes_convert_to_arabic_numerals(0));
+        $this->assertEquals('٠', muslprti_convert_to_arabic_numerals(0));
     }
     
     /**
@@ -840,22 +840,22 @@ class HelpersTest extends TestCase {
         // Test with specific known dates (these are approximate conversions)
         // January 1, 2023 ≈ Jumādá al-ākhirah 9, 1444
         $date1 = '2023-01-01';
-        $result1 = prayertimes_convert_to_hijri($date1);
+        $result1 = muslprti_convert_to_hijri($date1);
         $this->assertStringContainsString('8 Jumādá al-ākhirah 1444H', $result1);
         
         // May 15, 2023 ≈ Shawwāl 25, 1444
         $date2 = '2023-05-15';
-        $result2 = prayertimes_convert_to_hijri($date2);
+        $result2 = muslprti_convert_to_hijri($date2);
         $this->assertStringContainsString('25 Shawwāl 1444H', $result2);
         
         // Test with DateTime object
         $date3 = new DateTime('2023-03-10');
-        $result3 = prayertimes_convert_to_hijri($date3);
+        $result3 = muslprti_convert_to_hijri($date3);
         $this->assertStringContainsString('18 Shaʿbān 1444H', $result3);
         
         // Test non-formatted (array) return
         $date4 = '2023-01-15';
-        $result4 = prayertimes_convert_to_hijri($date4, false);
+        $result4 = muslprti_convert_to_hijri($date4, false);
         $this->assertIsArray($result4);
         $this->assertEquals(22, $result4['day']);
         $this->assertEquals(6, $result4['month']);
@@ -864,12 +864,12 @@ class HelpersTest extends TestCase {
         
         // Test Arabic language output
         $date5 = '2023-01-15';
-        $result5 = prayertimes_convert_to_hijri($date5, true, 'ar');
+        $result5 = muslprti_convert_to_hijri($date5, true, 'ar');
         $this->assertStringContainsString('22 جُمادى الآخرة 1444H', $result5);
 
         // Test Arabic language with non-formatted return
         $date6 = '2023-01-15';
-        $result6 = prayertimes_convert_to_hijri($date6, false, 'ar');
+        $result6 = muslprti_convert_to_hijri($date6, false, 'ar');
         $this->assertIsArray($result6);
         $this->assertEquals(22, $result6['day']);
         $this->assertEquals(6, $result6['month']);
@@ -878,9 +878,9 @@ class HelpersTest extends TestCase {
         
         // Test with offset parameter
         $date7 = '2023-01-01';
-        $result7a = prayertimes_convert_to_hijri($date7, true, 'en', 0);  // No offset
-        $result7b = prayertimes_convert_to_hijri($date7, true, 'en', 1);  // +1 day
-        $result7c = prayertimes_convert_to_hijri($date7, true, 'en', -1); // -1 day
+        $result7a = muslprti_convert_to_hijri($date7, true, 'en', 0);  // No offset
+        $result7b = muslprti_convert_to_hijri($date7, true, 'en', 1);  // +1 day
+        $result7c = muslprti_convert_to_hijri($date7, true, 'en', -1); // -1 day
         
         $this->assertStringContainsString('8 Jumādá al-ākhirah 1444H', $result7a);
         $this->assertStringContainsString('9 Jumādá al-ākhirah 1444H', $result7b);
@@ -888,13 +888,13 @@ class HelpersTest extends TestCase {
         
         // Test date crossing Hijri year boundary
         $date8 = '2023-07-19'; // Around Muḥarram 1, 1445
-        $result8 = prayertimes_convert_to_hijri($date8);
+        $result8 = muslprti_convert_to_hijri($date8);
         $this->assertStringContainsString('1 Muḥarram 1445H', $result8);
         
         // Test date crossing Hijri month boundary
         $date9 = '2023-02-20'; // End of Rajab to beginning of Sha'ban
-        $result9a = prayertimes_convert_to_hijri($date9, true, 'en', 0);
-        $result9b = prayertimes_convert_to_hijri($date9, true, 'en', 1);
+        $result9a = muslprti_convert_to_hijri($date9, true, 'en', 0);
+        $result9b = muslprti_convert_to_hijri($date9, true, 'en', 1);
         
         $this->assertStringContainsString('29 Rajab 1444H', $result9a);
         $this->assertStringContainsString('1 Shaʿbān 1444H', $result9b);
@@ -905,34 +905,34 @@ class HelpersTest extends TestCase {
      */
     public function testGetTimezone() {
         // Test when plugin timezone setting is set
-        $this->setOption('prayertimes_settings', ['tz' => 'America/Los_Angeles']);
-        $this->assertEquals('America/Los_Angeles', prayertimes_get_timezone());
+        $this->setOption('muslprti_settings', ['tz' => 'America/Los_Angeles']);
+        $this->assertEquals('America/Los_Angeles', muslprti_get_timezone());
         
         // Test when plugin timezone is not set but WordPress timezone is set
-        $this->setOption('prayertimes_settings', []);
+        $this->setOption('muslprti_settings', []);
         $this->setOption('timezone_string', 'Europe/London');
-        $this->assertEquals('Europe/London', prayertimes_get_timezone());
+        $this->assertEquals('Europe/London', muslprti_get_timezone());
         
         // Test when WordPress timezone is set as an offset
         $this->setOption('timezone_string', '');
         $this->setOption('gmt_offset', 5.5);
-        $this->assertEquals('UTC+5.5', prayertimes_get_timezone());
+        $this->assertEquals('UTC+5.5', muslprti_get_timezone());
         
         // Test negative offset
         $this->setOption('gmt_offset', -4);
-        $this->assertEquals('UTC-4', prayertimes_get_timezone());
+        $this->assertEquals('UTC-4', muslprti_get_timezone());
         
         // Test fallback to UTC
-        $this->setOption('prayertimes_settings', []);
+        $this->setOption('muslprti_settings', []);
         $this->setOption('timezone_string', '');
         $this->setOption('gmt_offset', 0);
-        $this->assertEquals('UTC', prayertimes_get_timezone());
+        $this->assertEquals('UTC', muslprti_get_timezone());
         $this->setOption('gmt_offset', '');
-        $this->assertEquals('UTC', prayertimes_get_timezone());
+        $this->assertEquals('UTC', muslprti_get_timezone());
         
         // Test empty settings
         global $wp_options;
         $wp_options = [];
-        $this->assertEquals('UTC', prayertimes_get_timezone());
+        $this->assertEquals('UTC', muslprti_get_timezone());
     }
 }

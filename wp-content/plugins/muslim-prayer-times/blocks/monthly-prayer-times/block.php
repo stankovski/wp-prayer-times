@@ -8,10 +8,10 @@ if (!defined('ABSPATH')) exit;
 /**
  * Register the block
  */
-function prayertimes_register_monthly_prayer_times_block() {
+function muslprti_register_monthly_prayer_times_block() {
     // Register block script
     wp_register_script(
-        'prayertimes-monthly-prayer-times-block',
+        'muslprti-monthly-prayer-times-block',
         plugins_url('block.js', __FILE__),
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
         filemtime(plugin_dir_path(__FILE__) . 'block.js')
@@ -19,7 +19,7 @@ function prayertimes_register_monthly_prayer_times_block() {
 
     // Register block styles
     wp_register_style(
-        'prayertimes-monthly-prayer-times-style',
+        'muslprti-monthly-prayer-times-style',
         plugins_url('style.css', __FILE__),
         array(),
         filemtime(plugin_dir_path(__FILE__) . 'style.css')
@@ -27,10 +27,10 @@ function prayertimes_register_monthly_prayer_times_block() {
 
     // Register the block
     register_block_type('prayer-times/monthly-prayer-times', array(
-        'editor_script' => 'prayertimes-monthly-prayer-times-block',
-        'editor_style' => 'prayertimes-monthly-prayer-times-style',
-        'style' => 'prayertimes-monthly-prayer-times-style',
-        'render_callback' => 'prayertimes_render_monthly_prayer_times_block',
+        'editor_script' => 'muslprti-monthly-prayer-times-block',
+        'editor_style' => 'muslprti-monthly-prayer-times-style',
+        'style' => 'muslprti-monthly-prayer-times-style',
+        'render_callback' => 'muslprti_render_monthly_prayer_times_block',
         'attributes' => array(
             'className' => array(
                 'type' => 'string',
@@ -79,17 +79,17 @@ function prayertimes_register_monthly_prayer_times_block() {
         ),
     ));
 }
-add_action('init', 'prayertimes_register_monthly_prayer_times_block');
+add_action('init', 'muslprti_register_monthly_prayer_times_block');
 
 /**
  * Render the Monthly Prayer Times block on the frontend
  */
-function prayertimes_render_monthly_prayer_times_block($attributes) {
+function muslprti_render_monthly_prayer_times_block($attributes) {
     global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Enqueue the frontend script
-    wp_enqueue_script('prayertimes-monthly-prayer-times-frontend');
+    wp_enqueue_script('muslprti-monthly-prayer-times-frontend');
     
     // Get block attributes
     $className = isset($attributes['className']) ? $attributes['className'] : '';
@@ -105,14 +105,14 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     $showPagination = isset($attributes['showPagination']) ? $attributes['showPagination'] : true;
     
     // Get timezone from settings
-    $timezone = prayertimes_get_timezone();
+    $timezone = muslprti_get_timezone();
     
     // Create DateTime object with timezone
     $datetime_zone = new DateTimeZone($timezone);
     $current_date = new DateTime('now', $datetime_zone);
     
     // Generate a unique ID for this instance
-    $block_id = 'prayertimes-monthly-' . uniqid();
+    $block_id = 'muslprti-monthly-' . uniqid();
     
     // Create inline styles
     $container_style = "text-align: {$align};";
@@ -214,7 +214,7 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
     
     // Table container
     $output .= '<div class="prayer-times-table-container">';
-    $output .= prayertimes_generate_monthly_prayer_times_table($prayer_times, $showSunrise, $showIqama, $highlightToday, $tableStyle, $header_style, $table_style);
+    $output .= muslprti_generate_monthly_prayer_times_table($prayer_times, $showSunrise, $showIqama, $highlightToday, $tableStyle, $header_style, $table_style);
     $output .= '</div>';
     
     $output .= '</div>';
@@ -225,9 +225,9 @@ function prayertimes_render_monthly_prayer_times_block($attributes) {
 /**
  * Generate the HTML table for monthly prayer times
  */
-function prayertimes_generate_monthly_prayer_times_table($prayer_times, $showSunrise, $showIqama, $highlightToday, $tableStyle, $header_style, $table_style) {
+function muslprti_generate_monthly_prayer_times_table($prayer_times, $showSunrise, $showIqama, $highlightToday, $tableStyle, $header_style, $table_style) {
     // Get timezone from settings
-    $timezone = prayertimes_get_timezone();
+    $timezone = muslprti_get_timezone();
     
     // Create DateTime object with timezone
     $datetime_zone = new DateTimeZone($timezone);
@@ -290,17 +290,17 @@ function prayertimes_generate_monthly_prayer_times_table($prayer_times, $showSun
         // Fajr column
         $output .= '<td class="prayer-column">';
         if ($showIqama && !empty($day['fajr_iqama'])) {
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['fajr_iqama'])) . '</span>';
-            $output .= '<span class="athan-time">Athan: ' . esc_html(prayertimes_format_prayer_time($day['fajr_athan'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['fajr_iqama'])) . '</span>';
+            $output .= '<span class="athan-time">Athan: ' . esc_html(muslprti_format_prayer_time($day['fajr_athan'])) . '</span>';
         } else {
-            $output .= '<span class="athan-time">' . esc_html(prayertimes_format_prayer_time($day['fajr_athan'])) . '</span>';
+            $output .= '<span class="athan-time">' . esc_html(muslprti_format_prayer_time($day['fajr_athan'])) . '</span>';
         }
         $output .= '</td>';
         
         // Fajr Iqama column (separate)
         if (!$showIqama && !empty($day['fajr_iqama'])) {
             $output .= '<td class="prayer-column iqama-column">';
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['fajr_iqama'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['fajr_iqama'])) . '</span>';
             $output .= '</td>';
         }
         
@@ -308,7 +308,7 @@ function prayertimes_generate_monthly_prayer_times_table($prayer_times, $showSun
         if ($showSunrise) {
             $output .= '<td class="prayer-column sunrise-column">';
             if (!empty($day['sunrise'])) {
-                $output .= '<span class="athan-time">' . esc_html(prayertimes_format_prayer_time($day['sunrise'])) . '</span>';
+                $output .= '<span class="athan-time">' . esc_html(muslprti_format_prayer_time($day['sunrise'])) . '</span>';
             } else {
                 $output .= '-';
             }
@@ -318,68 +318,68 @@ function prayertimes_generate_monthly_prayer_times_table($prayer_times, $showSun
         // Dhuhr column
         $output .= '<td class="prayer-column">';
         if ($showIqama && !empty($day['dhuhr_iqama'])) {
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['dhuhr_iqama'])) . '</span>';
-            $output .= '<span class="athan-time">Athan: ' . esc_html(prayertimes_format_prayer_time($day['dhuhr_athan'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['dhuhr_iqama'])) . '</span>';
+            $output .= '<span class="athan-time">Athan: ' . esc_html(muslprti_format_prayer_time($day['dhuhr_athan'])) . '</span>';
         } else {
-            $output .= '<span class="athan-time">' . esc_html(prayertimes_format_prayer_time($day['dhuhr_athan'])) . '</span>';
+            $output .= '<span class="athan-time">' . esc_html(muslprti_format_prayer_time($day['dhuhr_athan'])) . '</span>';
         }
         $output .= '</td>';
         
         // Dhuhr Iqama column (separate)
         if (!$showIqama && !empty($day['dhuhr_iqama'])) {
             $output .= '<td class="prayer-column iqama-column">';
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['dhuhr_iqama'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['dhuhr_iqama'])) . '</span>';
             $output .= '</td>';
         }
         
         // Asr column
         $output .= '<td class="prayer-column">';
         if ($showIqama && !empty($day['asr_iqama'])) {
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['asr_iqama'])) . '</span>';
-            $output .= '<span class="athan-time">Athan: ' . esc_html(prayertimes_format_prayer_time($day['asr_athan'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['asr_iqama'])) . '</span>';
+            $output .= '<span class="athan-time">Athan: ' . esc_html(muslprti_format_prayer_time($day['asr_athan'])) . '</span>';
         } else {
-            $output .= '<span class="athan-time">' . esc_html(prayertimes_format_prayer_time($day['asr_athan'])) . '</span>';
+            $output .= '<span class="athan-time">' . esc_html(muslprti_format_prayer_time($day['asr_athan'])) . '</span>';
         }
         $output .= '</td>';
         
         // Asr Iqama column (separate)
         if (!$showIqama && !empty($day['asr_iqama'])) {
             $output .= '<td class="prayer-column iqama-column">';
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['asr_iqama'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['asr_iqama'])) . '</span>';
             $output .= '</td>';
         }
         
         // Maghrib column
         $output .= '<td class="prayer-column">';
         if ($showIqama && !empty($day['maghrib_iqama'])) {
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['maghrib_iqama'])) . '</span>';
-            $output .= '<span class="athan-time">Athan: ' . esc_html(prayertimes_format_prayer_time($day['maghrib_athan'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['maghrib_iqama'])) . '</span>';
+            $output .= '<span class="athan-time">Athan: ' . esc_html(muslprti_format_prayer_time($day['maghrib_athan'])) . '</span>';
         } else {
-            $output .= '<span class="athan-time">' . esc_html(prayertimes_format_prayer_time($day['maghrib_athan'])) . '</span>';
+            $output .= '<span class="athan-time">' . esc_html(muslprti_format_prayer_time($day['maghrib_athan'])) . '</span>';
         }
         $output .= '</td>';
         
         // Maghrib Iqama column (separate)
         if (!$showIqama && !empty($day['maghrib_iqama'])) {
             $output .= '<td class="prayer-column iqama-column">';
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['maghrib_iqama'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['maghrib_iqama'])) . '</span>';
             $output .= '</td>';
         }
         
         // Isha column
         $output .= '<td class="prayer-column">';
         if ($showIqama && !empty($day['isha_iqama'])) {
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['isha_iqama'])) . '</span>';
-            $output .= '<span class="athan-time">Athan: ' . esc_html(prayertimes_format_prayer_time($day['isha_athan'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['isha_iqama'])) . '</span>';
+            $output .= '<span class="athan-time">Athan: ' . esc_html(muslprti_format_prayer_time($day['isha_athan'])) . '</span>';
         } else {
-            $output .= '<span class="athan-time">' . esc_html(prayertimes_format_prayer_time($day['isha_athan'])) . '</span>';
+            $output .= '<span class="athan-time">' . esc_html(muslprti_format_prayer_time($day['isha_athan'])) . '</span>';
         }
         $output .= '</td>';
         
         // Isha Iqama column (separate)
         if (!$showIqama && !empty($day['isha_iqama'])) {
             $output .= '<td class="prayer-column iqama-column">';
-            $output .= '<span class="iqama-time">' . esc_html(prayertimes_format_prayer_time($day['isha_iqama'])) . '</span>';
+            $output .= '<span class="iqama-time">' . esc_html(muslprti_format_prayer_time($day['isha_iqama'])) . '</span>';
             $output .= '</td>';
         }
         
@@ -394,15 +394,15 @@ function prayertimes_generate_monthly_prayer_times_table($prayer_times, $showSun
 /**
  * AJAX handler for pagination
  */
-function prayertimes_monthly_prayer_times_pagination() {
-    check_ajax_referer('prayertimes_monthly_prayer_times_nonce', 'nonce');
+function muslprti_monthly_prayer_times_pagination() {
+    check_ajax_referer('muslprti_monthly_prayer_times_nonce', 'nonce');
     
     global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Get parameters from the request
-    $month = isset($_POST['month']) ? intval($_POST['month']) : prayertimes_date('n');
-    $year = isset($_POST['year']) ? intval($_POST['year']) : prayertimes_date('Y');
+    $month = isset($_POST['month']) ? intval($_POST['month']) : muslprti_date('n');
+    $year = isset($_POST['year']) ? intval($_POST['year']) : muslprti_date('Y');
     $show_sunrise = isset($_POST['show_sunrise']) && $_POST['show_sunrise'] === '1';
     $show_iqama = isset($_POST['show_iqama']) && $_POST['show_iqama'] === '1';
     $highlight_today = isset($_POST['highlight_today']) && $_POST['highlight_today'] === '1';
@@ -437,7 +437,7 @@ function prayertimes_monthly_prayer_times_pagination() {
     $month_name = $start_of_month->format('F');
     
     // Generate table HTML
-    $table_html = prayertimes_generate_monthly_prayer_times_table(
+    $table_html = muslprti_generate_monthly_prayer_times_table(
         $prayer_times, 
         $show_sunrise, 
         $show_iqama, 
@@ -452,21 +452,21 @@ function prayertimes_monthly_prayer_times_pagination() {
         'month_name' => $month_name
     ]);
 }
-add_action('wp_ajax_prayertimes_monthly_prayer_times_pagination', 'prayertimes_monthly_prayer_times_pagination');
-add_action('wp_ajax_nopriv_prayertimes_monthly_prayer_times_pagination', 'prayertimes_monthly_prayer_times_pagination');
+add_action('wp_ajax_muslprti_monthly_prayer_times_pagination', 'muslprti_monthly_prayer_times_pagination');
+add_action('wp_ajax_nopriv_muslprti_monthly_prayer_times_pagination', 'muslprti_monthly_prayer_times_pagination');
 
 /**
  * AJAX handler to check if a month has prayer times
  */
-function prayertimes_check_month_availability() {
-    check_ajax_referer('prayertimes_monthly_prayer_times_nonce', 'nonce');
+function muslprti_check_month_availability() {
+    check_ajax_referer('muslprti_monthly_prayer_times_nonce', 'nonce');
     
     global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Get parameters from the request
-    $month = isset($_POST['month']) ? intval($_POST['month']) : prayertimes_date('n');
-    $year = isset($_POST['year']) ? intval($_POST['year']) : prayertimes_date('Y');
+    $month = isset($_POST['month']) ? intval($_POST['month']) : muslprti_date('n');
+    $year = isset($_POST['year']) ? intval($_POST['year']) : muslprti_date('Y');
     
     // Validate month and year
     if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
@@ -492,15 +492,15 @@ function prayertimes_check_month_availability() {
         'year' => $year
     ]);
 }
-add_action('wp_ajax_prayertimes_check_month_availability', 'prayertimes_check_month_availability');
-add_action('wp_ajax_nopriv_prayertimes_check_month_availability', 'prayertimes_check_month_availability');
+add_action('wp_ajax_muslprti_check_month_availability', 'muslprti_check_month_availability');
+add_action('wp_ajax_nopriv_muslprti_check_month_availability', 'muslprti_check_month_availability');
 
 /**
  * Helper function to format time based on global time format setting
  */
-function prayertimes_format_prayer_time($time_string) {
+function muslprti_format_prayer_time($time_string) {
     // Get time format from settings
-    $opts = get_option('prayertimes_settings', []);
+    $opts = get_option('muslprti_settings', []);
     $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
     
     // Parse time string to DateTime object
@@ -508,8 +508,8 @@ function prayertimes_format_prayer_time($time_string) {
     
     // Format according to setting
     if($time_format === '24hour') {
-        return prayertimes_date('H:i', $time);
+        return muslprti_date('H:i', $time);
     } else {
-        return prayertimes_date('g:i A', $time);
+        return muslprti_date('g:i A', $time);
     }
 }

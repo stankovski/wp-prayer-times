@@ -8,10 +8,10 @@ if (!defined('ABSPATH')) exit;
 /**
  * Register the block
  */
-function prayertimes_register_live_prayer_times_block() {
+function muslprti_register_live_prayer_times_block() {
     // Register block script
     wp_register_script(
-        'prayertimes-live-prayer-times-block',
+        'muslprti-live-prayer-times-block',
         plugins_url('block.js', __FILE__),
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
         filemtime(plugin_dir_path(__FILE__) . 'block.js')
@@ -19,7 +19,7 @@ function prayertimes_register_live_prayer_times_block() {
 
     // Register frontend script
     wp_register_script(
-        'prayertimes-live-prayer-times-frontend',
+        'muslprti-live-prayer-times-frontend',
         plugins_url('frontend.js', __FILE__),
         array('jquery'),
         filemtime(plugin_dir_path(__FILE__) . 'frontend.js'),
@@ -28,7 +28,7 @@ function prayertimes_register_live_prayer_times_block() {
 
     // Register block styles
     wp_register_style(
-        'prayertimes-live-prayer-times-style',
+        'muslprti-live-prayer-times-style',
         plugins_url('style.css', __FILE__),
         array(),
         filemtime(plugin_dir_path(__FILE__) . 'style.css')
@@ -36,11 +36,11 @@ function prayertimes_register_live_prayer_times_block() {
 
     // Register the block
     register_block_type('prayer-times/live-prayer-times', array(
-        'editor_script' => 'prayertimes-live-prayer-times-block',
-        'editor_style' => 'prayertimes-live-prayer-times-style',
-        'style' => 'prayertimes-live-prayer-times-style',
-        'script' => 'prayertimes-live-prayer-times-frontend',
-        'render_callback' => 'prayertimes_render_live_prayer_times_block',
+        'editor_script' => 'muslprti-live-prayer-times-block',
+        'editor_style' => 'muslprti-live-prayer-times-style',
+        'style' => 'muslprti-live-prayer-times-style',
+        'script' => 'muslprti-live-prayer-times-frontend',
+        'render_callback' => 'muslprti_render_live_prayer_times_block',
         'attributes' => array(
             'className' => array(
                 'type' => 'string',
@@ -117,20 +117,20 @@ function prayertimes_register_live_prayer_times_block() {
         ),
     ));
 }
-add_action('init', 'prayertimes_register_live_prayer_times_block');
+add_action('init', 'muslprti_register_live_prayer_times_block');
 
 /**
  * Render the Live Prayer Times block on the frontend
  */
-function prayertimes_render_live_prayer_times_block($attributes) {
+function muslprti_render_live_prayer_times_block($attributes) {
     // Load Hijri date converter if needed
     if (isset($attributes['showHijriDate']) && $attributes['showHijriDate']) {
         require_once plugin_dir_path(dirname(dirname(__FILE__))) . 'includes/hijri-date-converter.php';
     }
     
     // Get timezone from settings
-    $opts = get_option('prayertimes_settings', []);
-    $timezone = prayertimes_get_timezone();
+    $opts = get_option('muslprti_settings', []);
+    $timezone = muslprti_get_timezone();
     $timeFormat = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
 
     // Extract attributes for styling
@@ -209,7 +209,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
     );
     
     // Generate a unique ID for this block instance
-    $block_id = 'prayertimes-live-' . uniqid();
+    $block_id = 'muslprti-live-' . uniqid();
     
     // Build the HTML output
     $output = '<div id="' . esc_attr($block_id) . '" class="wp-block-prayer-times-live-prayer-times ' . esc_attr($className) . '" 
@@ -320,7 +320,7 @@ function prayertimes_render_live_prayer_times_block($attributes) {
 /**
  * Helper function to convert hex color to RGB
  */
-function prayertimes_hex2rgb($hex) {
+function muslprti_hex2rgb($hex) {
     $hex = str_replace('#', '', $hex);
     
     if(strlen($hex) == 3) {

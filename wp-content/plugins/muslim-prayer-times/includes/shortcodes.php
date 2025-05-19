@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
  * @param array $defaults Default values
  * @return array Block-compatible attributes
  */
-function prayertimes_convert_shortcode_atts_to_block_atts($atts, $defaults) {
+function muslprti_convert_shortcode_atts_to_block_atts($atts, $defaults) {
     // Parse shortcode attributes
     $atts = shortcode_atts($defaults, $atts);
     
@@ -35,7 +35,7 @@ function prayertimes_convert_shortcode_atts_to_block_atts($atts, $defaults) {
 /**
  * Monthly Prayer Times shortcode
  */
-function prayertimes_monthly_prayer_times_shortcode($atts) {
+function muslprti_monthly_prayer_times_shortcode($atts) {
     // Default attributes matching the block's defaults
     $defaults = array(
         'className' => '',
@@ -51,17 +51,17 @@ function prayertimes_monthly_prayer_times_shortcode($atts) {
     );
     
     // Convert attributes format
-    $block_atts = prayertimes_convert_shortcode_atts_to_block_atts($atts, $defaults);
+    $block_atts = muslprti_convert_shortcode_atts_to_block_atts($atts, $defaults);
     
     // Use the block's render function
-    return prayertimes_render_monthly_prayer_times_block($block_atts);
+    return muslprti_render_monthly_prayer_times_block($block_atts);
 }
-add_shortcode('monthly_prayer_times', 'prayertimes_monthly_prayer_times_shortcode');
+add_shortcode('monthly_prayer_times', 'muslprti_monthly_prayer_times_shortcode');
 
 /**
  * Live Prayer Times shortcode
  */
-function prayertimes_live_prayer_times_shortcode($atts) {
+function muslprti_live_prayer_times_shortcode($atts) {
     // Default attributes matching the block's defaults
     $defaults = array(
         'className' => '',
@@ -81,20 +81,20 @@ function prayertimes_live_prayer_times_shortcode($atts) {
     );
     
     // Convert attributes format
-    $block_atts = prayertimes_convert_shortcode_atts_to_block_atts($atts, $defaults);
+    $block_atts = muslprti_convert_shortcode_atts_to_block_atts($atts, $defaults);
     
     // Enqueue the frontend script
-    wp_enqueue_script('prayertimes-live-prayer-times-frontend');
+    wp_enqueue_script('muslprti-live-prayer-times-frontend');
     
     // Use the block's render function
-    return prayertimes_render_live_prayer_times_block($block_atts);
+    return muslprti_render_live_prayer_times_block($block_atts);
 }
-add_shortcode('live_prayer_times', 'prayertimes_live_prayer_times_shortcode');
+add_shortcode('live_prayer_times', 'muslprti_live_prayer_times_shortcode');
 
 /**
  * Daily Prayer Times shortcode
  */
-function prayertimes_daily_prayer_times_shortcode($atts) {
+function muslprti_daily_prayer_times_shortcode($atts) {
     // Default attributes matching the block's defaults
     $defaults = array(
         'className' => '',
@@ -111,12 +111,12 @@ function prayertimes_daily_prayer_times_shortcode($atts) {
     );
     
     // Convert attributes format
-    $block_atts = prayertimes_convert_shortcode_atts_to_block_atts($atts, $defaults);
+    $block_atts = muslprti_convert_shortcode_atts_to_block_atts($atts, $defaults);
     
     // Enqueue the carousel script
-    wp_enqueue_script('prayertimes-prayer-times-carousel');
+    wp_enqueue_script('muslprti-prayer-times-carousel');
     
     // Use the block's render function
-    return prayertimes_render_daily_prayer_times_block($block_atts);
+    return muslprti_render_daily_prayer_times_block($block_atts);
 }
-add_shortcode('daily_prayer_times', 'prayertimes_daily_prayer_times_shortcode');
+add_shortcode('daily_prayer_times', 'muslprti_daily_prayer_times_shortcode');

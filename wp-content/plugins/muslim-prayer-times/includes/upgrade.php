@@ -5,9 +5,9 @@ if (!defined('ABSPATH')) exit;
 /**
  * Add sunrise column to the prayer times table
  */
-function prayertimes_upgrade_database() {
+function muslprti_upgrade_database() {
     global $wpdb;
-    $table_name = $wpdb->prefix . PRAYERTIMES_IQAMA_TABLE;
+    $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Check if the column already exists
     $column_exists = $wpdb->get_results(
@@ -23,7 +23,7 @@ function prayertimes_upgrade_database() {
     if (empty($column_exists)) {
         $wpdb->query("ALTER TABLE $table_name ADD COLUMN sunrise time DEFAULT NULL AFTER fajr_iqama");
         error_log('Muslim Prayer Times Plugin: Sunrise column added to database');
-        update_option('prayertimes_db_version', '1.1');
+        update_option('muslprti_db_version', '1.1');
     }
     
     return empty($column_exists) ? true : false;
