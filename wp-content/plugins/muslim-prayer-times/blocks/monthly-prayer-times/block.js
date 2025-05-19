@@ -12,7 +12,7 @@
     registerBlockType('prayer-times/monthly-prayer-times', {
         title: 'Monthly Prayer Times',
         icon: 'calendar',
-        category: 'prayer-times',
+        category: 'muslim-prayer-times',
         supports: {
             align: true
         },

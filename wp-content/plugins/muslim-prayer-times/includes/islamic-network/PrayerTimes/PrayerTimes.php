@@ -531,11 +531,11 @@ class PrayerTimes
         $julianDate = gregoriantojd($this->date->format('n'), $this->date->format('d'), $this->date->format('Y'));
 
         //correct for half-day offset
-        $dayfrac = date('G') / 24 - .5;
+        $dayfrac = gmdate('G') / 24 - .5;
         if ($dayfrac < 0) $dayfrac += 1;
 
         //now set the fraction of a day
-        $frac = $dayfrac + (date('i') + date('s') / 60) / 60 / 24;
+        $frac = $dayfrac + (gmdate('i') + gmdate('s') / 60) / 60 / 24;
 
         return ($julianDate + $frac);
 

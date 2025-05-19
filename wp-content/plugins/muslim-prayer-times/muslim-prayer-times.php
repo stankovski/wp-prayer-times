@@ -101,8 +101,8 @@ function prayer_times_register_block_category($categories) {
         $categories,
         [
             [
-                'slug'  => 'prayer-times',
-                'title' => __('Muslim Prayer Times', 'prayer-times'),
+                'slug'  => 'muslim-prayer-times',
+                'title' => __('Muslim Prayer Times', 'muslim-prayer-times'),
                 'icon'  => null, // You can add a custom SVG icon here
             ],
         ]

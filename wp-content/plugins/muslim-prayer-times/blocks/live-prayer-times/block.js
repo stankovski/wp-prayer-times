@@ -25,7 +25,7 @@
     registerBlockType('prayer-times/live-prayer-times', {
         title: 'Live Prayer Times',
         icon: 'calendar-alt',
-        category: 'prayer-times',
+        category: 'muslim-prayer-times',
         supports: {
             align: true
         },

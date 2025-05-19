@@ -37,11 +37,11 @@ class Calculator
     public function verifyGregorianInputDate(DateTime $inputDate): void
     {
         if ($inputDate < $this->validGregorianFrom) {
-            throw new Exception('Gregorian date must be after ' . $this->validGregorianFrom->format('r'));
+            throw new Exception('Gregorian date must be after ' . esc_html($this->validGregorianFrom->format('r')));
         }
 
         if ($inputDate > $this->validGregorianTo) {
-            throw new Exception('Gregorian date must be before ' . $this->validGregorianTo->format('r'));
+            throw new Exception('Gregorian date must be before ' . esc_html($this->validGregorianTo->format('r')));
         }
 
     }
@@ -54,11 +54,11 @@ class Calculator
         // Hijri Dates don't really work with the timestamp creation, but we can force that over here
         $inputDate = DateTime::createFromFormat('d-m-Y', $inputDate);
         if ($inputDate < $this->validHijriFrom) {
-            throw new Exception('Hijri date must be after ' . $this->validHijriFrom->format('d-m-Y'));
+            throw new Exception('Hijri date must be after ' . esc_html($this->validHijriFrom->format('d-m-Y')));
         }
 
         if ($inputDate > $this->validHijriTo) {
-            throw new Exception('Hijri date must be before ' . $this->validHijriTo->format('d-m-Y'));
+            throw new Exception('Hijri date must be before ' . esc_html($this->validHijriTo->format('d-m-Y')));
         }
 
     }

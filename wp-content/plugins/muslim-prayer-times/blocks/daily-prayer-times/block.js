@@ -25,7 +25,7 @@
     registerBlockType('prayer-times/daily-prayer-times', {
         title: 'Daily Prayer Times',
         icon: 'editor-table',
-        category: 'prayer-times',
+        category: 'muslim-prayer-times',
         supports: {
             align: true
         },

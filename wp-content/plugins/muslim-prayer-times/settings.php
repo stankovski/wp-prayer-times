@@ -336,7 +336,7 @@ function prayertimes_settings_page() {
     <div class="wrap">
         <!-- Banner Image -->
         <div class="prayer-times-banner">
-            <img src="<?php echo plugins_url('assets/banner-1544x500.png', __FILE__); ?>" alt="Muslim Prayer Times Banner" style="max-width:100%; height:auto; margin-bottom:20px; border-radius:5px;">
+            <img src="<?php echo esc_url(plugins_url('assets/banner-1544x500.png', __FILE__)); ?>" alt="Muslim Prayer Times Banner" style="max-width:100%; height:auto; margin-bottom:20px; border-radius:5px;">
         </div>
 
         <!-- New Header Section with Instructions -->
