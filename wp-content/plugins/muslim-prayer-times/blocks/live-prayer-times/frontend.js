@@ -74,13 +74,13 @@ function loadPrayerTimesData(block, dateStr) {
     }
     
     // Build the AJAX URL with the date
-    const ajaxUrl = prayerTimesLiveData.ajaxUrl + '/' + dateStr;
+    const ajaxUrl = muslprtiLiveData.ajaxUrl + '/' + dateStr;
     
     // Make the AJAX request
     fetch(ajaxUrl, {
         method: 'GET',
         headers: {
-            'X-WP-Nonce': prayerTimesLiveData.nonce,
+            'X-WP-Nonce': muslprtiLiveData.nonce,
             'Content-Type': 'application/json'
         }
     })

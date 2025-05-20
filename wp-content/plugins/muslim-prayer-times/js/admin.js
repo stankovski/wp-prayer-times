@@ -20,11 +20,11 @@ jQuery(document).ready(function($) {
             $(this).text('Searching...').prop('disabled', true);
             
             $.ajax({
-                url: ptpAdmin.ajaxurl,
+                url: muslprtiAdmin.ajaxurl,
                 type: 'POST',
                 data: {
                     action: 'muslprti_geocode',
-                    nonce: ptpAdmin.geocode_nonce,
+                    nonce: muslprtiAdmin.geocode_nonce,
                     address: address
                 },
                 success: function(response) {
@@ -67,7 +67,7 @@ jQuery(document).ready(function($) {
         
         var data = {
             action: 'muslprti_generate_times',
-            nonce: ptpAdmin.export_nonce,
+            nonce: muslprtiAdmin.export_nonce,
             period: selectedPeriod
         };
         
@@ -104,7 +104,7 @@ jQuery(document).ready(function($) {
         }
         
         $.ajax({
-            url: ptpAdmin.ajaxurl,
+            url: muslprtiAdmin.ajaxurl,
             type: 'POST',
             data: data,
             success: function(response) {
@@ -153,11 +153,11 @@ jQuery(document).ready(function($) {
         $('#muslprti_export_result').html('<p>Exporting prayer times from database, please wait...</p>');
         
         $.ajax({
-            url: ptpAdmin.ajaxurl,
+            url: muslprtiAdmin.ajaxurl,
             type: 'POST',
             data: {
                 action: 'muslprti_export_db',
-                nonce: ptpAdmin.export_db_nonce
+                nonce: muslprtiAdmin.export_db_nonce
             },
             success: function(response) {
                 $('#muslprti_export_db_btn').text('Export Existing Prayer Times').prop('disabled', false);
@@ -211,14 +211,14 @@ jQuery(document).ready(function($) {
         // Create FormData object
         var formData = new FormData();
         formData.append('action', 'muslprti_import_preview');
-        formData.append('nonce', ptpAdmin.import_preview_nonce);
+        formData.append('nonce', muslprtiAdmin.import_preview_nonce);
         formData.append('import_file', file);
         
         $(this).text('Previewing...').prop('disabled', true);
         
         // Send AJAX request
         $.ajax({
-            url: ptpAdmin.ajaxurl,
+            url: muslprtiAdmin.ajaxurl,
             type: 'POST',
             data: formData,
             contentType: false,
@@ -312,14 +312,14 @@ jQuery(document).ready(function($) {
         var file = fileInput.files[0];
         var formData = new FormData();
         formData.append('action', 'muslprti_import');
-        formData.append('nonce', ptpAdmin.import_nonce);
+        formData.append('nonce', muslprtiAdmin.import_nonce);
         formData.append('import_file', file);
         
         $(this).text('Importing...').prop('disabled', true);
         
         // Send AJAX request
         $.ajax({
-            url: ptpAdmin.ajaxurl,
+            url: muslprtiAdmin.ajaxurl,
             type: 'POST',
             data: formData,
             contentType: false,

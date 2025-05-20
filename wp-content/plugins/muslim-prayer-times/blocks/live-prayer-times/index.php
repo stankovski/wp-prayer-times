@@ -24,7 +24,7 @@ function muslprti_live_prayer_times_editor_assets() {
     );
     
     // Add plugin URL data to be used in JavaScript - sanitize the URL
-    wp_localize_script('muslprti-live-prayer-times-block', 'wpPrayerTimesData', array(
+    wp_localize_script('muslprti-live-prayer-times-block', 'muslprtiData', array(
         'pluginUrl' => esc_url(plugins_url('', dirname(dirname(__FILE__))))
     ));
 }
@@ -45,7 +45,7 @@ function muslprti_live_prayer_times_frontend_assets() {
         );
         
         // Add AJAX URL and nonce for frontend use - properly escaped
-        wp_localize_script('muslprti-live-prayer-times-frontend', 'prayerTimesLiveData', array(
+        wp_localize_script('muslprti-live-prayer-times-frontend', 'muslprtiLiveData', array(
             'ajaxUrl' => esc_url_raw(rest_url('prayer-times/v1/times')),
             'nonce' => wp_create_nonce('wp_rest'),
             'timezone' => sanitize_text_field(wp_timezone_string())

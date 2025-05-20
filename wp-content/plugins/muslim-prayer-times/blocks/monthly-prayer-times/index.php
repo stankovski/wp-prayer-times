@@ -21,7 +21,7 @@ function muslprti_monthly_prayer_times_editor_assets() {
     );
     
     // Add plugin URL data to be used in JavaScript - sanitize the URL
-    wp_localize_script('muslprti-monthly-prayer-times-block', 'wpPrayerTimesData', array(
+    wp_localize_script('muslprti-monthly-prayer-times-block', 'muslprtiData', array(
         'pluginUrl' => esc_url(plugins_url('', dirname(dirname(__FILE__))))
     ));
 }

@@ -9,7 +9,7 @@
     var RangeControl = components.RangeControl;
     
     // Get plugin URL for icons
-    var pluginUrl = (typeof wpPrayerTimesData !== 'undefined') ? wpPrayerTimesData.pluginUrl : '';
+    var pluginUrl = (typeof muslprtiData !== 'undefined') ? muslprtiData.pluginUrl : '';
     
     // Define icon paths
     var prayerIcons = {

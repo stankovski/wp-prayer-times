@@ -47,7 +47,7 @@ function muslprti_admin_scripts($hook) {
     
     // Register and enqueue main admin script
     wp_enqueue_script('muslprti-admin', plugins_url('js/admin.js', __FILE__), array('jquery'), '1.0', true);
-    wp_localize_script('muslprti-admin', 'ptpAdmin', array(
+    wp_localize_script('muslprti-admin', 'muslprtiAdmin', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'export_nonce' => wp_create_nonce('muslprti_generate_nonce'),
         'export_db_nonce' => wp_create_nonce('muslprti_export_db_nonce'), // New nonce
@@ -66,12 +66,12 @@ function muslprti_admin_scripts($hook) {
                 $('#hijri-date-preview').html('Loading...');
                 
                 $.ajax({
-                    url: ptpAdmin.ajaxurl,
+                    url: muslprtiAdmin.ajaxurl,
                     type: 'POST',
                     data: {
                         action: 'muslprti_preview_hijri',
                         offset: offset,
-                        nonce: ptpAdmin.hijri_preview_nonce
+                        nonce: muslprtiAdmin.hijri_preview_nonce
                     },
                     success: function(response) {
                         if (response.success) {
