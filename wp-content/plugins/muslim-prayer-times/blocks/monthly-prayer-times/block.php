@@ -98,18 +98,18 @@ function muslprti_render_monthly_prayer_times_block($attributes) {
     // Enqueue the frontend script
     wp_enqueue_script('muslprti-monthly-prayer-times-frontend');
     
-    // Get block attributes
-    $className = isset($attributes['className']) ? $attributes['className'] : '';
-    $align = isset($attributes['align']) ? $attributes['align'] : 'center';
-    $headerTextColor = isset($attributes['headerTextColor']) ? $attributes['headerTextColor'] : '';
-    $headerColor = isset($attributes['headerColor']) ? $attributes['headerColor'] : '';
-    $tableStyle = isset($attributes['tableStyle']) ? $attributes['tableStyle'] : 'default';
-    $fontSize = isset($attributes['fontSize']) ? $attributes['fontSize'] : 16;
-    $showSunrise = isset($attributes['showSunrise']) ? $attributes['showSunrise'] : true;
-    $showIqama = isset($attributes['showIqama']) ? $attributes['showIqama'] : true;
-    $highlightToday = isset($attributes['highlightToday']) ? $attributes['highlightToday'] : true;
-    $reportType = isset($attributes['reportType']) ? $attributes['reportType'] : 'monthly';
-    $showPagination = isset($attributes['showPagination']) ? $attributes['showPagination'] : true;
+    // Get block attributes with sanitization
+    $className = isset($attributes['className']) ? sanitize_html_class($attributes['className']) : '';
+    $align = isset($attributes['align']) ? sanitize_text_field($attributes['align']) : 'center';
+    $headerTextColor = isset($attributes['headerTextColor']) ? sanitize_hex_color($attributes['headerTextColor']) : '';
+    $headerColor = isset($attributes['headerColor']) ? sanitize_hex_color($attributes['headerColor']) : '';
+    $tableStyle = isset($attributes['tableStyle']) ? sanitize_text_field($attributes['tableStyle']) : 'default';
+    $fontSize = isset($attributes['fontSize']) ? absint($attributes['fontSize']) : 16;
+    $showSunrise = isset($attributes['showSunrise']) ? (bool)$attributes['showSunrise'] : true;
+    $showIqama = isset($attributes['showIqama']) ? (bool)$attributes['showIqama'] : true;
+    $highlightToday = isset($attributes['highlightToday']) ? (bool)$attributes['highlightToday'] : true;
+    $reportType = isset($attributes['reportType']) ? sanitize_text_field($attributes['reportType']) : 'monthly';
+    $showPagination = isset($attributes['showPagination']) ? (bool)$attributes['showPagination'] : true;
     
     // Get timezone from settings
     $timezone = muslprti_get_timezone();
@@ -122,19 +122,19 @@ function muslprti_render_monthly_prayer_times_block($attributes) {
     $block_id = 'muslprti-monthly-' . uniqid();
     
     // Create inline styles
-    $container_style = "text-align: {$align};";
+    $container_style = "text-align: " . esc_attr($align) . ";";
     if ($fontSize) {
-        $container_style .= "font-size: {$fontSize}px;";
+        $container_style .= "font-size: " . esc_attr($fontSize) . "px;";
     }
     
     $table_style = '';
     
     $header_style = '';
     if ($headerColor) {
-        $header_style .= "background-color: {$headerColor};";
+        $header_style .= "background-color: " . esc_attr($headerColor) . ";";
     }
     if ($headerTextColor) {
-        $header_style .= "color: {$headerTextColor};";
+        $header_style .= "color: " . esc_attr($headerTextColor) . ";";
     }
     
     // Get dates based on report type
@@ -175,7 +175,7 @@ function muslprti_render_monthly_prayer_times_block($attributes) {
             break;
     }
     
-    // Get prayer times for the specified date range
+    // Get prayer times for the specified date range using prepared query
     $prayer_times = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $table_name 
          WHERE day BETWEEN %s AND %s 
@@ -187,7 +187,7 @@ function muslprti_render_monthly_prayer_times_block($attributes) {
     // If no times available, return a message
     if (empty($prayer_times)) {
         return '<div class="wp-block-prayer-times-monthly-prayer-times">
-            <p>No prayer times available for the selected date range.</p>
+            <p>' . esc_html__('No prayer times available for the selected date range.', 'muslim-prayer-times') . '</p>
         </div>';
     }
     
@@ -207,14 +207,14 @@ function muslprti_render_monthly_prayer_times_block($attributes) {
     $output .= '<div class="prayer-times-month-header">';
     
     if ($reportType === 'monthly' && $showPagination) {
-        $output .= '<button class="prev-page">&laquo; Previous Month</button>';
+        $output .= '<button class="prev-page">' . esc_html__('« Previous Month', 'muslim-prayer-times') . '</button>';
         $output .= '<h3 class="month-name">' . esc_html($header_text) . '</h3>';
-        $output .= '<button class="next-page">Next Month &raquo;</button>';
+        $output .= '<button class="next-page">' . esc_html__('Next Month »', 'muslim-prayer-times') . '</button>';
     } else {
         // For weekly/next5days or monthly without pagination, show header but disable navigation
-        $output .= '<button class="prev-page" disabled style="visibility:hidden;">&laquo; Previous</button>';
+        $output .= '<button class="prev-page" disabled style="visibility:hidden;">' . esc_html__('« Previous', 'muslim-prayer-times') . '</button>';
         $output .= '<h3 class="month-name">' . esc_html($header_text) . '</h3>';
-        $output .= '<button class="next-page" disabled style="visibility:hidden;">Next &raquo;</button>';
+        $output .= '<button class="next-page" disabled style="visibility:hidden;">' . esc_html__('Next »', 'muslim-prayer-times') . '</button>';
     }
     
     $output .= '</div>';
@@ -242,29 +242,29 @@ function muslprti_generate_monthly_prayer_times_table($prayer_times, $showSunris
     
     $output = '<table class="prayer-times-table ' . esc_attr('table-style-' . $tableStyle) . '" style="' . esc_attr($table_style) . '">';
     $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
-    $output .= '<th>Date</th>';
-    $output .= '<th>Fajr</th>';
+    $output .= '<th>' . esc_html__('Date', 'muslim-prayer-times') . '</th>';
+    $output .= '<th>' . esc_html__('Fajr', 'muslim-prayer-times') . '</th>';
     if (!$showIqama) {
-        $output .= '<th>Fajr Iqama</th>';
+        $output .= '<th>' . esc_html__('Fajr Iqama', 'muslim-prayer-times') . '</th>';
     }
     if ($showSunrise) {
-        $output .= '<th>Sunrise</th>';
+        $output .= '<th>' . esc_html__('Sunrise', 'muslim-prayer-times') . '</th>';
     }
-    $output .= '<th>Dhuhr</th>';
+    $output .= '<th>' . esc_html__('Dhuhr', 'muslim-prayer-times') . '</th>';
     if (!$showIqama) {
-        $output .= '<th>Dhuhr Iqama</th>';
+        $output .= '<th>' . esc_html__('Dhuhr Iqama', 'muslim-prayer-times') . '</th>';
     }
-    $output .= '<th>Asr</th>';
+    $output .= '<th>' . esc_html__('Asr', 'muslim-prayer-times') . '</th>';
     if (!$showIqama) {
-        $output .= '<th>Asr Iqama</th>';
+        $output .= '<th>' . esc_html__('Asr Iqama', 'muslim-prayer-times') . '</th>';
     }
-    $output .= '<th>Maghrib</th>';
+    $output .= '<th>' . esc_html__('Maghrib', 'muslim-prayer-times') . '</th>';
     if (!$showIqama) {
-        $output .= '<th>Maghrib Iqama</th>';
+        $output .= '<th>' . esc_html__('Maghrib Iqama', 'muslim-prayer-times') . '</th>';
     }
-    $output .= '<th>Isha</th>';
+    $output .= '<th>' . esc_html__('Isha', 'muslim-prayer-times') . '</th>';
     if (!$showIqama) {
-        $output .= '<th>Isha Iqama</th>';
+        $output .= '<th>' . esc_html__('Isha Iqama', 'muslim-prayer-times') . '</th>';
     }
     $output .= '</tr></thead>';
     
@@ -407,17 +407,17 @@ function muslprti_monthly_prayer_times_pagination() {
     global $wpdb;
     $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
-    // Get parameters from the request
-    $month = isset($_POST['month']) ? intval($_POST['month']) : muslprti_date('n');
-    $year = isset($_POST['year']) ? intval($_POST['year']) : muslprti_date('Y');
-    $show_sunrise = isset($_POST['show_sunrise']) && $_POST['show_sunrise'] === '1';
-    $show_iqama = isset($_POST['show_iqama']) && $_POST['show_iqama'] === '1';
-    $highlight_today = isset($_POST['highlight_today']) && $_POST['highlight_today'] === '1';
+    // Get parameters from the request with sanitization
+    $month = isset($_POST['month']) ? intval($_POST['month']) : intval(muslprti_date('n'));
+    $year = isset($_POST['year']) ? intval($_POST['year']) : intval(muslprti_date('Y'));
+    $show_sunrise = isset($_POST['show_sunrise']) && sanitize_text_field($_POST['show_sunrise']) === '1';
+    $show_iqama = isset($_POST['show_iqama']) && sanitize_text_field($_POST['show_iqama']) === '1';
+    $highlight_today = isset($_POST['highlight_today']) && sanitize_text_field($_POST['highlight_today']) === '1';
     $table_style = isset($_POST['table_style']) ? sanitize_text_field($_POST['table_style']) : 'default';
     
     // Validate month and year
     if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
-        wp_send_json_error('Invalid month or year');
+        wp_send_json_error(esc_html__('Invalid month or year', 'muslim-prayer-times'));
         return;
     }
     
@@ -425,7 +425,7 @@ function muslprti_monthly_prayer_times_pagination() {
     $start_of_month = new DateTime("$year-$month-01");
     $end_of_month = new DateTime($start_of_month->format('Y-m-t'));
     
-    // Get prayer times for the entire month
+    // Get prayer times for the entire month using prepared query
     $prayer_times = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $table_name 
          WHERE day BETWEEN %s AND %s 
@@ -436,7 +436,7 @@ function muslprti_monthly_prayer_times_pagination() {
     
     // If no times available, return error
     if (empty($prayer_times)) {
-        wp_send_json_error('No prayer times available for the selected month');
+        wp_send_json_error(esc_html__('No prayer times available for the selected month', 'muslim-prayer-times'));
         return;
     }
     
@@ -456,7 +456,7 @@ function muslprti_monthly_prayer_times_pagination() {
     
     wp_send_json_success([
         'table_html' => $table_html,
-        'month_name' => $month_name
+        'month_name' => esc_html($month_name)
     ]);
 }
 add_action('wp_ajax_muslprti_monthly_prayer_times_pagination', 'muslprti_monthly_prayer_times_pagination');
@@ -471,13 +471,13 @@ function muslprti_check_month_availability() {
     global $wpdb;
     $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
-    // Get parameters from the request
-    $month = isset($_POST['month']) ? intval($_POST['month']) : muslprti_date('n');
-    $year = isset($_POST['year']) ? intval($_POST['year']) : muslprti_date('Y');
+    // Get parameters from the request with sanitization
+    $month = isset($_POST['month']) ? intval($_POST['month']) : intval(muslprti_date('n'));
+    $year = isset($_POST['year']) ? intval($_POST['year']) : intval(muslprti_date('Y'));
     
     // Validate month and year
     if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
-        wp_send_json_error('Invalid month or year');
+        wp_send_json_error(esc_html__('Invalid month or year', 'muslim-prayer-times'));
         return;
     }
     
@@ -485,7 +485,7 @@ function muslprti_check_month_availability() {
     $start_of_month = new DateTime("$year-$month-01");
     $end_of_month = new DateTime($start_of_month->format('Y-m-t'));
     
-    // Check if there are any prayer times for the month
+    // Check if there are any prayer times for the month using prepared query
     $count = $wpdb->get_var($wpdb->prepare(
         "SELECT COUNT(*) FROM $table_name 
          WHERE day BETWEEN %s AND %s",

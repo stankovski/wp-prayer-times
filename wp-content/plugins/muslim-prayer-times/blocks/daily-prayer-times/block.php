@@ -111,7 +111,7 @@ function muslprti_render_daily_prayer_times_block($attributes) {
     // Get timezone from settings
     $opts = get_option('muslprti_settings', []);
     $timezone = muslprti_get_timezone();
-    $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
+    $time_format = isset($opts['time_format']) ? sanitize_text_field($opts['time_format']) : '12hour';
     
     // Create DateTime object with timezone
     $datetime_zone = new DateTimeZone($timezone);
@@ -128,7 +128,7 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         $current_date_obj->modify("+$i days");
         $current_date = $current_date_obj->format('Y-m-d');
         
-        // Query the database for current day's prayer times
+        // Query the database for current day's prayer times using prepared statement
         $prayer_times = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM $table_name WHERE day = %s",
             $current_date
@@ -180,56 +180,52 @@ function muslprti_render_daily_prayer_times_block($attributes) {
     // If no prayer times at all, return a message
     if (empty($days_prayer_times) || !$days_prayer_times[0]['prayer_times']) {
         return '<div class="wp-block-prayer-times-daily-prayer-times">
-            <p>No prayer times available for today or future dates.</p>
+            <p>' . esc_html__('No prayer times available for today or future dates.', 'muslim-prayer-times') . '</p>
         </div>';
     }
     
-    // Extract attributes for styling
-    $className = isset($attributes['className']) ? $attributes['className'] : '';
-    $align = isset($attributes['align']) ? $attributes['align'] : 'center';
-    $textColor = isset($attributes['textColor']) ? $attributes['textColor'] : '';
-    $backgroundColor = isset($attributes['backgroundColor']) ? $attributes['backgroundColor'] : '';
-    $headerColor = isset($attributes['headerColor']) ? $attributes['headerColor'] : '';
-    $showDate = isset($attributes['showDate']) ? $attributes['showDate'] : true;
-    $showHijriDate = isset($attributes['showHijriDate']) ? $attributes['showHijriDate'] : true;
-    $showSunrise = isset($attributes['showSunrise']) ? $attributes['showSunrise'] : true;
-    $tableStyle = isset($attributes['tableStyle']) ? $attributes['tableStyle'] : 'default';
-    $fontSize = isset($attributes['fontSize']) ? $attributes['fontSize'] : 16;
-    $showArrows = isset($attributes['showArrows']) ? $attributes['showArrows'] : true;
-    
-    // Get time format from settings
-    $opts = get_option('muslprti_settings', []);
-    $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
+    // Extract attributes for styling with sanitization
+    $className = isset($attributes['className']) ? sanitize_html_class($attributes['className']) : '';
+    $align = isset($attributes['align']) ? sanitize_text_field($attributes['align']) : 'center';
+    $textColor = isset($attributes['textColor']) ? sanitize_hex_color($attributes['textColor']) : '';
+    $backgroundColor = isset($attributes['backgroundColor']) ? sanitize_hex_color($attributes['backgroundColor']) : '';
+    $headerColor = isset($attributes['headerColor']) ? sanitize_hex_color($attributes['headerColor']) : '';
+    $showDate = isset($attributes['showDate']) ? (bool)$attributes['showDate'] : true;
+    $showHijriDate = isset($attributes['showHijriDate']) ? (bool)$attributes['showHijriDate'] : true;
+    $showSunrise = isset($attributes['showSunrise']) ? (bool)$attributes['showSunrise'] : true;
+    $tableStyle = isset($attributes['tableStyle']) ? sanitize_text_field($attributes['tableStyle']) : 'default';
+    $fontSize = isset($attributes['fontSize']) ? absint($attributes['fontSize']) : 16;
+    $showArrows = isset($attributes['showArrows']) ? (bool)$attributes['showArrows'] : true;
     
     // Create inline styles
-    $container_style = "text-align: {$align};";
+    $container_style = "text-align: " . esc_attr($align) . ";";
     if ($fontSize) {
-        $container_style .= "font-size: {$fontSize}px;";
+        $container_style .= "font-size: " . esc_attr($fontSize) . "px;";
     }
     
     $table_style = '';
     if ($backgroundColor) {
-        $table_style .= "background-color: {$backgroundColor};";
+        $table_style .= "background-color: " . esc_attr($backgroundColor) . ";";
     }
     if ($textColor) {
-        $table_style .= "color: {$textColor};";
+        $table_style .= "color: " . esc_attr($textColor) . ";";
     }
     
     $header_style = '';
     if ($headerColor) {
-        $header_style .= "background-color: {$headerColor};";
+        $header_style .= "background-color: " . esc_attr($headerColor) . ";";
     }
     $header_style .= "text-transform: uppercase;";
     
     // Define icons for each prayer
     $icons_dir = plugins_url('assets/icons/', dirname(__DIR__));
     $prayer_icons = array(
-        'fajr' => $icons_dir . 'fajr.svg',
-        'sunrise' => $icons_dir . 'sunrise.svg',
-        'dhuhr' => $icons_dir . 'dhuhr.svg',
-        'asr' => $icons_dir . 'asr.svg',
-        'maghrib' => $icons_dir . 'maghrib.svg',
-        'isha' => $icons_dir . 'isha.svg'
+        'fajr' => esc_url($icons_dir . 'fajr.svg'),
+        'sunrise' => esc_url($icons_dir . 'sunrise.svg'),
+        'dhuhr' => esc_url($icons_dir . 'dhuhr.svg'),
+        'asr' => esc_url($icons_dir . 'asr.svg'),
+        'maghrib' => esc_url($icons_dir . 'maghrib.svg'),
+        'isha' => esc_url($icons_dir . 'isha.svg')
     );
     
     // Build the HTML output
@@ -249,7 +245,8 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         // If no prayer times for this day, create an empty slide with a message
         if (!$prayer_times) {
             $output .= '<div class="prayer-times-carousel-item">';
-            $output .= '<p>No prayer times available for ' . muslprti_date('l, F j, Y', strtotime($current_date)) . '</p>';
+            $output .= '<p>' . esc_html(sprintf(__('No prayer times available for %s', 'muslim-prayer-times'), 
+                muslprti_date('l, F j, Y', strtotime($current_date)))) . '</p>';
             $output .= '</div>';
             continue;
         }
@@ -317,7 +314,7 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         
         // Table header
         $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
-        $output .= '<th></th><th>Athan</th><th>Iqama</th>';
+        $output .= '<th>' . esc_html__('', 'muslim-prayer-times') . '</th><th>' . esc_html__('Athan', 'muslim-prayer-times') . '</th><th>' . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
         $output .= '</tr></thead>';
         
         // Table body
@@ -325,7 +322,7 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         
         // Fajr row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['fajr']) . '" alt="Fajr" class="prayer-icon"> Fajr</td>';
+        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['fajr']) . '" alt="' . esc_attr__('Fajr', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Fajr', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['fajr_athan']) ? esc_html($formatted_times['fajr_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['fajr_iqama']) ? esc_html($formatted_times['fajr_iqama']) : '-') . '</td>';
         $output .= '</tr>';
@@ -333,35 +330,35 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         // Sunrise row (if enabled)
         if ($showSunrise) {
             $output .= '<tr class="sunrise-row">';
-            $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['sunrise']) . '" alt="Sunrise" class="prayer-icon"> Sunrise</td>';
+            $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['sunrise']) . '" alt="' . esc_attr__('Sunrise', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Sunrise', 'muslim-prayer-times') . '</td>';
             $output .= '<td colspan="2">' . (isset($formatted_times['sunrise']) ? esc_html($formatted_times['sunrise']) : '-') . '</td>';
             $output .= '</tr>';
         }
         
         // Dhuhr row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['dhuhr']) . '" alt="Dhuhr" class="prayer-icon"> Dhuhr</td>';
+        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['dhuhr']) . '" alt="' . esc_attr__('Dhuhr', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Dhuhr', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['dhuhr_athan']) ? esc_html($formatted_times['dhuhr_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['dhuhr_iqama']) ? esc_html($formatted_times['dhuhr_iqama']) : '-') . '</td>';
         $output .= '</tr>';
         
         // Asr row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['asr']) . '" alt="Asr" class="prayer-icon"> Asr</td>';
+        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['asr']) . '" alt="' . esc_attr__('Asr', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Asr', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['asr_athan']) ? esc_html($formatted_times['asr_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['asr_iqama']) ? esc_html($formatted_times['asr_iqama']) : '-') . '</td>';
         $output .= '</tr>';
         
         // Maghrib row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['maghrib']) . '" alt="Maghrib" class="prayer-icon"> Maghrib</td>';
+        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['maghrib']) . '" alt="' . esc_attr__('Maghrib', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Maghrib', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['maghrib_athan']) ? esc_html($formatted_times['maghrib_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['maghrib_iqama']) ? esc_html($formatted_times['maghrib_iqama']) : '-') . '</td>';
         $output .= '</tr>';
         
         // Isha row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['isha']) . '" alt="Isha" class="prayer-icon"> Isha</td>';
+        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['isha']) . '" alt="' . esc_attr__('Isha', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Isha', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['isha_athan']) ? esc_html($formatted_times['isha_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['isha_iqama']) ? esc_html($formatted_times['isha_iqama']) : '-') . '</td>';
         $output .= '</tr>';
@@ -370,16 +367,16 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         
         // Add Jumuah times if available in settings
         $opts = get_option('muslprti_settings', []);
-        $jumuah1 = isset($opts['jumuah1']) && !empty($opts['jumuah1']) ? $opts['jumuah1'] : '';
-        $jumuah2 = isset($opts['jumuah2']) && !empty($opts['jumuah2']) ? $opts['jumuah2'] : '';
-        $jumuah3 = isset($opts['jumuah3']) && !empty($opts['jumuah3']) ? $opts['jumuah3'] : '';
+        $jumuah1 = isset($opts['jumuah1']) && !empty($opts['jumuah1']) ? sanitize_text_field($opts['jumuah1']) : '';
+        $jumuah2 = isset($opts['jumuah2']) && !empty($opts['jumuah2']) ? sanitize_text_field($opts['jumuah2']) : '';
+        $jumuah3 = isset($opts['jumuah3']) && !empty($opts['jumuah3']) ? sanitize_text_field($opts['jumuah3']) : '';
         
         // Get custom Jumuah names
-        $jumuah1_name = isset($opts['jumuah1_name']) ? $opts['jumuah1_name'] : 'Jumuah 1';
-        $jumuah2_name = isset($opts['jumuah2_name']) ? $opts['jumuah2_name'] : 'Jumuah 2';
-        $jumuah3_name = isset($opts['jumuah3_name']) ? $opts['jumuah3_name'] : 'Jumuah 3';
+        $jumuah1_name = isset($opts['jumuah1_name']) ? sanitize_text_field($opts['jumuah1_name']) : 'Jumuah 1';
+        $jumuah2_name = isset($opts['jumuah2_name']) ? sanitize_text_field($opts['jumuah2_name']) : 'Jumuah 2';
+        $jumuah3_name = isset($opts['jumuah3_name']) ? sanitize_text_field($opts['jumuah3_name']) : 'Jumuah 3';
 
-        // Format Jumuah times to 12-hour format
+        // Format Jumuah times to the proper format
         if (!empty($jumuah1)) {
             $jumuah1_time = strtotime($jumuah1);
             if ($time_format === '24hour') {

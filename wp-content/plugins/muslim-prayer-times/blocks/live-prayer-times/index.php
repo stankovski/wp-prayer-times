@@ -23,9 +23,9 @@ function muslprti_live_prayer_times_editor_assets() {
         filemtime(plugin_dir_path(__FILE__) . 'block.js')
     );
     
-    // Add plugin URL data to be used in JavaScript
+    // Add plugin URL data to be used in JavaScript - sanitize the URL
     wp_localize_script('muslprti-live-prayer-times-block', 'wpPrayerTimesData', array(
-        'pluginUrl' => plugins_url('', dirname(dirname(__FILE__)))
+        'pluginUrl' => esc_url(plugins_url('', dirname(dirname(__FILE__))))
     ));
 }
 add_action('enqueue_block_editor_assets', 'muslprti_live_prayer_times_editor_assets');
@@ -44,11 +44,11 @@ function muslprti_live_prayer_times_frontend_assets() {
             true
         );
         
-        // Add AJAX URL and nonce for frontend use
+        // Add AJAX URL and nonce for frontend use - properly escaped
         wp_localize_script('muslprti-live-prayer-times-frontend', 'prayerTimesLiveData', array(
-            'ajaxUrl' => rest_url('prayer-times/v1/times'),
+            'ajaxUrl' => esc_url_raw(rest_url('prayer-times/v1/times')),
             'nonce' => wp_create_nonce('wp_rest'),
-            'timezone' => wp_timezone_string()
+            'timezone' => sanitize_text_field(wp_timezone_string())
         ));
     }
 }
@@ -61,6 +61,7 @@ function muslprti_register_prayer_times_endpoints() {
     register_rest_route('prayer-times/v1', '/times/(?P<date>\d{4}-\d{2}-\d{2})', array(
         'methods' => 'GET',
         'callback' => 'muslprti_get_times_for_date',
+        // This is a public endpoint, so we don't need authentication
         'permission_callback' => '__return_true',
         'args' => array(
             'date' => array(
@@ -80,14 +81,14 @@ function muslprti_get_times_for_date($request) {
     global $wpdb;
     $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
-    // Get requested date
-    $date = $request->get_param('date');
+    // Get requested date and sanitize it
+    $date = sanitize_text_field($request->get_param('date'));
     
     // Get settings
     $opts = get_option('muslprti_settings', []);
-    $timeFormat = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
+    $timeFormat = isset($opts['time_format']) ? sanitize_text_field($opts['time_format']) : '12hour';
     
-    // Get prayer times for the requested date
+    // Get prayer times for the requested date using prepared query
     $prayer_times = $wpdb->get_row($wpdb->prepare(
         "SELECT * FROM $table_name WHERE day = %s",
         $date
@@ -105,7 +106,7 @@ function muslprti_get_times_for_date($request) {
     if (!$prayer_times) {
         return new WP_Error(
             'no_times_found',
-            'No prayer times available for the requested date or future dates.',
+            esc_html__('No prayer times available for the requested date or future dates.', 'muslim-prayer-times'),
             array('status' => 404)
         );
     }
@@ -154,7 +155,7 @@ function muslprti_get_times_for_date($request) {
     // Check for upcoming changes in the next 3 days
     $future_changes = array();
     
-    // Get the next 3 days' prayer times
+    // Get the next 3 days' prayer times using prepared query
     $next_days = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $table_name WHERE day > %s ORDER BY day ASC LIMIT 3",
         $prayer_times['day']
@@ -191,7 +192,7 @@ function muslprti_get_times_for_date($request) {
                     $changes_for_day[$column] = array(
                         'new_time' => $formatted_time,
                         'date' => $date_formatted,
-                        'day' => $next_day['day']
+                        'day' => sanitize_text_field($next_day['day'])
                     );
                 }
             }
@@ -209,16 +210,16 @@ function muslprti_get_times_for_date($request) {
     // Format date for display
     $display_date = muslprti_date('l, F j, Y', strtotime($prayer_times['day']));
     
-    // Get Jumuah times from settings
+    // Get Jumuah times from settings with sanitization
     $jumuah_times = array();
     
-    $jumuah1 = isset($opts['jumuah1']) && !empty($opts['jumuah1']) ? $opts['jumuah1'] : '';
-    $jumuah2 = isset($opts['jumuah2']) && !empty($opts['jumuah2']) ? $opts['jumuah2'] : '';
-    $jumuah3 = isset($opts['jumuah3']) && !empty($opts['jumuah3']) ? $opts['jumuah3'] : '';
+    $jumuah1 = isset($opts['jumuah1']) && !empty($opts['jumuah1']) ? sanitize_text_field($opts['jumuah1']) : '';
+    $jumuah2 = isset($opts['jumuah2']) && !empty($opts['jumuah2']) ? sanitize_text_field($opts['jumuah2']) : '';
+    $jumuah3 = isset($opts['jumuah3']) && !empty($opts['jumuah3']) ? sanitize_text_field($opts['jumuah3']) : '';
     
-    $jumuah1_name = isset($opts['jumuah1_name']) ? $opts['jumuah1_name'] : 'Jumuah 1';
-    $jumuah2_name = isset($opts['jumuah2_name']) ? $opts['jumuah2_name'] : 'Jumuah 2';
-    $jumuah3_name = isset($opts['jumuah3_name']) ? $opts['jumuah3_name'] : 'Jumuah 3';
+    $jumuah1_name = isset($opts['jumuah1_name']) ? sanitize_text_field($opts['jumuah1_name']) : esc_html__('Jumuah 1', 'muslim-prayer-times');
+    $jumuah2_name = isset($opts['jumuah2_name']) ? sanitize_text_field($opts['jumuah2_name']) : esc_html__('Jumuah 2', 'muslim-prayer-times');
+    $jumuah3_name = isset($opts['jumuah3_name']) ? sanitize_text_field($opts['jumuah3_name']) : esc_html__('Jumuah 3', 'muslim-prayer-times');
     
     if (!empty($jumuah1)) {
         $jumuah1_time = strtotime($jumuah1);
@@ -265,9 +266,9 @@ function muslprti_get_times_for_date($request) {
         }
     }
     
-    // Prepare the response
+    // Prepare the response with sanitized data
     $response = array(
-        'date' => $prayer_times['day'],
+        'date' => sanitize_text_field($prayer_times['day']),
         'display_date' => $display_date,
         'hijri_date' => $hijri_date,
         'hijri_date_arabic' => $hijri_date_arabic,

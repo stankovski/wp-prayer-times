@@ -20,9 +20,9 @@ function muslprti_daily_prayer_times_editor_assets() {
         filemtime(plugin_dir_path(__FILE__) . 'block.js')
     );
     
-    // Add plugin URL data to be used in JavaScript
+    // Add plugin URL data to be used in JavaScript - sanitize the URL
     wp_localize_script('muslprti-daily-prayer-times-block', 'wpPrayerTimesData', array(
-        'pluginUrl' => plugins_url('', dirname(dirname(__FILE__)))
+        'pluginUrl' => esc_url(plugins_url('', dirname(dirname(__FILE__))))
     ));
 }
 add_action('enqueue_block_editor_assets', 'muslprti_daily_prayer_times_editor_assets');

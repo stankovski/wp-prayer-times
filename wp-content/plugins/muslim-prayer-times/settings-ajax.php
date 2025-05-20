@@ -14,7 +14,7 @@ function muslprti_handle_geocode() {
     $address = isset($_POST['address']) ? sanitize_text_field($_POST['address']) : '';
     
     if (empty($address)) {
-        wp_send_json_error('Address is required');
+        wp_send_json_error(esc_html__('Address is required', 'muslim-prayer-times'));
     }
     
     // Use Nominatim OpenStreetMap API for geocoding (free but rate limited)
@@ -29,26 +29,26 @@ function muslprti_handle_geocode() {
     $response = wp_remote_get($url, array(
         'timeout' => 15,
         'headers' => array(
-            'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . home_url(),
+            'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . esc_url(home_url()),
         )
     ));
     
     if (is_wp_error($response)) {
-        wp_send_json_error($response->get_error_message());
+        wp_send_json_error(esc_html($response->get_error_message()));
     }
     
     $body = wp_remote_retrieve_body($response);
     $data = json_decode($body);
     
     if (empty($data)) {
-        wp_send_json_error('No results found for this address.');
+        wp_send_json_error(esc_html__('No results found for this address.', 'muslim-prayer-times'));
     }
     
     // Get the first result
     $result = array(
-        'lat' => $data[0]->lat,
-        'lon' => $data[0]->lon,
-        'display_name' => $data[0]->display_name
+        'lat' => sanitize_text_field($data[0]->lat),
+        'lon' => sanitize_text_field($data[0]->lon),
+        'display_name' => sanitize_text_field($data[0]->display_name)
     );
     
     wp_send_json_success($result);
@@ -60,7 +60,7 @@ function muslprti_handle_generate() {
     check_ajax_referer('muslprti_generate_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error('You do not have permission to generate prayer times');
+        wp_send_json_error(esc_html__('You do not have permission to generate prayer times', 'muslim-prayer-times'));
         return;
     }
     
@@ -69,40 +69,40 @@ function muslprti_handle_generate() {
         require_once __DIR__ . '/includes/islamic-network/autoload.php';
         
         if (!class_exists('IslamicNetwork\PrayerTimes\PrayerTimes')) {
-            wp_send_json_error('Muslim Prayer Times library not available');
+            wp_send_json_error(esc_html__('Muslim Prayer Times library not available', 'muslim-prayer-times'));
             return;
         }
         
         // Get saved settings
         $opts = get_option('muslprti_settings', []);
-        $latitude = isset($opts['lat']) ? $opts['lat'] : 47.7623;
-        $longitude = isset($opts['lng']) ? $opts['lng'] : -122.2054;
-        $timezone = isset($opts['tz']) ? $opts['tz'] : 'America/Los_Angeles';
-        $method = isset($opts['method']) ? $opts['method'] : 'ISNA';
-        $asr_calc = isset($opts['asr_calc']) ? $opts['asr_calc'] : 'STANDARD';
+        $latitude = isset($opts['lat']) ? floatval($opts['lat']) : 47.7623;
+        $longitude = isset($opts['lng']) ? floatval($opts['lng']) : -122.2054;
+        $timezone = isset($opts['tz']) ? sanitize_text_field($opts['tz']) : 'America/Los_Angeles';
+        $method = isset($opts['method']) ? sanitize_text_field($opts['method']) : 'ISNA';
+        $asr_calc = isset($opts['asr_calc']) ? sanitize_text_field($opts['asr_calc']) : 'STANDARD';
         
         // Create DateTime objects for the current date and timezone
         $dtz = new DateTimeZone($timezone);
         $now = new DateTime('now', $dtz);
         
         // Handle period or custom date range
-        if (isset($_POST['period']) && $_POST['period'] === 'custom') {
+        if (isset($_POST['period']) && sanitize_text_field($_POST['period']) === 'custom') {
             // Custom date range specified
             if (!isset($_POST['start_date']) || !isset($_POST['end_date'])) {
-                wp_send_json_error('Custom date range requires both start and end dates');
+                wp_send_json_error(esc_html__('Custom date range requires both start and end dates', 'muslim-prayer-times'));
                 return;
             }
             
             try {
                 // Parse start date
-                $start_date = new DateTime($_POST['start_date'], $dtz);
+                $start_date = new DateTime(sanitize_text_field($_POST['start_date']), $dtz);
                 
                 // Parse end date
-                $end_date = new DateTime($_POST['end_date'], $dtz);
+                $end_date = new DateTime(sanitize_text_field($_POST['end_date']), $dtz);
                 
                 // Ensure start date is not after end date
                 if ($start_date > $end_date) {
-                    wp_send_json_error('Start date cannot be after end date');
+                    wp_send_json_error(esc_html__('Start date cannot be after end date', 'muslim-prayer-times'));
                     return;
                 }
                 
@@ -111,7 +111,7 @@ function muslprti_handle_generate() {
                 
                 // Limit to 730 days (2 years) to prevent server overload
                 if ($days_diff > 730) {
-                    wp_send_json_error('Custom date range cannot exceed 2 years (730 days)');
+                    wp_send_json_error(esc_html__('Custom date range cannot exceed 2 years (730 days)', 'muslim-prayer-times'));
                     return;
                 }
                 
@@ -121,7 +121,7 @@ function muslprti_handle_generate() {
                 error_log('Muslim Prayer Times Generate: Custom date range from ' . $start_date->format('Y-m-d') . ' to ' . $end_date->format('Y-m-d') . ' (' . $days_to_generate . ' days)');
                 
             } catch (Exception $e) {
-                wp_send_json_error('Invalid date format: ' . $e->getMessage());
+                wp_send_json_error(esc_html__('Invalid date format: ', 'muslim-prayer-times') . esc_html($e->getMessage()));
                 return;
             }
         } else {
@@ -139,7 +139,7 @@ function muslprti_handle_generate() {
         }
         
         // Debug log - add to error_log
-        error_log('Muslim Prayer Times Generate: POST data = ' . print_r($_POST, true));
+        error_log('Muslim Prayer Times Generate: POST data = ' . print_r(array_map('sanitize_text_field', $_POST), true));
         
         // Initialize the PrayerTimes object
         $pt = new PrayerTimes($method, $asr_calc);
@@ -368,7 +368,7 @@ function muslprti_handle_generate() {
         
     } catch (\Throwable $e) {
         error_log('Muslim Prayer Times Generate Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
-        wp_send_json_error('Error generating prayer times: ' . $e->getMessage());
+        wp_send_json_error(esc_html__('Error generating prayer times: ', 'muslim-prayer-times') . esc_html($e->getMessage()));
     }
 }
 add_action('wp_ajax_muslprti_generate_times', 'muslprti_handle_generate');
@@ -378,7 +378,7 @@ function muslprti_handle_export_db() {
     check_ajax_referer('muslprti_export_db_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error('You do not have permission to export prayer times');
+        wp_send_json_error(esc_html__('You do not have permission to export prayer times', 'muslim-prayer-times'));
         return;
     }
     
@@ -457,7 +457,7 @@ function muslprti_handle_export_db() {
         ]);
         
     } catch (\Throwable $e) {
-        wp_send_json_error('Error exporting prayer times: ' . $e->getMessage());
+        wp_send_json_error(esc_html__('Error exporting prayer times: ', 'muslim-prayer-times') . esc_html($e->getMessage()));
     }
 }
 add_action('wp_ajax_muslprti_export_db', 'muslprti_handle_export_db');
@@ -467,12 +467,12 @@ function muslprti_handle_import_preview() {
     check_ajax_referer('muslprti_import_preview_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error('Permission denied');
+        wp_send_json_error(esc_html__('Permission denied', 'muslim-prayer-times'));
         return;
     }
     
     if (empty($_FILES['import_file'])) {
-        wp_send_json_error('No file uploaded');
+        wp_send_json_error(esc_html__('No file uploaded', 'muslim-prayer-times'));
         return;
     }
     
@@ -481,15 +481,15 @@ function muslprti_handle_import_preview() {
     // Check for upload errors
     if ($file['error'] !== UPLOAD_ERR_OK) {
         $upload_errors = array(
-            UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize directive',
-            UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE directive',
-            UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
-            UPLOAD_ERR_NO_FILE => 'No file was uploaded',
-            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
-            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
-            UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload'
+            UPLOAD_ERR_INI_SIZE => esc_html__('File exceeds upload_max_filesize directive', 'muslim-prayer-times'),
+            UPLOAD_ERR_FORM_SIZE => esc_html__('File exceeds MAX_FILE_SIZE directive', 'muslim-prayer-times'),
+            UPLOAD_ERR_PARTIAL => esc_html__('File was only partially uploaded', 'muslim-prayer-times'),
+            UPLOAD_ERR_NO_FILE => esc_html__('No file was uploaded', 'muslim-prayer-times'),
+            UPLOAD_ERR_NO_TMP_DIR => esc_html__('Missing a temporary folder', 'muslim-prayer-times'),
+            UPLOAD_ERR_CANT_WRITE => esc_html__('Failed to write file to disk', 'muslim-prayer-times'),
+            UPLOAD_ERR_EXTENSION => esc_html__('A PHP extension stopped the file upload', 'muslim-prayer-times')
         );
-        $error_message = isset($upload_errors[$file['error']]) ? $upload_errors[$file['error']] : 'Unknown upload error';
+        $error_message = isset($upload_errors[$file['error']]) ? $upload_errors[$file['error']] : esc_html__('Unknown upload error', 'muslim-prayer-times');
         wp_send_json_error($error_message);
         return;
     }
@@ -497,7 +497,7 @@ function muslprti_handle_import_preview() {
     // Check file type
     $file_type = wp_check_filetype(basename($file['name']), array('csv' => 'text/csv'));
     if (!$file_type['ext']) {
-        wp_send_json_error('Invalid file type. Please upload a CSV file.');
+        wp_send_json_error(esc_html__('Invalid file type. Please upload a CSV file.', 'muslim-prayer-times'));
         return;
     }
     
@@ -514,14 +514,14 @@ function muslprti_handle_import_preview() {
     // Get file content using WP_Filesystem
     $content = $wp_filesystem->get_contents($file['tmp_name']);
     if ($content === false) {
-        wp_send_json_error('Failed to read file');
+        wp_send_json_error(esc_html__('Failed to read file', 'muslim-prayer-times'));
         return;
     }
     
     // Process CSV content
     $lines = explode("\n", $content);
     if (empty($lines)) {
-        wp_send_json_error('No data found in the CSV file');
+        wp_send_json_error(esc_html__('No data found in the CSV file', 'muslim-prayer-times'));
         return;
     }
     
@@ -533,7 +533,7 @@ function muslprti_handle_import_preview() {
     $expected_headers = array('day', 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama');
     
     if (count(array_intersect($expected_headers, $header)) !== count($expected_headers)) {
-        wp_send_json_error('CSV header format is invalid. Expected columns: ' . implode(', ', $expected_headers));
+        wp_send_json_error(esc_html__('CSV header format is invalid. Expected columns: ', 'muslim-prayer-times') . esc_html(implode(', ', $expected_headers)));
         return;
     }
     
@@ -543,6 +543,9 @@ function muslprti_handle_import_preview() {
         
         $data = str_getcsv($line);
         if (count($data) === count($header)) {
+            // Sanitize each value
+            $data = array_map('sanitize_text_field', $data);
+            
             $row = array_combine($header, $data);
             
             // Convert any date format to Y-m-d
@@ -561,7 +564,7 @@ function muslprti_handle_import_preview() {
                 if ($date_obj) {
                     $row['day'] = $date_obj->format('Y-m-d');
                 } else {
-                    $row['day_error'] = 'Invalid date format';
+                    $row['day_error'] = esc_html__('Invalid date format', 'muslim-prayer-times');
                 }
             }
             
@@ -570,7 +573,7 @@ function muslprti_handle_import_preview() {
     }
     
     if (empty($rows)) {
-        wp_send_json_error('No valid data found in the CSV file');
+        wp_send_json_error(esc_html__('No valid data found in the CSV file', 'muslim-prayer-times'));
         return;
     }
     
@@ -587,12 +590,12 @@ function muslprti_handle_import() {
     check_ajax_referer('muslprti_import_nonce', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error('Permission denied');
+        wp_send_json_error(esc_html__('Permission denied', 'muslim-prayer-times'));
         return;
     }
     
     if (empty($_FILES['import_file'])) {
-        wp_send_json_error('No file uploaded');
+        wp_send_json_error(esc_html__('No file uploaded', 'muslim-prayer-times'));
         return;
     }
     
@@ -603,7 +606,7 @@ function muslprti_handle_import() {
     
     // Check for upload errors
     if ($file['error'] !== UPLOAD_ERR_OK) {
-        wp_send_json_error('File upload error: ' . $file['error']);
+        wp_send_json_error(esc_html__('File upload error: ', 'muslim-prayer-times') . esc_html($file['error']));
         return;
     }
     
@@ -617,14 +620,14 @@ function muslprti_handle_import() {
     // Get file content using WP_Filesystem
     $content = $wp_filesystem->get_contents($file['tmp_name']);
     if ($content === false) {
-        wp_send_json_error('Failed to read file');
+        wp_send_json_error(esc_html__('Failed to read file', 'muslim-prayer-times'));
         return;
     }
     
     // Process CSV content
     $lines = explode("\n", $content);
     if (empty($lines)) {
-        wp_send_json_error('No data found in the CSV file');
+        wp_send_json_error(esc_html__('No data found in the CSV file', 'muslim-prayer-times'));
         return;
     }
     
@@ -642,6 +645,8 @@ function muslprti_handle_import() {
         
         $data = str_getcsv($line);
         if (count($data) === count($header)) {
+            // Sanitize all data values
+            $data = array_map('sanitize_text_field', $data);
             $row = array_combine($header, $data);
             
             // Parse date
@@ -657,7 +662,10 @@ function muslprti_handle_import() {
             
             if (!$date_obj) {
                 $error_count++;
-                $errors[] = "Row skipped: Invalid date format '{$row['day']}'";
+                $errors[] = sprintf(
+                    esc_html__('Row skipped: Invalid date format %s', 'muslim-prayer-times'),
+                    esc_html($row['day'])
+                );
                 continue;
             }
             
@@ -687,7 +695,7 @@ function muslprti_handle_import() {
                 }
             }
             
-            // Insert or update the database record
+            // Insert or update the database record - using prepared statements for security
             $result = $wpdb->replace(
                 $table_name,
                 array(
@@ -711,7 +719,11 @@ function muslprti_handle_import() {
                 $success_count++;
             } else {
                 $error_count++;
-                $errors[] = "Database error on row with date {$row['day']}: " . $wpdb->last_error;
+                $errors[] = sprintf(
+                    esc_html__('Database error on row with date %s: %s', 'muslim-prayer-times'),
+                    esc_html($row['day']),
+                    esc_html($wpdb->last_error)
+                );
             }
         }
     }
@@ -719,7 +731,7 @@ function muslprti_handle_import() {
     wp_send_json_success(array(
         'success_count' => $success_count,
         'error_count' => $error_count,
-        'errors' => $errors
+        'errors' => array_map('esc_html', $errors)
     ));
 }
 add_action('wp_ajax_muslprti_import', 'muslprti_handle_import');
@@ -742,7 +754,7 @@ function muslprti_handle_hijri_preview() {
     $hijri_date = muslprti_convert_to_hijri($today, true, 'en', $offset);
     
     wp_send_json_success([
-        'hijri_date' => $hijri_date
+        'hijri_date' => esc_html($hijri_date)
     ]);
 }
 add_action('wp_ajax_muslprti_preview_hijri', 'muslprti_handle_hijri_preview');

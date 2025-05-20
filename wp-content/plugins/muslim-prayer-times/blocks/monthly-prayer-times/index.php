@@ -20,9 +20,9 @@ function muslprti_monthly_prayer_times_editor_assets() {
         filemtime(plugin_dir_path(__FILE__) . 'block.js')
     );
     
-    // Add plugin URL data to be used in JavaScript
+    // Add plugin URL data to be used in JavaScript - sanitize the URL
     wp_localize_script('muslprti-monthly-prayer-times-block', 'wpPrayerTimesData', array(
-        'pluginUrl' => plugins_url('', dirname(dirname(__FILE__)))
+        'pluginUrl' => esc_url(plugins_url('', dirname(dirname(__FILE__))))
     ));
 }
 add_action('enqueue_block_editor_assets', 'muslprti_monthly_prayer_times_editor_assets');
@@ -39,8 +39,9 @@ function muslprti_monthly_prayer_times_frontend_assets() {
         true
     );
     
+    // Localize script with properly sanitized/escaped data
     wp_localize_script('muslprti-monthly-prayer-times-frontend', 'muslprti_monthly_ajax', array(
-        'ajax_url' => admin_url('admin-ajax.php'),
+        'ajax_url' => esc_url(admin_url('admin-ajax.php')),
         'nonce' => wp_create_nonce('muslprti_monthly_prayer_times_nonce')
     ));
 }

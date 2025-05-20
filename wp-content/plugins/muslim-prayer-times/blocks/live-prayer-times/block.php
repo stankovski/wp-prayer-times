@@ -138,91 +138,92 @@ function muslprti_render_live_prayer_times_block($attributes) {
     // Get timezone from settings
     $opts = get_option('muslprti_settings', []);
     $timezone = muslprti_get_timezone();
-    $timeFormat = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
+    $timeFormat = isset($opts['time_format']) ? sanitize_text_field($opts['time_format']) : '12hour';
 
-    // Extract attributes for styling
-    $className = isset($attributes['className']) ? $attributes['className'] : '';
-    $align = isset($attributes['align']) ? $attributes['align'] : 'center';
-    $textColor = isset($attributes['textColor']) ? $attributes['textColor'] : '';
-    $backgroundColor = isset($attributes['backgroundColor']) ? $attributes['backgroundColor'] : '';
-    $headerColor = isset($attributes['headerColor']) ? $attributes['headerColor'] : '';
-    $headerTextColor = isset($attributes['headerTextColor']) ? $attributes['headerTextColor'] : '';
-    $highlightColor = isset($attributes['highlightColor']) ? $attributes['highlightColor'] : '';
-    $clockColor = isset($attributes['clockColor']) ? $attributes['clockColor'] : '';
-    $clockSize = isset($attributes['clockSize']) ? $attributes['clockSize'] : 40;
-    $showDate = isset($attributes['showDate']) ? $attributes['showDate'] : true;
-    $showHijriDate = isset($attributes['showHijriDate']) ? $attributes['showHijriDate'] : true;
-    $showSunrise = isset($attributes['showSunrise']) ? $attributes['showSunrise'] : true;
-    $tableStyle = isset($attributes['tableStyle']) ? $attributes['tableStyle'] : 'default';
-    $fontSize = isset($attributes['fontSize']) ? $attributes['fontSize'] : 16;
-    $showSeconds = isset($attributes['showSeconds']) ? $attributes['showSeconds'] : true;
-    $showChanges = isset($attributes['showChanges']) ? $attributes['showChanges'] : true;
-    $changeColor = isset($attributes['changeColor']) ? $attributes['changeColor'] : '#ff0000';
-    $nextPrayerColor = isset($attributes['nextPrayerColor']) ? $attributes['nextPrayerColor'] : 'rgba(255, 255, 102, 0.3)';
+    // Extract attributes for styling with sanitization
+    $className = isset($attributes['className']) ? sanitize_html_class($attributes['className']) : '';
+    $align = isset($attributes['align']) ? sanitize_text_field($attributes['align']) : 'center';
+    $textColor = isset($attributes['textColor']) ? sanitize_hex_color($attributes['textColor']) : '';
+    $backgroundColor = isset($attributes['backgroundColor']) ? sanitize_hex_color($attributes['backgroundColor']) : '';
+    $headerColor = isset($attributes['headerColor']) ? sanitize_hex_color($attributes['headerColor']) : '';
+    $headerTextColor = isset($attributes['headerTextColor']) ? sanitize_hex_color($attributes['headerTextColor']) : '';
+    $highlightColor = isset($attributes['highlightColor']) ? sanitize_hex_color($attributes['highlightColor']) : '';
+    $clockColor = isset($attributes['clockColor']) ? sanitize_hex_color($attributes['clockColor']) : '';
+    $clockSize = isset($attributes['clockSize']) ? absint($attributes['clockSize']) : 40;
+    $showDate = isset($attributes['showDate']) ? (bool)$attributes['showDate'] : true;
+    $showHijriDate = isset($attributes['showHijriDate']) ? (bool)$attributes['showHijriDate'] : true;
+    $showSunrise = isset($attributes['showSunrise']) ? (bool)$attributes['showSunrise'] : true;
+    $tableStyle = isset($attributes['tableStyle']) ? sanitize_text_field($attributes['tableStyle']) : 'default';
+    $fontSize = isset($attributes['fontSize']) ? absint($attributes['fontSize']) : 16;
+    $showSeconds = isset($attributes['showSeconds']) ? (bool)$attributes['showSeconds'] : true;
+    $showChanges = isset($attributes['showChanges']) ? (bool)$attributes['showChanges'] : true;
+    $changeColor = isset($attributes['changeColor']) ? sanitize_hex_color($attributes['changeColor']) : '#ff0000';
+    $nextPrayerColor = isset($attributes['nextPrayerColor']) ? sanitize_text_field($attributes['nextPrayerColor']) : 'rgba(255, 255, 102, 0.3)';
     
     // Create CSS for dynamic styling
     $block_id = 'muslprti-live-prayer-times-' . uniqid();
     
-    // Build CSS rules
+    // Build CSS rules with proper escaping
     $dynamic_css = "
         #{$block_id} {
-            text-align: {$align};
-            " . ($fontSize ? "font-size: {$fontSize}px;" : "") . "
+            text-align: " . esc_attr($align) . ";
+            " . ($fontSize ? "font-size: " . esc_attr($fontSize) . "px;" : "") . "
         }
         
         #{$block_id} .prayer-time-row {
-            " . ($backgroundColor ? "background-color: {$backgroundColor};" : "") . "
+            " . ($backgroundColor ? "background-color: " . esc_attr($backgroundColor) . ";" : "") . "
         }
         
         #{$block_id} table {
-            " . ($textColor ? "color: {$textColor};" : "") . "
+            " . ($textColor ? "color: " . esc_attr($textColor) . ";" : "") . "
         }
         
         #{$block_id} th,
         #{$block_id} .prayer-times-header {
-            " . ($headerColor ? "background-color: {$headerColor};" : "") . "
-            " . ($headerTextColor ? "color: {$headerTextColor};" : "") . "
+            " . ($headerColor ? "background-color: " . esc_attr($headerColor) . ";" : "") . "
+            " . ($headerTextColor ? "color: " . esc_attr($headerTextColor) . ";" : "") . "
         }
         
         #{$block_id} .highlight-time {
-            " . ($highlightColor ? "color: {$highlightColor};" : "") . "
+            " . ($highlightColor ? "color: " . esc_attr($highlightColor) . ";" : "") . "
         }
         
         #{$block_id} .change-header {
-            color: {$changeColor};
-            " . ($headerColor ? "background-color: {$headerColor};" : "") . "
+            color: " . esc_attr($changeColor) . ";
+            " . ($headerColor ? "background-color: " . esc_attr($headerColor) . ";" : "") . "
         }
         
         #{$block_id} .prayer-times-next {
-            background-color: {$nextPrayerColor};
+            background-color: " . esc_attr($nextPrayerColor) . ";
         }
     ";
     
     // Add the dynamic CSS to our registered style handle
     wp_add_inline_style('muslprti-live-prayer-times-dynamic-style', $dynamic_css);
+    
+    // Clock styling
+    $clock_style = '';
     if ($clockColor) {
-        $clock_style .= "color: {$clockColor};";
+        $clock_style .= "color: " . esc_attr($clockColor) . ";";
     }
     if ($clockSize) {
-        $clock_style .= "font-size: {$clockSize}px;";
+        $clock_style .= "font-size: " . esc_attr($clockSize) . "px;";
     }
     
     // Define icons for each prayer
     $icons_dir = plugins_url('assets/icons/', dirname(__DIR__));
     $prayer_icons = array(
-        'fajr' => $icons_dir . 'fajr.svg',
-        'sunrise' => $icons_dir . 'sunrise.svg',
-        'dhuhr' => $icons_dir . 'dhuhr.svg',
-        'asr' => $icons_dir . 'asr.svg',
-        'maghrib' => $icons_dir . 'maghrib.svg',
-        'isha' => $icons_dir . 'isha.svg',
-        'athan' => $icons_dir . 'athan.svg',
-        'iqama' => $icons_dir . 'iqama.svg',
+        'fajr' => esc_url($icons_dir . 'fajr.svg'),
+        'sunrise' => esc_url($icons_dir . 'sunrise.svg'),
+        'dhuhr' => esc_url($icons_dir . 'dhuhr.svg'),
+        'asr' => esc_url($icons_dir . 'asr.svg'),
+        'maghrib' => esc_url($icons_dir . 'maghrib.svg'),
+        'isha' => esc_url($icons_dir . 'isha.svg'),
+        'athan' => esc_url($icons_dir . 'athan.svg'),
+        'iqama' => esc_url($icons_dir . 'iqama.svg'),
     );
     
-    // Use the block ID that was defined above for CSS targeting
-    
-    // Build the HTML output
+    // Build the HTML output with proper escaping
     $output = '<div id="' . esc_attr($block_id) . '" class="wp-block-prayer-times-live-prayer-times ' . esc_attr($className) . '" 
                data-show-seconds="' . esc_attr($showSeconds ? '1' : '0') . '"
                data-show-date="' . esc_attr($showDate ? '1' : '0') . '"
@@ -241,24 +242,24 @@ function muslprti_render_live_prayer_times_block($attributes) {
     // Add date placeholder if enabled
     if ($showDate) {
         $output .= '<div class="prayer-times-date">';
-        $output .= '<div class="gregorian-date">Loading date...</div>';
+        $output .= '<div class="gregorian-date">' . esc_html__('Loading date...', 'muslim-prayer-times') . '</div>';
         if ($showHijriDate) {
             $output .= '<div class="hijri-date"></div>';
-            $output .= '<div class="hijri-date-arabic" style="' . esc_attr($highlight_style) . '"></div>';
+            $output .= '<div class="hijri-date-arabic"></div>';
         }
         $output .= '</div>';
     }
     
     // Prayer times table (initial structure that will be populated via AJAX)
-    $output .= '<table class="prayer-times-live-table ' . esc_attr('table-style-' . $tableStyle) . '" style="' . esc_attr($table_style) . '">';
+    $output .= '<table class="prayer-times-live-table ' . esc_attr('table-style-' . $tableStyle) . '">';
     
     // Table header
-    $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
-    $output .= '<th style="' . esc_attr($header_style) . '"></th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['athan']) . '" alt="Athan" class="header-icon">Athan</th><th style="' . esc_attr($header_style) . '"><img src="' . esc_url($prayer_icons['iqama']) . '" alt="Iqama" class="header-icon">Iqama</th>';
+    $output .= '<thead><tr>';
+    $output .= '<th></th><th><img src="' . esc_url($prayer_icons['athan']) . '" alt="' . esc_attr__('Athan', 'muslim-prayer-times') . '" class="header-icon">' . esc_html__('Athan', 'muslim-prayer-times') . '</th><th><img src="' . esc_url($prayer_icons['iqama']) . '" alt="' . esc_attr__('Iqama', 'muslim-prayer-times') . '" class="header-icon">' . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
     
     // Add the changes column header if enabled
     if ($showChanges) {
-        $output .= '<th style="' . esc_attr($change_header_style) . '" class="changes-column"></th>';
+        $output .= '<th class="changes-column"></th>';
     }
     
     $output .= '</tr></thead>';
@@ -268,12 +269,12 @@ function muslprti_render_live_prayer_times_block($attributes) {
     
     // Prayer rows - Create the structure with icons, but no times
     $prayer_map = array(
-        'fajr' => array('name' => 'Fajr'),
-        'sunrise' => array('name' => 'Sunrise'),
-        'dhuhr' => array('name' => 'Dhuhr'),
-        'asr' => array('name' => 'Asr'),
-        'maghrib' => array('name' => 'Maghrib'),
-        'isha' => array('name' => 'Isha')
+        'fajr' => array('name' => esc_html__('Fajr', 'muslim-prayer-times')),
+        'sunrise' => array('name' => esc_html__('Sunrise', 'muslim-prayer-times')),
+        'dhuhr' => array('name' => esc_html__('Dhuhr', 'muslim-prayer-times')),
+        'asr' => array('name' => esc_html__('Asr', 'muslim-prayer-times')),
+        'maghrib' => array('name' => esc_html__('Maghrib', 'muslim-prayer-times')),
+        'isha' => array('name' => esc_html__('Isha', 'muslim-prayer-times'))
     );
     
     foreach ($prayer_map as $prayer_key => $prayer_data) {
@@ -282,7 +283,7 @@ function muslprti_render_live_prayer_times_block($attributes) {
             continue;
         }
         
-        $output .= '<tr' . ($prayer_key === 'sunrise' ? ' class="sunrise-row"' : '') . ' style="' . esc_attr($row_style) . '">';
+        $output .= '<tr' . ($prayer_key === 'sunrise' ? ' class="sunrise-row"' : '') . '>';
         $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons[$prayer_key]) . '" alt="' . esc_attr($prayer_data['name']) . '" class="prayer-icon"> ' . esc_html($prayer_data['name']) . '</td>';
         
         if ($prayer_key === 'sunrise') {
@@ -295,7 +296,7 @@ function muslprti_render_live_prayer_times_block($attributes) {
             }
         } else {
             // Regular prayer with athan and iqama
-            $output .= '<td class="athan-time" style="' . esc_attr($highlight_style) . '">-</td>';
+            $output .= '<td class="athan-time">-</td>';
             $output .= '<td class="iqama-time">-</td>';
             
             // Add changes cell if enabled
@@ -331,6 +332,7 @@ function muslprti_render_live_prayer_times_block($attributes) {
  * Helper function to convert hex color to RGB
  */
 function muslprti_hex2rgb($hex) {
+    $hex = sanitize_hex_color($hex);
     $hex = str_replace('#', '', $hex);
     
     if(strlen($hex) == 3) {
@@ -343,5 +345,5 @@ function muslprti_hex2rgb($hex) {
         $b = hexdec(substr($hex, 4, 2));
     }
     
-    return array('r' => $r, 'g' => $g, 'b' => $b);
+    return array('r' => absint($r), 'g' => absint($g), 'b' => absint($b));
 }
