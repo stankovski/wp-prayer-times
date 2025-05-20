@@ -1,1 +1,1 @@
-./vendor/bin/phpunit wp-content/plugins/muslim-prayer-times/tests
+./vendor/bin/phpunit tests

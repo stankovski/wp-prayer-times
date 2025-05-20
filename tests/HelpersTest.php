@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 
 if (!defined('ABSPATH')) {
-    define('ABSPATH', dirname(dirname(dirname(dirname(__FILE__)))) . '/');
+    define('ABSPATH', dirname(dirname(__FILE__)) . '/wp-content/');
 }
 
 // Mock WordPress get_option function
