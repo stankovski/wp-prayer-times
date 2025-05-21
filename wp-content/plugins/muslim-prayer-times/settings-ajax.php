@@ -117,9 +117,6 @@ function muslprti_handle_generate() {
                 
                 $days_to_generate = $days_diff;
                 
-                // Debug log
-                error_log('Muslim Prayer Times Generate: Custom date range from ' . $start_date->format('Y-m-d') . ' to ' . $end_date->format('Y-m-d') . ' (' . $days_to_generate . ' days)');
-                
             } catch (Exception $e) {
                 wp_send_json_error(esc_html__('Invalid date format: ', 'muslim-prayer-times') . esc_html($e->getMessage()));
                 return;
@@ -133,13 +130,7 @@ function muslprti_handle_generate() {
             
             // Use current date as start date
             $start_date = clone $now;
-            
-            // Debug log
-            error_log('Muslim Prayer Times Generate: Days to generate = ' . $days_to_generate);
         }
-        
-        // Debug log - add to error_log
-        error_log('Muslim Prayer Times Generate: POST data = ' . print_r(array_map('sanitize_text_field', $_POST), true));
         
         // Initialize the PrayerTimes object
         $pt = new PrayerTimes($method, $asr_calc);
@@ -358,16 +349,12 @@ function muslprti_handle_generate() {
             $csv_content .= implode(',', $row) . "\n";
         }
         
-        // Debug info - how many rows were generated
-        error_log('Muslim Prayer Times Generate: Generated ' . count($csv_data) . ' rows');
-        
         wp_send_json_success([
             'filename' => 'prayer_times_' . muslprti_date('Y-m-d') . '.csv',
             'content' => $csv_content
         ]);
         
     } catch (\Throwable $e) {
-        error_log('Muslim Prayer Times Generate Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
         // translators: %s is the error message from the server
         wp_send_json_error(esc_html__('Error generating prayer times: ', 'muslim-prayer-times') . esc_html($e->getMessage()));
     }

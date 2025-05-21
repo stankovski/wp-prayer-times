@@ -22,7 +22,6 @@ function muslprti_upgrade_database() {
     // Only add the column if it doesn't exist
     if (empty($column_exists)) {
         $wpdb->query("ALTER TABLE $table_name ADD COLUMN sunrise time DEFAULT NULL AFTER fajr_iqama");
-        error_log('Muslim Prayer Times Plugin: Sunrise column added to database');
         update_option('muslprti_db_version', '1.1');
     }
     
