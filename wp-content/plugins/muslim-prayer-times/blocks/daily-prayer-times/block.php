@@ -245,6 +245,7 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         // If no prayer times for this day, create an empty slide with a message
         if (!$prayer_times) {
             $output .= '<div class="prayer-times-carousel-item">';
+            // translators: %s is a date in the format "Day of week, Month Day, Year" (e.g. "Monday, January 1, 2023")
             $output .= '<p>' . esc_html(sprintf(__('No prayer times available for %s', 'muslim-prayer-times'), 
                 muslprti_date('l, F j, Y', strtotime($current_date)))) . '</p>';
             $output .= '</div>';
@@ -314,7 +315,7 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         
         // Table header
         $output .= '<thead><tr style="' . esc_attr($header_style) . '">';
-        $output .= '<th>' . esc_html__('', 'muslim-prayer-times') . '</th><th>' . esc_html__('Athan', 'muslim-prayer-times') . '</th><th>' . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
+        $output .= '<th></th><th>' . esc_html__('Athan', 'muslim-prayer-times') . '</th><th>' . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
         $output .= '</tr></thead>';
         
         // Table body

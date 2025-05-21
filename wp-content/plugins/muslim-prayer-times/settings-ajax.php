@@ -368,6 +368,7 @@ function muslprti_handle_generate() {
         
     } catch (\Throwable $e) {
         error_log('Muslim Prayer Times Generate Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+        // translators: %s is the error message from the server
         wp_send_json_error(esc_html__('Error generating prayer times: ', 'muslim-prayer-times') . esc_html($e->getMessage()));
     }
 }
@@ -533,6 +534,7 @@ function muslprti_handle_import_preview() {
     $expected_headers = array('day', 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama');
     
     if (count(array_intersect($expected_headers, $header)) !== count($expected_headers)) {
+        // translators: %s is the list of expected column names in the CSV file
         wp_send_json_error(esc_html__('CSV header format is invalid. Expected columns: ', 'muslim-prayer-times') . esc_html(implode(', ', $expected_headers)));
         return;
     }
@@ -606,6 +608,7 @@ function muslprti_handle_import() {
     
     // Check for upload errors
     if ($file['error'] !== UPLOAD_ERR_OK) {
+        // translators: %s is the file upload error code
         wp_send_json_error(esc_html__('File upload error: ', 'muslim-prayer-times') . esc_html($file['error']));
         return;
     }
@@ -663,6 +666,7 @@ function muslprti_handle_import() {
             if (!$date_obj) {
                 $error_count++;
                 $errors[] = sprintf(
+                    // translators: %s is the invalid date value from the CSV file
                     esc_html__('Row skipped: Invalid date format %s', 'muslim-prayer-times'),
                     esc_html($row['day'])
                 );
@@ -720,7 +724,8 @@ function muslprti_handle_import() {
             } else {
                 $error_count++;
                 $errors[] = sprintf(
-                    esc_html__('Database error on row with date %s: %s', 'muslim-prayer-times'),
+                    // translators: %1$s is the date of the row, %2$s is the database error message
+                    esc_html__('Database error on row with date %1$s: %2$s', 'muslim-prayer-times'),
                     esc_html($row['day']),
                     esc_html($wpdb->last_error)
                 );
