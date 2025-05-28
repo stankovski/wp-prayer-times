@@ -178,22 +178,49 @@ function muslprti_render_monthly_prayer_times_block($attributes) {
             break;
     }
     
-    // Get prayer times for the specified date range using prepared query with caching
-    $cache_key = 'muslprti_monthly_prayer_times_' . $start_date->format('Y-m-d') . '_' . $end_date->format('Y-m-d');
-    $prayer_times = wp_cache_get($cache_key, 'muslim_prayer_times');
+    // Get prayer times for the specified date range with caching
+    $prayer_times = array();
+    $first_uncached_date = null;
     
-    if (false === $prayer_times) {
-        $prayer_times = $wpdb->get_results($wpdb->prepare(
+    // Check cache for each day in the range
+    $current_check = clone $start_date;
+    while ($current_check <= $end_date) {
+        $date_string = $current_check->format('Y-m-d');
+        $cache_key = 'muslprti_prayer_times_' . $date_string;
+        $cached_day = wp_cache_get($cache_key, 'muslim_prayer_times');
+        
+        if (false !== $cached_day && !empty($cached_day)) {
+            $prayer_times[] = $cached_day;
+        } else {
+            // Once we find an uncached day, assume all remaining days are uncached
+            $first_uncached_date = $date_string;
+            break;
+        }
+        $current_check->modify('+1 day');
+    }
+    
+    // If we have uncached dates, fetch them from database
+    if ($first_uncached_date !== null) {
+        $db_results = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM $table_name 
              WHERE day BETWEEN %s AND %s 
              ORDER BY day ASC",
-            $start_date->format('Y-m-d'),
+            $first_uncached_date,
             $end_date->format('Y-m-d')
         ), ARRAY_A);
         
-        // Cache the result for 1 hour (3600 seconds)
-        wp_cache_set($cache_key, $prayer_times, 'muslim_prayer_times', 3600);
+        // Cache each day individually and add to prayer_times array
+        foreach ($db_results as $day_data) {
+            $cache_key = 'muslprti_prayer_times_' . $day_data['day'];
+            wp_cache_set($cache_key, $day_data, 'muslim_prayer_times', 3600);
+            $prayer_times[] = $day_data;
+        }
     }
+    
+    // Sort the final array by day to ensure proper order
+    usort($prayer_times, function($a, $b) {
+        return strcmp($a['day'], $b['day']);
+    });
     
     // If no times available, return a message
     if (empty($prayer_times)) {
@@ -436,22 +463,49 @@ function muslprti_monthly_prayer_times_pagination() {
     $start_of_month = new DateTime("$year-$month-01");
     $end_of_month = new DateTime($start_of_month->format('Y-m-t'));
     
-    // Get prayer times for the entire month using prepared query with caching
-    $cache_key = 'muslprti_monthly_prayer_times_' . $start_of_month->format('Y-m-d') . '_' . $end_of_month->format('Y-m-d');
-    $prayer_times = wp_cache_get($cache_key, 'muslim_prayer_times');
+    // Get prayer times for the entire month with caching
+    $prayer_times = array();
+    $first_uncached_date = null;
     
-    if (false === $prayer_times) {
-        $prayer_times = $wpdb->get_results($wpdb->prepare(
+    // Check cache for each day in the month
+    $current_check = clone $start_of_month;
+    while ($current_check <= $end_of_month) {
+        $date_string = $current_check->format('Y-m-d');
+        $cache_key = 'muslprti_prayer_times_' . $date_string;
+        $cached_day = wp_cache_get($cache_key, 'muslim_prayer_times');
+        
+        if (false !== $cached_day && !empty($cached_day)) {
+            $prayer_times[] = $cached_day;
+        } else {
+            // Once we find an uncached day, assume all remaining days are uncached
+            $first_uncached_date = $date_string;
+            break;
+        }
+        $current_check->modify('+1 day');
+    }
+    
+    // If we have uncached dates, fetch them from database
+    if ($first_uncached_date !== null) {
+        $db_results = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM $table_name 
              WHERE day BETWEEN %s AND %s 
              ORDER BY day ASC",
-            $start_of_month->format('Y-m-d'),
+            $first_uncached_date,
             $end_of_month->format('Y-m-d')
         ), ARRAY_A);
         
-        // Cache the result for 1 hour (3600 seconds)
-        wp_cache_set($cache_key, $prayer_times, 'muslim_prayer_times', 3600);
+        // Cache each day individually and add to prayer_times array
+        foreach ($db_results as $day_data) {
+            $cache_key = 'muslprti_prayer_times_' . $day_data['day'];
+            wp_cache_set($cache_key, $day_data, 'muslim_prayer_times', 3600);
+            $prayer_times[] = $day_data;
+        }
     }
+    
+    // Sort the final array by day to ensure proper order
+    usort($prayer_times, function($a, $b) {
+        return strcmp($a['day'], $b['day']);
+    });
     
     // If no times available, return error
     if (empty($prayer_times)) {
@@ -504,21 +558,13 @@ function muslprti_check_month_availability() {
     $start_of_month = new DateTime("$year-$month-01");
     $end_of_month = new DateTime($start_of_month->format('Y-m-t'));
     
-    // Check if there are any prayer times for the month using prepared query with caching
-    $cache_key = 'muslprti_month_count_' . $start_of_month->format('Y-m-d') . '_' . $end_of_month->format('Y-m-d');
-    $count = wp_cache_get($cache_key, 'muslim_prayer_times');
-    
-    if (false === $count) {
-        $count = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $table_name 
-             WHERE day BETWEEN %s AND %s",
-            $start_of_month->format('Y-m-d'),
-            $end_of_month->format('Y-m-d')
-        ));
-        
-        // Cache the result for 1 hour (3600 seconds)
-        wp_cache_set($cache_key, $count, 'muslim_prayer_times', 3600);
-    }
+    // Check if there are any prayer times for the month using prepared query
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table_name 
+         WHERE day BETWEEN %s AND %s",
+        $start_of_month->format('Y-m-d'),
+        $end_of_month->format('Y-m-d')
+    ));
     
     wp_send_json_success([
         'has_records' => ($count > 0),
