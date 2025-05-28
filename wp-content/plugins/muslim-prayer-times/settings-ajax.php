@@ -722,6 +722,8 @@ function muslprti_handle_import() {
             
             if ($result !== false) {
                 $success_count++;
+                // Clear the cache for the updated day
+                wp_cache_delete('muslprti_prayer_times_' . $row['day'], 'muslim_prayer_times');
             } else {
                 $error_count++;
                 $errors[] = sprintf(
