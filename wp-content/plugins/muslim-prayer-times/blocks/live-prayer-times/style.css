@@ -84,6 +84,9 @@
     vertical-align: middle;
     margin-right: 10px;
     display: inline-block;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .wp-block-prayer-times-live-prayer-times .header-icon {
@@ -94,6 +97,9 @@
     margin-top: 5px;
     margin-bottom: 5px;
     display: inline-block;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 /* Prayer Table Styles - Border Override */

@@ -7,10 +7,13 @@
 
 /* Banner image */
 .muslprti-banner {
-    max-width: 100%;
-    height: auto;
+    width: 100%;
+    height: 200px;
     margin-bottom: 20px;
     border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* Cards */

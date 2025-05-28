@@ -231,6 +231,14 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         'isha' => esc_url($icons_dir . 'isha.svg')
     );
     
+    // Helper function to get prayer icon HTML
+    $get_prayer_icon = function($prayer_name) use ($prayer_icons) {
+        if (isset($prayer_icons[$prayer_name])) {
+            return '<span class="prayer-icon" style="background-image: url(' . esc_url($prayer_icons[$prayer_name]) . ');" aria-hidden="true"></span>';
+        }
+        return '';
+    };
+
     // Build the HTML output
     $output = '<div class="wp-block-prayer-times-daily-prayer-times ' . esc_attr($className) . '" style="' . esc_attr($container_style) . '">';
     
@@ -326,7 +334,7 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         
         // Fajr row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['fajr']) . '" alt="' . esc_attr__('Fajr', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Fajr', 'muslim-prayer-times') . '</td>';
+        $output .= '<td class="prayer-name">' . $get_prayer_icon('fajr') . ' ' . esc_html__('Fajr', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['fajr_athan']) ? esc_html($formatted_times['fajr_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['fajr_iqama']) ? esc_html($formatted_times['fajr_iqama']) : '-') . '</td>';
         $output .= '</tr>';
@@ -334,35 +342,35 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         // Sunrise row (if enabled)
         if ($showSunrise) {
             $output .= '<tr class="sunrise-row">';
-            $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['sunrise']) . '" alt="' . esc_attr__('Sunrise', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Sunrise', 'muslim-prayer-times') . '</td>';
+            $output .= '<td class="prayer-name">' . $get_prayer_icon('sunrise') . ' ' . esc_html__('Sunrise', 'muslim-prayer-times') . '</td>';
             $output .= '<td colspan="2">' . (isset($formatted_times['sunrise']) ? esc_html($formatted_times['sunrise']) : '-') . '</td>';
             $output .= '</tr>';
         }
         
         // Dhuhr row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['dhuhr']) . '" alt="' . esc_attr__('Dhuhr', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Dhuhr', 'muslim-prayer-times') . '</td>';
+        $output .= '<td class="prayer-name">' . $get_prayer_icon('dhuhr') . ' ' . esc_html__('Dhuhr', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['dhuhr_athan']) ? esc_html($formatted_times['dhuhr_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['dhuhr_iqama']) ? esc_html($formatted_times['dhuhr_iqama']) : '-') . '</td>';
         $output .= '</tr>';
         
         // Asr row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['asr']) . '" alt="' . esc_attr__('Asr', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Asr', 'muslim-prayer-times') . '</td>';
+        $output .= '<td class="prayer-name">' . $get_prayer_icon('asr') . ' ' . esc_html__('Asr', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['asr_athan']) ? esc_html($formatted_times['asr_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['asr_iqama']) ? esc_html($formatted_times['asr_iqama']) : '-') . '</td>';
         $output .= '</tr>';
         
         // Maghrib row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['maghrib']) . '" alt="' . esc_attr__('Maghrib', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Maghrib', 'muslim-prayer-times') . '</td>';
+        $output .= '<td class="prayer-name">' . $get_prayer_icon('maghrib') . ' ' . esc_html__('Maghrib', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['maghrib_athan']) ? esc_html($formatted_times['maghrib_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['maghrib_iqama']) ? esc_html($formatted_times['maghrib_iqama']) : '-') . '</td>';
         $output .= '</tr>';
         
         // Isha row
         $output .= '<tr>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons['isha']) . '" alt="' . esc_attr__('Isha', 'muslim-prayer-times') . '" class="prayer-icon"> ' . esc_html__('Isha', 'muslim-prayer-times') . '</td>';
+        $output .= '<td class="prayer-name">' . $get_prayer_icon('isha') . ' ' . esc_html__('Isha', 'muslim-prayer-times') . '</td>';
         $output .= '<td>' . (isset($formatted_times['isha_athan']) ? esc_html($formatted_times['isha_athan']) : '-') . '</td>';
         $output .= '<td class="iqama-time">' . (isset($formatted_times['isha_iqama']) ? esc_html($formatted_times['isha_iqama']) : '-') . '</td>';
         $output .= '</tr>';

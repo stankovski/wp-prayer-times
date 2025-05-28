@@ -39,6 +39,9 @@
     vertical-align: middle;
     margin-right: 8px;
     display: inline-block;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .wp-block-prayer-times-daily-prayer-times .prayer-name {

@@ -427,7 +427,7 @@ function muslprti_settings_page() {
     <div class="wrap">
         <!-- Banner Image -->
         <div class="prayer-times-banner">
-            <img src="<?php echo esc_url(plugins_url('assets/admin-header.png', __FILE__)); ?>" alt="Muslim Prayer Times Banner" class="muslprti-banner">
+            <div class="muslprti-banner" style="background-image: url('<?php echo esc_url(plugins_url('assets/admin-header.png', __FILE__)); ?>');"></div>
         </div>
 
         <!-- New Header Section with Instructions -->

@@ -226,6 +226,14 @@ function muslprti_render_live_prayer_times_block($attributes) {
         'iqama' => esc_url($icons_dir . 'iqama.svg'),
     );
     
+    // Helper function to get prayer icon HTML
+    $get_prayer_icon = function($prayer_name, $class = 'prayer-icon') use ($prayer_icons) {
+        if (isset($prayer_icons[$prayer_name])) {
+            return '<span class="' . esc_attr($class) . '" style="background-image: url(' . esc_url($prayer_icons[$prayer_name]) . ');" aria-hidden="true"></span>';
+        }
+        return '';
+    };
+
     // Build the HTML output with proper escaping
     $output = '<div id="' . esc_attr($block_id) . '" class="wp-block-prayer-times-live-prayer-times ' . esc_attr($className) . '" 
                data-show-seconds="' . esc_attr($showSeconds ? '1' : '0') . '"
@@ -258,7 +266,7 @@ function muslprti_render_live_prayer_times_block($attributes) {
     
     // Table header
     $output .= '<thead><tr>';
-    $output .= '<th></th><th><img src="' . esc_url($prayer_icons['athan']) . '" alt="' . esc_attr__('Athan', 'muslim-prayer-times') . '" class="header-icon">' . esc_html__('Athan', 'muslim-prayer-times') . '</th><th><img src="' . esc_url($prayer_icons['iqama']) . '" alt="' . esc_attr__('Iqama', 'muslim-prayer-times') . '" class="header-icon">' . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
+    $output .= '<th></th><th>' . $get_prayer_icon('athan', 'header-icon') . esc_html__('Athan', 'muslim-prayer-times') . '</th><th>' . $get_prayer_icon('iqama', 'header-icon') . esc_html__('Iqama', 'muslim-prayer-times') . '</th>';
     
     // Add the changes column header if enabled
     if ($showChanges) {
@@ -287,7 +295,7 @@ function muslprti_render_live_prayer_times_block($attributes) {
         }
         
         $output .= '<tr' . ($prayer_key === 'sunrise' ? ' class="sunrise-row"' : '') . '>';
-        $output .= '<td class="prayer-name"><img src="' . esc_url($prayer_icons[$prayer_key]) . '" alt="' . esc_attr($prayer_data['name']) . '" class="prayer-icon"> ' . esc_html($prayer_data['name']) . '</td>';
+        $output .= '<td class="prayer-name">' . $get_prayer_icon($prayer_key) . ' ' . esc_html($prayer_data['name']) . '</td>';
         
         if ($prayer_key === 'sunrise') {
             // Sunrise has a single time column that spans both athan and iqama
