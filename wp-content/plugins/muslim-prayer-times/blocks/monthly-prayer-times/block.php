@@ -408,12 +408,12 @@ function muslprti_monthly_prayer_times_pagination() {
     $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Get parameters from the request with sanitization
-    $month = isset($_POST['month']) ? intval($_POST['month']) : intval(muslprti_date('n'));
-    $year = isset($_POST['year']) ? intval($_POST['year']) : intval(muslprti_date('Y'));
-    $show_sunrise = isset($_POST['show_sunrise']) && sanitize_text_field($_POST['show_sunrise']) === '1';
-    $show_iqama = isset($_POST['show_iqama']) && sanitize_text_field($_POST['show_iqama']) === '1';
-    $highlight_today = isset($_POST['highlight_today']) && sanitize_text_field($_POST['highlight_today']) === '1';
-    $table_style = isset($_POST['table_style']) ? sanitize_text_field($_POST['table_style']) : 'default';
+    $month = isset($_POST['month']) ? intval(wp_unslash($_POST['month'])) : intval(muslprti_date('n'));
+    $year = isset($_POST['year']) ? intval(wp_unslash($_POST['year'])) : intval(muslprti_date('Y'));
+    $show_sunrise = isset($_POST['show_sunrise']) && sanitize_text_field(wp_unslash($_POST['show_sunrise'])) === '1';
+    $show_iqama = isset($_POST['show_iqama']) && sanitize_text_field(wp_unslash($_POST['show_iqama'])) === '1';
+    $highlight_today = isset($_POST['highlight_today']) && sanitize_text_field(wp_unslash($_POST['highlight_today'])) === '1';
+    $table_style = isset($_POST['table_style']) ? sanitize_text_field(wp_unslash($_POST['table_style'])) : 'default';
     
     // Validate month and year
     if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
@@ -472,8 +472,8 @@ function muslprti_check_month_availability() {
     $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Get parameters from the request with sanitization
-    $month = isset($_POST['month']) ? intval($_POST['month']) : intval(muslprti_date('n'));
-    $year = isset($_POST['year']) ? intval($_POST['year']) : intval(muslprti_date('Y'));
+    $month = isset($_POST['month']) ? intval(wp_unslash($_POST['month'])) : intval(muslprti_date('n'));
+    $year = isset($_POST['year']) ? intval(wp_unslash($_POST['year'])) : intval(muslprti_date('Y'));
     
     // Validate month and year
     if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
