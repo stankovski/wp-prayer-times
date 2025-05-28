@@ -263,27 +263,27 @@ function muslprti_settings_page() {
     
     // Handle general settings form submission
     if (isset($_POST['muslprti_general_settings_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['muslprti_general_settings_nonce'])), 'muslprti_save_general_settings')) {
-        $opts['lat'] = floatval($_POST['muslprti_lat']);
-        $opts['lng'] = floatval($_POST['muslprti_lng']);
-        $opts['tz'] = sanitize_text_field($_POST['muslprti_tz']);
-        $opts['method'] = sanitize_text_field($_POST['muslprti_method']);
-        $opts['asr_calc'] = sanitize_text_field($_POST['muslprti_asr_calc']);
+        $opts['lat'] = isset($_POST['muslprti_lat']) ? floatval(wp_unslash($_POST['muslprti_lat'])) : 47.7623;
+        $opts['lng'] = isset($_POST['muslprti_lng']) ? floatval(wp_unslash($_POST['muslprti_lng'])) : -122.2054;
+        $opts['tz'] = isset($_POST['muslprti_tz']) ? sanitize_text_field(wp_unslash($_POST['muslprti_tz'])) : 'America/Los_Angeles';
+        $opts['method'] = isset($_POST['muslprti_method']) ? sanitize_text_field(wp_unslash($_POST['muslprti_method'])) : 'ISNA';
+        $opts['asr_calc'] = isset($_POST['muslprti_asr_calc']) ? sanitize_text_field(wp_unslash($_POST['muslprti_asr_calc'])) : 'STANDARD';
         
         // Save Hijri day offset
-        $opts['hijri_offset'] = intval($_POST['muslprti_hijri_offset']);
+        $opts['hijri_offset'] = isset($_POST['muslprti_hijri_offset']) ? intval(wp_unslash($_POST['muslprti_hijri_offset'])) : 0;
         
         // Save time format setting
-        $opts['time_format'] = sanitize_text_field($_POST['muslprti_time_format']);
+        $opts['time_format'] = isset($_POST['muslprti_time_format']) ? sanitize_text_field(wp_unslash($_POST['muslprti_time_format'])) : '12hour';
         
         // Save Jumuah times
-        $opts['jumuah1'] = sanitize_text_field($_POST['muslprti_jumuah1']);
-        $opts['jumuah2'] = sanitize_text_field($_POST['muslprti_jumuah2']);
-        $opts['jumuah3'] = sanitize_text_field($_POST['muslprti_jumuah3']);
+        $opts['jumuah1'] = isset($_POST['muslprti_jumuah1']) ? sanitize_text_field(wp_unslash($_POST['muslprti_jumuah1'])) : '12:30';
+        $opts['jumuah2'] = isset($_POST['muslprti_jumuah2']) ? sanitize_text_field(wp_unslash($_POST['muslprti_jumuah2'])) : '13:30';
+        $opts['jumuah3'] = isset($_POST['muslprti_jumuah3']) ? sanitize_text_field(wp_unslash($_POST['muslprti_jumuah3'])) : '';
         
         // Save Jumuah custom names
-        $opts['jumuah1_name'] = sanitize_text_field($_POST['muslprti_jumuah1_name']);
-        $opts['jumuah2_name'] = sanitize_text_field($_POST['muslprti_jumuah2_name']);
-        $opts['jumuah3_name'] = sanitize_text_field($_POST['muslprti_jumuah3_name']);
+        $opts['jumuah1_name'] = isset($_POST['muslprti_jumuah1_name']) ? sanitize_text_field(wp_unslash($_POST['muslprti_jumuah1_name'])) : 'Jumuah 1';
+        $opts['jumuah2_name'] = isset($_POST['muslprti_jumuah2_name']) ? sanitize_text_field(wp_unslash($_POST['muslprti_jumuah2_name'])) : 'Jumuah 2';
+        $opts['jumuah3_name'] = isset($_POST['muslprti_jumuah3_name']) ? sanitize_text_field(wp_unslash($_POST['muslprti_jumuah3_name'])) : 'Jumuah 3';
         
         update_option('muslprti_settings', $opts);
         echo '<div class="updated"><p>General Prayer Times settings saved.</p></div>';
@@ -292,43 +292,43 @@ function muslprti_settings_page() {
     // Handle Iqama rules form submission
     if (isset($_POST['muslprti_iqama_settings_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['muslprti_iqama_settings_nonce'])), 'muslprti_save_iqama_settings')) {
         // Save Iqama rules
-        $opts['iqama_frequency'] = sanitize_text_field($_POST['muslprti_iqama_frequency']);
+        $opts['iqama_frequency'] = isset($_POST['muslprti_iqama_frequency']) ? sanitize_text_field(wp_unslash($_POST['muslprti_iqama_frequency'])) : 'weekly';
         
         // Fajr rules
-        $opts['fajr_rule'] = sanitize_text_field($_POST['muslprti_fajr_rule']);
-        $opts['fajr_minutes_after'] = isset($_POST['muslprti_fajr_minutes_after']) ? intval($_POST['muslprti_fajr_minutes_after']) : 20;
-        $opts['fajr_minutes_before_shuruq'] = isset($_POST['muslprti_fajr_minutes_before_shuruq']) ? intval($_POST['muslprti_fajr_minutes_before_shuruq']) : 45;
+        $opts['fajr_rule'] = isset($_POST['muslprti_fajr_rule']) ? sanitize_text_field(wp_unslash($_POST['muslprti_fajr_rule'])) : 'after_athan';
+        $opts['fajr_minutes_after'] = isset($_POST['muslprti_fajr_minutes_after']) ? intval(wp_unslash($_POST['muslprti_fajr_minutes_after'])) : 20;
+        $opts['fajr_minutes_before_shuruq'] = isset($_POST['muslprti_fajr_minutes_before_shuruq']) ? intval(wp_unslash($_POST['muslprti_fajr_minutes_before_shuruq'])) : 45;
         $opts['fajr_daily_change'] = isset($_POST['muslprti_fajr_daily_change']) ? 1 : 0;
-        $opts['fajr_rounding'] = isset($_POST['muslprti_fajr_rounding']) ? intval($_POST['muslprti_fajr_rounding']) : 1;
+        $opts['fajr_rounding'] = isset($_POST['muslprti_fajr_rounding']) ? intval(wp_unslash($_POST['muslprti_fajr_rounding'])) : 1;
         
         // Dhuhr rules
-        $opts['dhuhr_rule'] = sanitize_text_field($_POST['muslprti_dhuhr_rule']);
-        $opts['dhuhr_minutes_after'] = isset($_POST['muslprti_dhuhr_minutes_after']) ? intval($_POST['muslprti_dhuhr_minutes_after']) : 15;
-        $opts['dhuhr_fixed_standard'] = sanitize_text_field($_POST['muslprti_dhuhr_fixed_standard']);
-        $opts['dhuhr_fixed_dst'] = sanitize_text_field($_POST['muslprti_dhuhr_fixed_dst']);
+        $opts['dhuhr_rule'] = isset($_POST['muslprti_dhuhr_rule']) ? sanitize_text_field(wp_unslash($_POST['muslprti_dhuhr_rule'])) : 'after_athan';
+        $opts['dhuhr_minutes_after'] = isset($_POST['muslprti_dhuhr_minutes_after']) ? intval(wp_unslash($_POST['muslprti_dhuhr_minutes_after'])) : 15;
+        $opts['dhuhr_fixed_standard'] = isset($_POST['muslprti_dhuhr_fixed_standard']) ? sanitize_text_field(wp_unslash($_POST['muslprti_dhuhr_fixed_standard'])) : '13:30';
+        $opts['dhuhr_fixed_dst'] = isset($_POST['muslprti_dhuhr_fixed_dst']) ? sanitize_text_field(wp_unslash($_POST['muslprti_dhuhr_fixed_dst'])) : '13:30';
         $opts['dhuhr_daily_change'] = isset($_POST['muslprti_dhuhr_daily_change']) ? 1 : 0;
-        $opts['dhuhr_rounding'] = isset($_POST['muslprti_dhuhr_rounding']) ? intval($_POST['muslprti_dhuhr_rounding']) : 1;
+        $opts['dhuhr_rounding'] = isset($_POST['muslprti_dhuhr_rounding']) ? intval(wp_unslash($_POST['muslprti_dhuhr_rounding'])) : 1;
         
         // Asr rules
-        $opts['asr_rule'] = sanitize_text_field($_POST['muslprti_asr_rule']);
-        $opts['asr_minutes_after'] = isset($_POST['muslprti_asr_minutes_after']) ? intval($_POST['muslprti_asr_minutes_after']) : 15;
-        $opts['asr_fixed_standard'] = sanitize_text_field($_POST['muslprti_asr_fixed_standard']);
-        $opts['asr_fixed_dst'] = sanitize_text_field($_POST['muslprti_asr_fixed_dst']);
+        $opts['asr_rule'] = isset($_POST['muslprti_asr_rule']) ? sanitize_text_field(wp_unslash($_POST['muslprti_asr_rule'])) : 'after_athan';
+        $opts['asr_minutes_after'] = isset($_POST['muslprti_asr_minutes_after']) ? intval(wp_unslash($_POST['muslprti_asr_minutes_after'])) : 15;
+        $opts['asr_fixed_standard'] = isset($_POST['muslprti_asr_fixed_standard']) ? sanitize_text_field(wp_unslash($_POST['muslprti_asr_fixed_standard'])) : '16:30';
+        $opts['asr_fixed_dst'] = isset($_POST['muslprti_asr_fixed_dst']) ? sanitize_text_field(wp_unslash($_POST['muslprti_asr_fixed_dst'])) : '16:30';
         $opts['asr_daily_change'] = isset($_POST['muslprti_asr_daily_change']) ? 1 : 0;
-        $opts['asr_rounding'] = isset($_POST['muslprti_asr_rounding']) ? intval($_POST['muslprti_asr_rounding']) : 1;
+        $opts['asr_rounding'] = isset($_POST['muslprti_asr_rounding']) ? intval(wp_unslash($_POST['muslprti_asr_rounding'])) : 1;
         
         // Maghrib rules
-        $opts['maghrib_minutes_after'] = intval($_POST['muslprti_maghrib_minutes_after']);
+        $opts['maghrib_minutes_after'] = isset($_POST['muslprti_maghrib_minutes_after']) ? intval(wp_unslash($_POST['muslprti_maghrib_minutes_after'])) : 5;
         $opts['maghrib_daily_change'] = isset($_POST['muslprti_maghrib_daily_change']) ? 1 : 0;
-        $opts['maghrib_rounding'] = isset($_POST['muslprti_maghrib_rounding']) ? intval($_POST['muslprti_maghrib_rounding']) : 1;
+        $opts['maghrib_rounding'] = isset($_POST['muslprti_maghrib_rounding']) ? intval(wp_unslash($_POST['muslprti_maghrib_rounding'])) : 1;
         
         // Isha rules
-        $opts['isha_rule'] = sanitize_text_field($_POST['muslprti_isha_rule']);
-        $opts['isha_minutes_after'] = isset($_POST['muslprti_isha_minutes_after']) ? intval($_POST['muslprti_isha_minutes_after']) : 15;
-        $opts['isha_min_time'] = sanitize_text_field($_POST['muslprti_isha_min_time']);
-        $opts['isha_max_time'] = sanitize_text_field($_POST['muslprti_isha_max_time']);
+        $opts['isha_rule'] = isset($_POST['muslprti_isha_rule']) ? sanitize_text_field(wp_unslash($_POST['muslprti_isha_rule'])) : 'after_athan';
+        $opts['isha_minutes_after'] = isset($_POST['muslprti_isha_minutes_after']) ? intval(wp_unslash($_POST['muslprti_isha_minutes_after'])) : 15;
+        $opts['isha_min_time'] = isset($_POST['muslprti_isha_min_time']) ? sanitize_text_field(wp_unslash($_POST['muslprti_isha_min_time'])) : '19:30';
+        $opts['isha_max_time'] = isset($_POST['muslprti_isha_max_time']) ? sanitize_text_field(wp_unslash($_POST['muslprti_isha_max_time'])) : '22:00';
         $opts['isha_daily_change'] = isset($_POST['muslprti_isha_daily_change']) ? 1 : 0;
-        $opts['isha_rounding'] = isset($_POST['muslprti_isha_rounding']) ? intval($_POST['muslprti_isha_rounding']) : 1;
+        $opts['isha_rounding'] = isset($_POST['muslprti_isha_rounding']) ? intval(wp_unslash($_POST['muslprti_isha_rounding'])) : 1;
         
         update_option('muslprti_settings', $opts);
         echo '<div class="updated"><p>Iqama rules settings saved.</p></div>';

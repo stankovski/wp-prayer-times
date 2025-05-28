@@ -11,7 +11,7 @@ require_once __DIR__ . '/includes/helpers.php';
 function muslprti_handle_geocode() {
     check_ajax_referer('muslprti_geocode_nonce', 'nonce');
     
-    $address = isset($_POST['address']) ? sanitize_text_field($_POST['address']) : '';
+    $address = isset($_POST['address']) ? sanitize_text_field(wp_unslash($_POST['address'])) : '';
     
     if (empty($address)) {
         wp_send_json_error(esc_html__('Address is required', 'muslim-prayer-times'));
@@ -86,7 +86,7 @@ function muslprti_handle_generate() {
         $now = new DateTime('now', $dtz);
         
         // Handle period or custom date range
-        if (isset($_POST['period']) && sanitize_text_field($_POST['period']) === 'custom') {
+        if (isset($_POST['period']) && sanitize_text_field(wp_unslash($_POST['period'])) === 'custom') {
             // Custom date range specified
             if (!isset($_POST['start_date']) || !isset($_POST['end_date'])) {
                 wp_send_json_error(esc_html__('Custom date range requires both start and end dates', 'muslim-prayer-times'));
@@ -95,10 +95,10 @@ function muslprti_handle_generate() {
             
             try {
                 // Parse start date
-                $start_date = new DateTime(sanitize_text_field($_POST['start_date']), $dtz);
+                $start_date = new DateTime(sanitize_text_field(wp_unslash($_POST['start_date'])), $dtz);
                 
                 // Parse end date
-                $end_date = new DateTime(sanitize_text_field($_POST['end_date']), $dtz);
+                $end_date = new DateTime(sanitize_text_field(wp_unslash($_POST['end_date'])), $dtz);
                 
                 // Ensure start date is not after end date
                 if ($start_date > $end_date) {
@@ -123,7 +123,7 @@ function muslprti_handle_generate() {
             }
         } else {
             // Standard period option
-            $days_to_generate = isset($_POST['period']) ? intval($_POST['period']) : 30;
+            $days_to_generate = isset($_POST['period']) ? intval(wp_unslash($_POST['period'])) : 30;
             
             // Apply a reasonable limit to prevent server overload
             $days_to_generate = min(max($days_to_generate, 7), 365);
@@ -176,7 +176,7 @@ function muslprti_handle_generate() {
         $isha_rounding = isset($opts['isha_rounding']) ? $opts['isha_rounding'] : 1;
         
         // Find the next Friday or use current date if it's Friday (or use start_date for custom range)
-        if (isset($_POST['period']) && $_POST['period'] === 'custom') {
+        if (isset($_POST['period']) && wp_unslash($_POST['period']) === 'custom') {
             // For custom date range, use the specified start date
             $current_date = clone $start_date;
         } else {
@@ -459,12 +459,19 @@ function muslprti_handle_import_preview() {
         return;
     }
     
-    if (empty($_FILES['import_file'])) {
+    if (empty($_FILES['import_file']) || !is_array($_FILES['import_file'])) {
         wp_send_json_error(esc_html__('No file uploaded', 'muslim-prayer-times'));
         return;
     }
     
-    $file = $_FILES['import_file'];
+    // Sanitize file array
+    $file = array(
+        'name' => isset($_FILES['import_file']['name']) ? sanitize_file_name(wp_unslash($_FILES['import_file']['name'])) : '',
+        'type' => isset($_FILES['import_file']['type']) ? sanitize_text_field(wp_unslash($_FILES['import_file']['type'])) : '',
+        'tmp_name' => isset($_FILES['import_file']['tmp_name']) ? sanitize_text_field(wp_unslash($_FILES['import_file']['tmp_name'])) : '',
+        'error' => isset($_FILES['import_file']['error']) ? intval($_FILES['import_file']['error']) : UPLOAD_ERR_NO_FILE,
+        'size' => isset($_FILES['import_file']['size']) ? intval($_FILES['import_file']['size']) : 0
+    );
     
     // Check for upload errors
     if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -583,7 +590,7 @@ function muslprti_handle_import() {
         return;
     }
     
-    if (empty($_FILES['import_file'])) {
+    if (empty($_FILES['import_file']) || !is_array($_FILES['import_file'])) {
         wp_send_json_error(esc_html__('No file uploaded', 'muslim-prayer-times'));
         return;
     }
@@ -591,7 +598,14 @@ function muslprti_handle_import() {
     global $wpdb;
     $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
-    $file = $_FILES['import_file'];
+    // Sanitize file array
+    $file = array(
+        'name' => isset($_FILES['import_file']['name']) ? sanitize_file_name(wp_unslash($_FILES['import_file']['name'])) : '',
+        'type' => isset($_FILES['import_file']['type']) ? sanitize_text_field(wp_unslash($_FILES['import_file']['type'])) : '',
+        'tmp_name' => isset($_FILES['import_file']['tmp_name']) ? sanitize_text_field(wp_unslash($_FILES['import_file']['tmp_name'])) : '',
+        'error' => isset($_FILES['import_file']['error']) ? intval($_FILES['import_file']['error']) : UPLOAD_ERR_NO_FILE,
+        'size' => isset($_FILES['import_file']['size']) ? intval($_FILES['import_file']['size']) : 0
+    );
     
     // Check for upload errors
     if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -733,7 +747,7 @@ function muslprti_handle_hijri_preview() {
     check_ajax_referer('muslprti_hijri_preview_nonce', 'nonce');
     
     // Get the offset from the request
-    $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+    $offset = isset($_POST['offset']) ? intval(wp_unslash($_POST['offset'])) : 0;
     
     // Ensure the offset is within allowed range
     $offset = max(-2, min(2, $offset));
