@@ -131,18 +131,35 @@ function muslprti_render_daily_prayer_times_block($attributes) {
         $current_date_obj->modify("+$i days");
         $current_date = $current_date_obj->format('Y-m-d');
         
-        // Query the database for current day's prayer times using prepared statement
-        $prayer_times = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE day = %s",
-            $current_date
-        ), ARRAY_A);
+        // Check cache first
+        $cache_key = 'muslprti_prayer_times_' . $current_date;
+        $prayer_times = wp_cache_get($cache_key, 'muslim_prayer_times');
+        
+        if (false === $prayer_times) {
+            // Query the database for current day's prayer times using prepared statement
+            $prayer_times = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM $table_name WHERE day = %s",
+                $current_date
+            ), ARRAY_A);
+            
+            // Cache the result for 1 hour (3600 seconds)
+            wp_cache_set($cache_key, $prayer_times, 'muslim_prayer_times', 3600);
+        }
         
         // If no times available for this day, try finding the next available date
         if (!$prayer_times && $i === 0) {
-            $future_time = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM $table_name WHERE day >= %s ORDER BY day ASC LIMIT 1",
-                $current_date
-            ), ARRAY_A);
+            $future_cache_key = 'muslprti_future_prayer_times_' . $current_date;
+            $future_time = wp_cache_get($future_cache_key, 'muslim_prayer_times');
+            
+            if (false === $future_time) {
+                $future_time = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM $table_name WHERE day >= %s ORDER BY day ASC LIMIT 1",
+                    $current_date
+                ), ARRAY_A);
+                
+                // Cache the result for 1 hour
+                wp_cache_set($future_cache_key, $future_time, 'muslim_prayer_times', 3600);
+            }
             
             if ($future_time) {
                 $prayer_times = $future_time;
@@ -159,10 +176,18 @@ function muslprti_render_daily_prayer_times_block($attributes) {
             );
         } else {
             // Try to find next available date after current_date
-            $next_available = $wpdb->get_row($wpdb->prepare(
-                "SELECT * FROM $table_name WHERE day > %s ORDER BY day ASC LIMIT 1",
-                $current_date
-            ), ARRAY_A);
+            $next_cache_key = 'muslprti_next_prayer_times_' . $current_date;
+            $next_available = wp_cache_get($next_cache_key, 'muslim_prayer_times');
+            
+            if (false === $next_available) {
+                $next_available = $wpdb->get_row($wpdb->prepare(
+                    "SELECT * FROM $table_name WHERE day > %s ORDER BY day ASC LIMIT 1",
+                    $current_date
+                ), ARRAY_A);
+                
+                // Cache the result for 1 hour
+                wp_cache_set($next_cache_key, $next_available, 'muslim_prayer_times', 3600);
+            }
             
             if ($next_available) {
                 $days_prayer_times[] = array(

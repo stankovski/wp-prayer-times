@@ -178,14 +178,22 @@ function muslprti_render_monthly_prayer_times_block($attributes) {
             break;
     }
     
-    // Get prayer times for the specified date range using prepared query
-    $prayer_times = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM $table_name 
-         WHERE day BETWEEN %s AND %s 
-         ORDER BY day ASC",
-        $start_date->format('Y-m-d'),
-        $end_date->format('Y-m-d')
-    ), ARRAY_A);
+    // Get prayer times for the specified date range using prepared query with caching
+    $cache_key = 'muslprti_monthly_prayer_times_' . $start_date->format('Y-m-d') . '_' . $end_date->format('Y-m-d');
+    $prayer_times = wp_cache_get($cache_key, 'muslim_prayer_times');
+    
+    if (false === $prayer_times) {
+        $prayer_times = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table_name 
+             WHERE day BETWEEN %s AND %s 
+             ORDER BY day ASC",
+            $start_date->format('Y-m-d'),
+            $end_date->format('Y-m-d')
+        ), ARRAY_A);
+        
+        // Cache the result for 1 hour (3600 seconds)
+        wp_cache_set($cache_key, $prayer_times, 'muslim_prayer_times', 3600);
+    }
     
     // If no times available, return a message
     if (empty($prayer_times)) {
@@ -428,14 +436,22 @@ function muslprti_monthly_prayer_times_pagination() {
     $start_of_month = new DateTime("$year-$month-01");
     $end_of_month = new DateTime($start_of_month->format('Y-m-t'));
     
-    // Get prayer times for the entire month using prepared query
-    $prayer_times = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM $table_name 
-         WHERE day BETWEEN %s AND %s 
-         ORDER BY day ASC",
-        $start_of_month->format('Y-m-d'),
-        $end_of_month->format('Y-m-d')
-    ), ARRAY_A);
+    // Get prayer times for the entire month using prepared query with caching
+    $cache_key = 'muslprti_monthly_prayer_times_' . $start_of_month->format('Y-m-d') . '_' . $end_of_month->format('Y-m-d');
+    $prayer_times = wp_cache_get($cache_key, 'muslim_prayer_times');
+    
+    if (false === $prayer_times) {
+        $prayer_times = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table_name 
+             WHERE day BETWEEN %s AND %s 
+             ORDER BY day ASC",
+            $start_of_month->format('Y-m-d'),
+            $end_of_month->format('Y-m-d')
+        ), ARRAY_A);
+        
+        // Cache the result for 1 hour (3600 seconds)
+        wp_cache_set($cache_key, $prayer_times, 'muslim_prayer_times', 3600);
+    }
     
     // If no times available, return error
     if (empty($prayer_times)) {
@@ -488,13 +504,21 @@ function muslprti_check_month_availability() {
     $start_of_month = new DateTime("$year-$month-01");
     $end_of_month = new DateTime($start_of_month->format('Y-m-t'));
     
-    // Check if there are any prayer times for the month using prepared query
-    $count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name 
-         WHERE day BETWEEN %s AND %s",
-        $start_of_month->format('Y-m-d'),
-        $end_of_month->format('Y-m-d')
-    ));
+    // Check if there are any prayer times for the month using prepared query with caching
+    $cache_key = 'muslprti_month_count_' . $start_of_month->format('Y-m-d') . '_' . $end_of_month->format('Y-m-d');
+    $count = wp_cache_get($cache_key, 'muslim_prayer_times');
+    
+    if (false === $count) {
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name 
+             WHERE day BETWEEN %s AND %s",
+            $start_of_month->format('Y-m-d'),
+            $end_of_month->format('Y-m-d')
+        ));
+        
+        // Cache the result for 1 hour (3600 seconds)
+        wp_cache_set($cache_key, $count, 'muslim_prayer_times', 3600);
+    }
     
     wp_send_json_success([
         'has_records' => ($count > 0),
