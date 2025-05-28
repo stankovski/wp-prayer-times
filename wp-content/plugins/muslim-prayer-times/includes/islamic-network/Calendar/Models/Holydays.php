@@ -1,6 +1,6 @@
 <?php
 
-namespace IslamicNetwork\Calendar\Models;
+namespace stankovski\muslimprayertimes\calendar\Models;
 
 class Holydays
 {

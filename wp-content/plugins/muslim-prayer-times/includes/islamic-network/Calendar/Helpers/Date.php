@@ -1,9 +1,9 @@
 <?php
 
-namespace IslamicNetwork\Calendar\Helpers;
+namespace stankovski\muslimprayertimes\calendar\Helpers;
 
 use DateTime;
-use IslamicNetwork\Calendar\Types;
+use stankovski\muslimprayertimes\calendar\Types;
 
 class Date
 {

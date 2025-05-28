@@ -1,6 +1,6 @@
 <?php
 
-namespace IslamicNetwork\Calendar\Types\Hijri;
+namespace stankovski\muslimprayertimes\calendar\Types\Hijri;
 
 class Date
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace IslamicNetwork\Calendar\Models\Date;
+namespace stankovski\muslimprayertimes\calendar\Models\Date;
 
 class Hijri
 {

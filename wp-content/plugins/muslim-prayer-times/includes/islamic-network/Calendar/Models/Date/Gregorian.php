@@ -1,9 +1,9 @@
 <?php
 
-namespace IslamicNetwork\Calendar\Models\Date;
+namespace stankovski\muslimprayertimes\calendar\Models\Date;
 
 use DateTime;
-use IslamicNetwork\Calendar\Helpers\Date;
+use stankovski\muslimprayertimes\calendar\Helpers\Date;
 
 class Gregorian
 {

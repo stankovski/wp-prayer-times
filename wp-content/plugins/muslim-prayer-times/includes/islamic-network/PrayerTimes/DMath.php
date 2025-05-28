@@ -1,5 +1,5 @@
 <?php
-namespace IslamicNetwork\PrayerTimes;
+namespace stankovski\muslimprayertimes;
 /**
  * Class DMath
  */

@@ -2,7 +2,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-use IslamicNetwork\PrayerTimes\PrayerTimes;
+use stankovski\muslimprayertimes\PrayerTimes;
 
 // Include helper functions
 require_once __DIR__ . '/includes/helpers.php';
@@ -68,7 +68,7 @@ function muslprti_handle_generate() {
         // Include the autoloader for Islamic Network libraries
         require_once __DIR__ . '/includes/islamic-network/autoload.php';
         
-        if (!class_exists('IslamicNetwork\PrayerTimes\PrayerTimes')) {
+        if (!class_exists('stankovski\muslimprayertimes\PrayerTimes')) {
             wp_send_json_error(esc_html__('Muslim Prayer Times library not available', 'muslim-prayer-times'));
             return;
         }

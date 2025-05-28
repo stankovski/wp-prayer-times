@@ -1,9 +1,9 @@
 <?php
 
 
-namespace IslamicNetwork\Calendar\Helpers;
+namespace stankovski\muslimprayertimes\calendar\Helpers;
 
-use IslamicNetwork\Calendar\Models\Holydays;
+use stankovski\muslimprayertimes\calendar\Models\Holydays;
 
 class Calendar
 {
