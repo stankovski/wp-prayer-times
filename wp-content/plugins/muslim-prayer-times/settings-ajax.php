@@ -176,7 +176,7 @@ function muslprti_handle_generate() {
         $isha_rounding = isset($opts['isha_rounding']) ? $opts['isha_rounding'] : 1;
         
         // Find the next Friday or use current date if it's Friday (or use start_date for custom range)
-        if (isset($_POST['period']) && wp_unslash($_POST['period']) === 'custom') {
+        if (isset($_POST['period']) && sanitize_text_field(wp_unslash($_POST['period'])) === 'custom') {
             // For custom date range, use the specified start date
             $current_date = clone $start_date;
         } else {

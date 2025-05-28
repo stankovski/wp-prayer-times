@@ -579,12 +579,22 @@ add_action('wp_ajax_nopriv_muslprti_check_month_availability', 'muslprti_check_m
  * Helper function to format time based on global time format setting
  */
 function muslprti_format_prayer_time($time_string) {
+    // If the time string is empty, null, or whitespace, return a placeholder.
+    if (empty(trim((string)$time_string))) {
+        return '-'; 
+    }
+
+    $time = strtotime($time_string);
+    // If strtotime fails to parse the string, it returns false.
+    if ($time === false) {
+        // Optionally log this occurrence if it's unexpected, e.g., using error_log().
+        // error_log('Muslim Prayer Times: Failed to parse time string: ' . $time_string);
+        return '-'; // Fallback for unparseable time
+    }
+
     // Get time format from settings
     $opts = get_option('muslprti_settings', []);
     $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
-    
-    // Parse time string to DateTime object
-    $time = strtotime($time_string);
     
     // Format according to setting
     if($time_format === '24hour') {
