@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) exit;
 // Include the autoloader for Islamic Network libraries
 require_once __DIR__ . '/islamic-network/autoload.php';
 
-use stankovski\muslimprayertimes\calendar\Models\Astronomical\HighJudiciaryCouncilOfSaudiArabia;
+use IslamicNetwork\Calendar\Models\Astronomical\HighJudiciaryCouncilOfSaudiArabia;
 
 $hjcosa = new HighJudiciaryCouncilOfSaudiArabia();
 

@@ -9,16 +9,16 @@
  * License: GNU LGPL v3.0
  */
 
-namespace stankovski\muslimprayertimes;
+namespace IslamicNetwork\PrayerTimes;
 
 use DateTime;
 use DateTimezone;
-use stankovski\muslimprayertimes\moonsighting\Fajr;
-use stankovski\muslimprayertimes\moonsighting\Isha;
+use IslamicNetwork\MoonSighting\Fajr;
+use IslamicNetwork\MoonSighting\Isha;
 
 /**
  * Class PrayerTimes
- * @package stankovski\muslimprayertimes
+ * @package IslamicNetwork\PrayerTimes
  */
 class PrayerTimes
 {

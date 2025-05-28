@@ -2,7 +2,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-use stankovski\muslimprayertimes\PrayerTimes;
+use IslamicNetwork\PrayerTimes\PrayerTimes;
 
 // Include the admin AJAX handlers
 require_once plugin_dir_path(__FILE__) . 'settings-ajax.php';

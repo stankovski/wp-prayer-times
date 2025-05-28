@@ -1,12 +1,12 @@
 <?php
 
-namespace stankovski\muslimprayertimes\calendar\Models\Mathematical;
+namespace IslamicNetwork\Calendar\Models\Mathematical;
 
 use DateTime;
-use stankovski\muslimprayertimes\calendar\Models\Date\Gregorian;
-use stankovski\muslimprayertimes\calendar\Models\Date\Hijri;
-use stankovski\muslimprayertimes\calendar\Models\Date\Julian;
-use stankovski\muslimprayertimes\calendar\Types;
+use IslamicNetwork\Calendar\Models\Date\Gregorian;
+use IslamicNetwork\Calendar\Models\Date\Hijri;
+use IslamicNetwork\Calendar\Models\Date\Julian;
+use IslamicNetwork\Calendar\Types;
 
 class Calculator
 {

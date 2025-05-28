@@ -1,11 +1,11 @@
 <?php
 
-namespace stankovski\muslimprayertimes\calendar\Models\Date;
+namespace IslamicNetwork\Calendar\Models\Date;
 
 use DateTime;
-use stankovski\muslimprayertimes\calendar\Helpers;
-use stankovski\muslimprayertimes\calendar\Models\Mathematical\Calculator;
-use stankovski\muslimprayertimes\calendar\Types;
+use IslamicNetwork\Calendar\Helpers;
+use IslamicNetwork\Calendar\Models\Mathematical\Calculator;
+use IslamicNetwork\Calendar\Types;
 
 class Julian
 {

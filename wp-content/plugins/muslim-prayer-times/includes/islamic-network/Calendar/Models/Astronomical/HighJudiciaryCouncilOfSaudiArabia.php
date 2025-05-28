@@ -1,15 +1,15 @@
 <?php
 
-namespace stankovski\muslimprayertimes\calendar\Models\Astronomical;
+namespace IslamicNetwork\Calendar\Models\Astronomical;
 
 use DateTime;
-use stankovski\muslimprayertimes\calendar\Data\Astronomical;
-use stankovski\muslimprayertimes\calendar\Helpers\Calendar;
-use stankovski\muslimprayertimes\calendar\Helpers\Date;
-use stankovski\muslimprayertimes\calendar\Models\Date\Gregorian;
-use stankovski\muslimprayertimes\calendar\Models\Date\Hijri;
-use stankovski\muslimprayertimes\calendar\Models\Date\Julian;
-use stankovski\muslimprayertimes\calendar\Types;
+use IslamicNetwork\Calendar\Data\Astronomical;
+use IslamicNetwork\Calendar\Helpers\Calendar;
+use IslamicNetwork\Calendar\Helpers\Date;
+use IslamicNetwork\Calendar\Models\Date\Gregorian;
+use IslamicNetwork\Calendar\Models\Date\Hijri;
+use IslamicNetwork\Calendar\Models\Date\Julian;
+use IslamicNetwork\Calendar\Types;
 
 class HighJudiciaryCouncilOfSaudiArabia extends Calculator
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace stankovski\muslimprayertimes\calendar\Models\Astronomical;
+namespace IslamicNetwork\Calendar\Models\Astronomical;
 
 use DateTime;
-use stankovski\muslimprayertimes\calendar\Data\Astronomical;
+use IslamicNetwork\Calendar\Data\Astronomical;
 
 class UmmAlQura extends Calculator
 {

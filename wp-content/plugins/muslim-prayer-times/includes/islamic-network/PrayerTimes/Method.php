@@ -1,8 +1,8 @@
 <?php
 
-namespace stankovski\muslimprayertimes;
+namespace IslamicNetwork\PrayerTimes;
 
-use stankovski\muslimprayertimes\moonsighting\Isha;
+use IslamicNetwork\MoonSighting\Isha;
 
 class Method
 {

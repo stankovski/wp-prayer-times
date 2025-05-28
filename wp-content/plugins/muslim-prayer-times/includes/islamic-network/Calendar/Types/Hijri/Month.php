@@ -1,6 +1,6 @@
 <?php
 
-namespace stankovski\muslimprayertimes\calendar\Types\Hijri;
+namespace IslamicNetwork\Calendar\Types\Hijri;
 
 class Month
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace stankovski\muslimprayertimes\calendar\Data;
+namespace IslamicNetwork\Calendar\Data;
 
 class Astronomical
 {
