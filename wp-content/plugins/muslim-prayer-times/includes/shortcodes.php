@@ -56,7 +56,7 @@ function muslprti_monthly_prayer_times_shortcode($atts) {
     // Use the block's render function
     return muslprti_render_monthly_prayer_times_block($block_atts);
 }
-add_shortcode('monthly_prayer_times', 'muslprti_monthly_prayer_times_shortcode');
+add_shortcode('muslprti_monthly_prayer_times', 'muslprti_monthly_prayer_times_shortcode');
 
 /**
  * Live Prayer Times shortcode
@@ -89,7 +89,7 @@ function muslprti_live_prayer_times_shortcode($atts) {
     // Use the block's render function
     return muslprti_render_live_prayer_times_block($block_atts);
 }
-add_shortcode('live_prayer_times', 'muslprti_live_prayer_times_shortcode');
+add_shortcode('muslprti_live_prayer_times', 'muslprti_live_prayer_times_shortcode');
 
 /**
  * Daily Prayer Times shortcode
@@ -119,4 +119,4 @@ function muslprti_daily_prayer_times_shortcode($atts) {
     // Use the block's render function
     return muslprti_render_daily_prayer_times_block($block_atts);
 }
-add_shortcode('daily_prayer_times', 'muslprti_daily_prayer_times_shortcode');
+add_shortcode('muslprti_daily_prayer_times', 'muslprti_daily_prayer_times_shortcode');
