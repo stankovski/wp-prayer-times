@@ -14,7 +14,8 @@ function muslprti_register_monthly_prayer_times_block() {
         'muslprti-monthly-prayer-times-block',
         plugins_url('block.js', __FILE__),
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
-        filemtime(plugin_dir_path(__FILE__) . 'block.js')
+        filemtime(plugin_dir_path(__FILE__) . 'block.js'),
+        false
     );
 
     // Register block styles
@@ -28,7 +29,9 @@ function muslprti_register_monthly_prayer_times_block() {
     // Register dynamic styles handle that will receive inline CSS
     wp_register_style(
         'muslprti-monthly-prayer-times-dynamic-style',
-        false // No actual CSS file
+        false, // No actual CSS file
+        array(),
+        '1.0.0' // Version parameter to avoid caching issues
     );
     wp_enqueue_style('muslprti-monthly-prayer-times-dynamic-style');
 

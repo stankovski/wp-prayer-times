@@ -20,7 +20,8 @@ function muslprti_live_prayer_times_editor_assets() {
         'muslprti-live-prayer-times-block',
         $block_script,
         array('wp-blocks', 'wp-element', 'wp-editor', 'wp-components'),
-        filemtime(plugin_dir_path(__FILE__) . 'block.js')
+        filemtime(plugin_dir_path(__FILE__) . 'block.js'),
+        false
     );
     
     // Add plugin URL data to be used in JavaScript - sanitize the URL
