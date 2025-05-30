@@ -3,7 +3,7 @@ Contributors: stankovski
 Tags: prayer times, muslim, islamic, mosque, salah
 Requires at least: 5.0
 Tested up to: 6.8
-Stable tag: 1.0
+Stable tag: 1.0.1
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT

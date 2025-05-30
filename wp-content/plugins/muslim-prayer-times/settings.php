@@ -46,7 +46,7 @@ function muslprti_admin_scripts($hook) {
     wp_enqueue_style('muslprti-admin-styles', plugins_url('assets/css/admin-styles.css', __FILE__), array(), filemtime(plugin_dir_path(__FILE__) . 'assets/css/admin-styles.css'));
     
     // Register and enqueue main admin script
-    wp_enqueue_script('muslprti-admin', plugins_url('js/admin.js', __FILE__), array('jquery'), '1.0', true);
+    wp_enqueue_script('muslprti-admin', plugins_url('js/admin.js', __FILE__), array('jquery'), '1.0.1', true);
     wp_localize_script('muslprti-admin', 'muslprtiAdmin', array(
         'ajaxurl' => admin_url('admin-ajax.php'),
         'export_nonce' => wp_create_nonce('muslprti_generate_nonce'),
