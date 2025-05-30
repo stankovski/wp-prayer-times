@@ -8,6 +8,31 @@ jQuery(document).ready(function($) {
         $(this).next('.muslprti-accordion-content').toggleClass('active');
     });
     
+    // Radio button handling for Iqama rules
+    $('.rule-radio').on('change', function() {
+        var name = $(this).attr('name');
+        var value = $(this).val();
+        var prayer = name.replace('muslprti_', '').replace('_rule', '');
+        
+        // Disable all inputs for this prayer
+        $('.' + prayer + '-input').prop('disabled', true);
+        
+        // Enable inputs based on selected rule
+        if (value === 'after_athan') {
+            $('input[name="muslprti_' + prayer + '_minutes_after"]').prop('disabled', false);
+        } else if (value === 'before_shuruq') {
+            $('input[name="muslprti_' + prayer + '_minutes_before_shuruq"]').prop('disabled', false);
+        } else if (value === 'fixed_time') {
+            $('input[name="muslprti_' + prayer + '_fixed_standard"]').prop('disabled', false);
+            $('input[name="muslprti_' + prayer + '_fixed_dst"]').prop('disabled', false);
+        }
+    });
+    
+    // Initialize radio button states on page load
+    $('.rule-radio:checked').each(function() {
+        $(this).trigger('change');
+    });
+    
     // Geocoding functionality (if it exists in original code)
     if ($('#muslprti_geocode_btn').length > 0) {
         $('#muslprti_geocode_btn').on('click', function() {
