@@ -74,17 +74,23 @@ function muslprti_admin_scripts($hook) {
                         nonce: muslprtiAdmin.hijri_preview_nonce
                     },
                     success: function(response) {
-                        if (response.success) {
-                            $('#hijri-date-preview').html(response.data);
+                        console.log('Hijri preview response:', response); // Debug log
+                        if (response.success && response.data && response.data.hijri_date) {
+                            $('#hijri-date-preview').html('Today: ' + response.data.hijri_date);
                         } else {
-                            $('#hijri-date-preview').html('Error: ' + response.data);
+                            console.log('Invalid response structure:', response);
+                            $('#hijri-date-preview').html('Error: Invalid response');
                         }
                     },
-                    error: function() {
-                        $('#hijri-date-preview').html('Error connecting to server');
+                    error: function(xhr, status, error) {
+                        console.log('Hijri preview error:', error, xhr.responseText); // Debug log
+                        $('#hijri-date-preview').html('Error connecting to server: ' + error);
                     }
                 });
             });
+            
+            // Trigger initial load to set the current value
+            $('#muslprti_hijri_offset').trigger('change');
         });
     ";
     wp_add_inline_script('muslprti-admin', $hijri_script);

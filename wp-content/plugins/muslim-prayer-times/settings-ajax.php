@@ -762,7 +762,12 @@ function muslprti_handle_hijri_preview() {
     $hijri_date = muslprti_convert_to_hijri($today, true, 'en', $offset);
     
     wp_send_json_success([
-        'hijri_date' => esc_html($hijri_date)
+        'hijri_date' => esc_html($hijri_date),
+        'debug_info' => [
+            'today' => $today,
+            'offset' => $offset,
+            'raw_hijri' => $hijri_date
+        ]
     ]);
 }
 add_action('wp_ajax_muslprti_preview_hijri', 'muslprti_handle_hijri_preview');
