@@ -72,7 +72,7 @@ The plugin includes three blocks that can be added to any post or page:
 3. **Live Prayer Times Block**:
    * Shows real-time prayer schedule with a live clock
    * Automatically highlights the next upcoming prayer
-   * Ideal for digital displays in mosques when used with the Digital Signage plugin
+   * Ideal for digital displays in mosques when used with the [Digital Signage](https://wordpress.org/plugins/digital-signage/) plugin
 
 To add a block:
 1. Edit any post or page
@@ -94,7 +94,7 @@ Each block comes with extensive customization options:
 
 = For Developers =
 
-This plugin is open-source and available on GitHub: https://github.com/stankovski/wp-prayer-times
+This plugin is open-source and available on GitHub: [https://github.com/stankovski/wp-prayer-times](https://github.com/stankovski/wp-prayer-times)
 
 Developers can extend the plugin's functionality or customize it further by:
 * Adding custom styling with CSS
