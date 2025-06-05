@@ -533,6 +533,9 @@ function muslprti_handle_import_preview() {
         return;
     }
     
+    // Get the selected date format
+    $date_format = isset($_POST['date_format']) ? sanitize_text_field(wp_unslash($_POST['date_format'])) : 'Y-m-d';
+    
     // Process data rows
     foreach ($lines as $line) {
         if (empty(trim($line))) continue;
@@ -544,11 +547,14 @@ function muslprti_handle_import_preview() {
             
             $row = array_combine($header, $data);
             
-            // Convert any date format to Y-m-d
+            // Convert any date format to Y-m-d using the selected format
             if (isset($row['day'])) {
-                // Try different date formats (including Excel's M/d/YY)
+                // Use the selected date format first, then fallback to other formats
                 $date_obj = false;
-                $formats = array('Y-m-d', 'n/j/y', 'n/j/Y', 'm/d/y', 'm/d/Y', 'd-m-Y', 'd/m/Y');
+                $formats = array($date_format, 'Y-m-d', 'n/j/y', 'n/j/Y', 'm/d/y', 'm/d/Y', 'd-m-Y', 'd/m/Y', 'd.m.Y', 'd/m/y', 'd-m-y', 'd.m.y', 'Y/m/d', 'Y.m.d', 'j/n/Y', 'j-n-Y', 'j.n.Y');
+                
+                // Remove duplicates while preserving order
+                $formats = array_unique($formats);
                 
                 foreach ($formats as $format) {
                     $date_obj = DateTime::createFromFormat($format, $row['day']);
@@ -651,87 +657,50 @@ function muslprti_handle_import() {
         if (count($data) === count($header)) {
             // Sanitize all data values
             $data = array_map('sanitize_text_field', $data);
-            $row = array_combine($header, $data);
+            $row_data = array_combine($header, $data);
             
-            // Parse date
-            $date_obj = false;
-            $formats = array('Y-m-d', 'n/j/y', 'n/j/Y', 'm/d/y', 'm/d/Y', 'd-m-Y', 'd/m/Y');
-            
-            foreach ($formats as $format) {
-                $date_obj = DateTime::createFromFormat($format, $row['day']);
-                if ($date_obj !== false) {
-                    break;
-                }
-            }
-            
-            if (!$date_obj) {
-                $error_count++;
-                $errors[] = sprintf(
-                    // translators: %s is the invalid date value from the CSV file
-                    esc_html__('Row skipped: Invalid date format %s', 'muslim-prayer-times'),
-                    esc_html($row['day'])
-                );
-                continue;
-            }
-            
-            // Format date for database
-            $row['day'] = $date_obj->format('Y-m-d');
-            
-            // Format prayer times (convert from AM/PM to 24h format for database)
-            $prayer_columns = array('fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 
-                                  'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 
-                                  'isha_athan', 'isha_iqama');
-            
-            foreach ($prayer_columns as $column) {
-                if (!empty($row[$column])) {
-                    // Try to parse the time
-                    $time_obj = DateTime::createFromFormat('g:i A', $row[$column]);
-                    if (!$time_obj) {
-                        $time_obj = DateTime::createFromFormat('H:i', $row[$column]);
+            // Convert date using the selected format
+            if (isset($row_data['day'])) {
+                $date_obj = false;
+                $formats = array($date_format, 'Y-m-d', 'n/j/y', 'n/j/Y', 'm/d/y', 'm/d/Y', 'd-m-Y', 'd/m/Y', 'd.m.Y', 'd/m/y', 'd-m-y', 'd.m.y', 'Y/m/d', 'Y.m.d', 'j/n/Y', 'j-n-Y', 'j.n.Y');
+                $formats = array_unique($formats);
+                
+                foreach ($formats as $format) {
+                    $date_obj = DateTime::createFromFormat($format, $row_data['day']);
+                    if ($date_obj !== false) {
+                        break;
                     }
+                }
+                
+                if ($date_obj) {
+                    $row_data['day'] = $date_obj->format('Y-m-d');
                     
-                    if ($time_obj) {
-                        $row[$column] = $time_obj->format('H:i:s');
-                    } else {
-                        $row[$column] = null; // If time can't be parsed, set to null
+                    // Insert or update the row
+                    $result = $wpdb->replace(
+                        $table_name,
+                        array(
+                            'day' => $row_data['day'],
+                            'fajr_athan' => isset($row_data['fajr_athan']) ? $row_data['fajr_athan'] : '',
+                            'fajr_iqama' => isset($row_data['fajr_iqama']) ? $row_data['fajr_iqama'] : '',
+                            'sunrise' => isset($row_data['sunrise']) ? $row_data['sunrise'] : '',
+                            'dhuhr_athan' => isset($row_data['dhuhr_athan']) ? $row_data['dhuhr_athan'] : '',
+                            'dhuhr_iqama' => isset($row_data['dhuhr_iqama']) ? $row_data['dhuhr_iqama'] : '',
+                            'asr_athan' => isset($row_data['asr_athan']) ? $row_data['asr_athan'] : '',
+                            'asr_iqama' => isset($row_data['asr_iqama']) ? $row_data['asr_iqama'] : '',
+                            'maghrib_athan' => isset($row_data['maghrib_athan']) ? $row_data['maghrib_athan'] : '',
+                            'maghrib_iqama' => isset($row_data['maghrib_iqama']) ? $row_data['maghrib_iqama'] : '',
+                            'isha_athan' => isset($row_data['isha_athan']) ? $row_data['isha_athan'] : '',
+                            'isha_iqama' => isset($row_data['isha_iqama']) ? $row_data['isha_iqama'] : ''
+                        ),
+                        array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+                    );
+                    
+                    if ($result !== false) {
+                        $imported_count++;
                     }
                 } else {
-                    $row[$column] = null;
+                    $error_count++;
                 }
-            }
-            
-            // Insert or update the database record - using prepared statements for security
-            $result = $wpdb->replace(
-                $table_name,
-                array(
-                    'day' => $row['day'],
-                    'fajr_athan' => $row['fajr_athan'],
-                    'fajr_iqama' => $row['fajr_iqama'],
-                    'sunrise' => $row['sunrise'],
-                    'dhuhr_athan' => $row['dhuhr_athan'],
-                    'dhuhr_iqama' => $row['dhuhr_iqama'],
-                    'asr_athan' => $row['asr_athan'],
-                    'asr_iqama' => $row['asr_iqama'],
-                    'maghrib_athan' => $row['maghrib_athan'],
-                    'maghrib_iqama' => $row['maghrib_iqama'],
-                    'isha_athan' => $row['isha_athan'],
-                    'isha_iqama' => $row['isha_iqama']
-                ),
-                array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
-            );
-            
-            if ($result !== false) {
-                $success_count++;
-                // Clear the cache for the updated day
-                wp_cache_delete('muslprti_prayer_times_' . $row['day'], 'muslim_prayer_times');
-            } else {
-                $error_count++;
-                $errors[] = sprintf(
-                    // translators: %1$s is the date of the row, %2$s is the database error message
-                    esc_html__('Database error on row with date %1$s: %2$s', 'muslim-prayer-times'),
-                    esc_html($row['day']),
-                    esc_html($wpdb->last_error)
-                );
             }
         }
     }

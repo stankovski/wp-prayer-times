@@ -57,6 +57,77 @@ function muslprti_admin_scripts($hook) {
         'hijri_preview_nonce' => wp_create_nonce('muslprti_hijri_preview_nonce') // Add new nonce for Hijri preview
     ));
     
+    // Date format preview script
+    $date_format_script = "
+        jQuery(document).ready(function($) {
+            // Update date format preview when format changes
+            $('#muslprti_date_format').change(function() {
+                var format = $(this).val();
+                var today = new Date();
+                var preview = '';
+                
+                switch(format) {
+                    case 'Y-m-d':
+                        preview = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                        break;
+                    case 'n/j/y':
+                        preview = (today.getMonth() + 1) + '/' + today.getDate() + '/' + String(today.getFullYear()).slice(-2);
+                        break;
+                    case 'n/j/Y':
+                        preview = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
+                        break;
+                    case 'm/d/y':
+                        preview = String(today.getMonth() + 1).padStart(2, '0') + '/' + String(today.getDate()).padStart(2, '0') + '/' + String(today.getFullYear()).slice(-2);
+                        break;
+                    case 'm/d/Y':
+                        preview = String(today.getMonth() + 1).padStart(2, '0') + '/' + String(today.getDate()).padStart(2, '0') + '/' + today.getFullYear();
+                        break;
+                    case 'd-m-Y':
+                        preview = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + today.getFullYear();
+                        break;
+                    case 'd/m/Y':
+                        preview = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
+                        break;
+                    case 'd.m.Y':
+                        preview = String(today.getDate()).padStart(2, '0') + '.' + String(today.getMonth() + 1).padStart(2, '0') + '.' + today.getFullYear();
+                        break;
+                    case 'd/m/y':
+                        preview = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + String(today.getFullYear()).slice(-2);
+                        break;
+                    case 'd-m-y':
+                        preview = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getFullYear()).slice(-2);
+                        break;
+                    case 'd.m.y':
+                        preview = String(today.getDate()).padStart(2, '0') + '.' + String(today.getMonth() + 1).padStart(2, '0') + '.' + String(today.getFullYear()).slice(-2);
+                        break;
+                    case 'Y/m/d':
+                        preview = today.getFullYear() + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + String(today.getDate()).padStart(2, '0');
+                        break;
+                    case 'Y.m.d':
+                        preview = today.getFullYear() + '.' + String(today.getMonth() + 1).padStart(2, '0') + '.' + String(today.getDate()).padStart(2, '0');
+                        break;
+                    case 'j/n/Y':
+                        preview = today.getDate() + '/' + (today.getMonth() + 1) + '/' + today.getFullYear();
+                        break;
+                    case 'j-n-Y':
+                        preview = today.getDate() + '-' + (today.getMonth() + 1) + '-' + today.getFullYear();
+                        break;
+                    case 'j.n.Y':
+                        preview = today.getDate() + '.' + (today.getMonth() + 1) + '.' + today.getFullYear();
+                        break;
+                    default:
+                        preview = 'Unknown format';
+                }
+                
+                $('#date-format-preview').text('Today: ' + preview);
+            });
+            
+            // Trigger initial preview
+            $('#muslprti_date_format').trigger('change');
+        });
+    ";
+    wp_add_inline_script('muslprti-admin', $date_format_script);
+    
     // Hijri date preview script
     $hijri_script = "
         jQuery(document).ready(function($) {
@@ -836,7 +907,32 @@ function muslprti_settings_page() {
             <h3 style="margin-top:20px;">2. Import Prayer Times</h3>
             <p>Import prayer times from a CSV file. The file should match the format of the exported CSV.</p>
             <form id="muslprti_import_form" enctype="multipart/form-data">
-                <input type="file" id="muslprti_import_file" name="import_file" accept=".csv">
+                <p>
+                    <label for="muslprti_import_file"><strong>Select CSV file:</strong></label><br>
+                    <input type="file" id="muslprti_import_file" name="import_file" accept=".csv">
+                </p>
+                <p>
+                    <label for="muslprti_date_format"><strong>Date format in CSV:</strong></label><br>
+                    <select id="muslprti_date_format" name="date_format">
+                        <option value="Y-m-d">YYYY-MM-DD (ISO format)</option>
+                        <option value="n/j/y">M/D/YY (Excel default)</option>
+                        <option value="n/j/Y">M/D/YYYY (US format)</option>
+                        <option value="m/d/y">MM/DD/YY (US format with leading zeros)</option>
+                        <option value="m/d/Y">MM/DD/YYYY (US format with leading zeros)</option>
+                        <option value="d/m/Y">DD/MM/YYYY (European format)</option>
+                        <option value="d/m/y">DD/MM/YY (European format)</option>
+                        <option value="d-m-Y">DD-MM-YYYY (European with dashes)</option>
+                        <option value="d-m-y">DD-MM-YY (European with dashes)</option>
+                        <option value="d.m.Y">DD.MM.YYYY (German/European format)</option>
+                        <option value="d.m.y">DD.MM.YY (German/European format)</option>
+                        <option value="Y/m/d">YYYY/MM/DD (Asian format)</option>
+                        <option value="Y.m.d">YYYY.MM.DD (Asian with dots)</option>
+                        <option value="j/n/Y">D/M/YYYY (Single digits, European)</option>
+                        <option value="j-n-Y">D-M-YYYY (Single digits with dashes)</option>
+                        <option value="j.n.Y">D.M.YYYY (Single digits with dots)</option>
+                    </select>
+                    <span id="date-format-preview" class="hijri-preview" style="margin-left: 15px;"></span>
+                </p>
                 <p>
                     <button type="button" id="muslprti_preview_btn" class="button">Preview Import</button>
                     <button type="button" id="muslprti_import_btn" class="button button-primary" disabled>Import Prayer Times</button>
