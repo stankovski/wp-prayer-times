@@ -189,6 +189,15 @@ function muslprti_admin_scripts($hook) {
                 $('div[data-parent=\"' + name + '\"]').hide();
                 $('div[data-parent=\"' + name + '\"][data-show-for=\"' + value + '\"]').show();
             });
+            
+            // Handle Ramadan settings visibility
+            $('#muslprti_ramadan_enabled').change(function() {
+                if ($(this).is(':checked')) {
+                    $('.ramadan-settings-container').slideDown();
+                } else {
+                    $('.ramadan-settings-container').slideUp();
+                }
+            });
         });
     ";
     wp_add_inline_script('muslprti-admin', $iqama_rules_script);
@@ -410,6 +419,18 @@ function muslprti_settings_page() {
         $opts['isha_daily_change'] = isset($_POST['muslprti_isha_daily_change']) ? 1 : 0;
         $opts['isha_rounding'] = isset($_POST['muslprti_isha_rounding']) ? intval(wp_unslash($_POST['muslprti_isha_rounding'])) : 1;
         
+        // Ramadan settings
+        $opts['ramadan_enabled'] = isset($_POST['muslprti_ramadan_enabled']) ? 1 : 0;
+        $opts['ramadan_auto_detect'] = isset($_POST['muslprti_ramadan_auto_detect']) ? intval(wp_unslash($_POST['muslprti_ramadan_auto_detect'])) : 1;
+        $opts['ramadan_manual_start'] = isset($_POST['muslprti_ramadan_manual_start']) ? sanitize_text_field(wp_unslash($_POST['muslprti_ramadan_manual_start'])) : '';
+        $opts['ramadan_manual_end'] = isset($_POST['muslprti_ramadan_manual_end']) ? sanitize_text_field(wp_unslash($_POST['muslprti_ramadan_manual_end'])) : '';
+        $opts['ramadan_fajr_minutes_after'] = isset($_POST['muslprti_ramadan_fajr_minutes_after']) ? intval(wp_unslash($_POST['muslprti_ramadan_fajr_minutes_after'])) : 20;
+        $opts['ramadan_maghrib_minutes_after'] = isset($_POST['muslprti_ramadan_maghrib_minutes_after']) ? intval(wp_unslash($_POST['muslprti_ramadan_maghrib_minutes_after'])) : 10;
+        $opts['ramadan_isha_minutes_after'] = isset($_POST['muslprti_ramadan_isha_minutes_after']) ? intval(wp_unslash($_POST['muslprti_ramadan_isha_minutes_after'])) : 20;
+        $opts['ramadan_fajr_rounding'] = isset($_POST['muslprti_ramadan_fajr_rounding']) ? intval(wp_unslash($_POST['muslprti_ramadan_fajr_rounding'])) : 1;
+        $opts['ramadan_maghrib_rounding'] = isset($_POST['muslprti_ramadan_maghrib_rounding']) ? intval(wp_unslash($_POST['muslprti_ramadan_maghrib_rounding'])) : 1;
+        $opts['ramadan_isha_rounding'] = isset($_POST['muslprti_ramadan_isha_rounding']) ? intval(wp_unslash($_POST['muslprti_ramadan_isha_rounding'])) : 1;
+        
         update_option('muslprti_settings', $opts);
         echo '<div class="updated"><p>Iqama rules settings saved.</p></div>';
     }
@@ -506,6 +527,18 @@ function muslprti_settings_page() {
     $isha_max_time = isset($opts['isha_max_time']) ? $opts['isha_max_time'] : '22:00';
     $isha_daily_change = isset($opts['isha_daily_change']) ? $opts['isha_daily_change'] : 0;
     $isha_rounding = isset($opts['isha_rounding']) ? $opts['isha_rounding'] : 1;
+    
+    // Ramadan defaults
+    $ramadan_enabled = isset($opts['ramadan_enabled']) ? $opts['ramadan_enabled'] : 0;
+    $ramadan_auto_detect = isset($opts['ramadan_auto_detect']) ? $opts['ramadan_auto_detect'] : 1;
+    $ramadan_manual_start = isset($opts['ramadan_manual_start']) ? $opts['ramadan_manual_start'] : '';
+    $ramadan_manual_end = isset($opts['ramadan_manual_end']) ? $opts['ramadan_manual_end'] : '';
+    $ramadan_fajr_minutes_after = isset($opts['ramadan_fajr_minutes_after']) ? $opts['ramadan_fajr_minutes_after'] : 20;
+    $ramadan_maghrib_minutes_after = isset($opts['ramadan_maghrib_minutes_after']) ? $opts['ramadan_maghrib_minutes_after'] : 10;
+    $ramadan_isha_minutes_after = isset($opts['ramadan_isha_minutes_after']) ? $opts['ramadan_isha_minutes_after'] : 20;
+    $ramadan_fajr_rounding = isset($opts['ramadan_fajr_rounding']) ? $opts['ramadan_fajr_rounding'] : 1;
+    $ramadan_maghrib_rounding = isset($opts['ramadan_maghrib_rounding']) ? $opts['ramadan_maghrib_rounding'] : 1;
+    $ramadan_isha_rounding = isset($opts['ramadan_isha_rounding']) ? $opts['ramadan_isha_rounding'] : 1;
     ?>
     <div class="wrap">
         <!-- Banner Image -->
@@ -899,6 +932,121 @@ function muslprti_settings_page() {
                                 <label>Maximum Isha time: <input type="time" name="muslprti_isha_max_time" value="<?php echo esc_attr($isha_max_time); ?>"></label>
                             </p>
                             <p class="description">These settings ensure Isha Iqama is never before the minimum time or after the maximum time.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="iqama-rule-section">
+                        <h2>Ramadan Custom Iqama Rules</h2>
+                        <p class="description">During Ramadan, you may want different iqama calculation rules. Enable this section to override Fajr, Maghrib, and Isha calculations during Ramadan with daily changes.</p>
+                        
+                        <div class="iqama-rule-option">
+                            <label>
+                                <input type="checkbox" id="muslprti_ramadan_enabled" name="muslprti_ramadan_enabled" value="1" <?php checked($ramadan_enabled, 1); ?>>
+                                <strong>Enable Ramadan custom iqama rules</strong>
+                            </label>
+                        </div>
+                        
+                        <div class="ramadan-settings-container" style="<?php echo $ramadan_enabled ? '' : 'display:none;'; ?>">
+                            <h3>Ramadan Date Detection</h3>
+                            <div class="iqama-rule-option">
+                                <label>
+                                    <input type="radio" name="muslprti_ramadan_auto_detect" value="1" <?php checked($ramadan_auto_detect, 1); ?>>
+                                    Automatically detect Ramadan using Hijri calendar
+                                </label>
+                                <p class="description">Uses your Hijri offset setting from General Settings to detect Ramadan dates.</p>
+                            </div>
+                            
+                            <div class="iqama-rule-option">
+                                <label>
+                                    <input type="radio" name="muslprti_ramadan_auto_detect" value="0" <?php checked($ramadan_auto_detect, 0); ?>>
+                                    Manually specify Ramadan date range
+                                </label>
+                                <div class="field-container" style="margin-left: 25px; margin-top: 10px;">
+                                    <label>Start Date: <input type="date" name="muslprti_ramadan_manual_start" value="<?php echo esc_attr($ramadan_manual_start); ?>"></label><br>
+                                    <label>End Date: <input type="date" name="muslprti_ramadan_manual_end" value="<?php echo esc_attr($ramadan_manual_end); ?>"></label>
+                                </div>
+                            </div>
+                            
+                            <div id="ramadan-date-info" class="hijri-preview" style="margin-top: 10px;">
+                                <?php
+                                // Display current/next Ramadan dates
+                                require_once plugin_dir_path(__FILE__) . 'includes/helpers.php';
+                                $current_year = intval(muslprti_date('Y'));
+                                $ramadan_dates = muslprti_get_ramadan_dates($current_year, $opts);
+                                
+                                if ($ramadan_dates) {
+                                    echo sprintf(
+                                        'Ramadan %d: %s to %s',
+                                        $current_year,
+                                        esc_html(muslprti_date('F j, Y', strtotime($ramadan_dates['start']))),
+                                        esc_html(muslprti_date('F j, Y', strtotime($ramadan_dates['end'])))
+                                    );
+                                } else {
+                                    $ramadan_dates = muslprti_get_ramadan_dates($current_year + 1, $opts);
+                                    if ($ramadan_dates) {
+                                        echo sprintf(
+                                            'Next Ramadan (%d): %s to %s',
+                                            $current_year + 1,
+                                            esc_html(muslprti_date('F j, Y', strtotime($ramadan_dates['start']))),
+                                            esc_html(muslprti_date('F j, Y', strtotime($ramadan_dates['end'])))
+                                        );
+                                    }
+                                }
+                                ?>
+                            </div>
+                            
+                            <h3>Fajr Iqama During Ramadan</h3>
+                            <div class="iqama-rule-option">
+                                <p>During Ramadan, Fajr iqama will be calculated <strong>daily</strong> as:</p>
+                                <input type="number" name="muslprti_ramadan_fajr_minutes_after" value="<?php echo esc_attr($ramadan_fajr_minutes_after); ?>" min="0" max="120"> 
+                                minutes after Fajr Athan
+                            </div>
+                            <div class="iqama-rule-option">
+                                <label>Round to: 
+                                    <select name="muslprti_ramadan_fajr_rounding">
+                                        <option value="1" <?php selected($ramadan_fajr_rounding, 1); ?>>1 minute</option>
+                                        <option value="5" <?php selected($ramadan_fajr_rounding, 5); ?>>5 minutes</option>
+                                        <option value="15" <?php selected($ramadan_fajr_rounding, 15); ?>>15 minutes</option>
+                                        <option value="30" <?php selected($ramadan_fajr_rounding, 30); ?>>30 minutes</option>
+                                    </select>
+                                </label>
+                            </div>
+                            
+                            <h3>Maghrib Iqama During Ramadan</h3>
+                            <div class="iqama-rule-option">
+                                <p>During Ramadan, Maghrib iqama (Iftar time) will be calculated <strong>daily</strong> as:</p>
+                                <input type="number" name="muslprti_ramadan_maghrib_minutes_after" value="<?php echo esc_attr($ramadan_maghrib_minutes_after); ?>" min="0" max="30"> 
+                                minutes after Maghrib Athan
+                            </div>
+                            <div class="iqama-rule-option">
+                                <label>Round to: 
+                                    <select name="muslprti_ramadan_maghrib_rounding">
+                                        <option value="1" <?php selected($ramadan_maghrib_rounding, 1); ?>>1 minute</option>
+                                        <option value="5" <?php selected($ramadan_maghrib_rounding, 5); ?>>5 minutes</option>
+                                        <option value="15" <?php selected($ramadan_maghrib_rounding, 15); ?>>15 minutes</option>
+                                        <option value="30" <?php selected($ramadan_maghrib_rounding, 30); ?>>30 minutes</option>
+                                    </select>
+                                </label>
+                            </div>
+                            
+                            <h3>Isha Iqama During Ramadan</h3>
+                            <div class="iqama-rule-option">
+                                <p>During Ramadan, Isha iqama (Taraweeh time) will be calculated <strong>daily</strong> as:</p>
+                                <input type="number" name="muslprti_ramadan_isha_minutes_after" value="<?php echo esc_attr($ramadan_isha_minutes_after); ?>" min="0" max="120"> 
+                                minutes after Isha Athan
+                            </div>
+                            <div class="iqama-rule-option">
+                                <label>Round to: 
+                                    <select name="muslprti_ramadan_isha_rounding">
+                                        <option value="1" <?php selected($ramadan_isha_rounding, 1); ?>>1 minute</option>
+                                        <option value="5" <?php selected($ramadan_isha_rounding, 5); ?>>5 minutes</option>
+                                        <option value="15" <?php selected($ramadan_isha_rounding, 15); ?>>15 minutes</option>
+                                        <option value="30" <?php selected($ramadan_isha_rounding, 30); ?>>30 minutes</option>
+                                    </select>
+                                </label>
+                            </div>
+                            
+                            <p class="description"><strong>Note:</strong> Dhuhr and Asr prayers will continue to use the regular iqama rules defined above, even during Ramadan. Fajr, Maghrib, and Isha min/max constraints (if set above) still apply during Ramadan.</p>
                         </div>
                     </div>
                     

@@ -171,15 +171,27 @@ function muslprti_round_up(DateTime $time, $rounding_minutes = 1) {
 function muslprti_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_after, $fajr_minutes_before_shuruq, $is_weekly, $fajr_rounding, $fajr_min_time = '00:00', $fajr_max_time = '23:59') {
     $results = [];
     
+    // Get settings for Ramadan detection
+    $opts = get_option('muslprti_settings', []);
+    $ramadan_enabled = isset($opts['ramadan_enabled']) ? $opts['ramadan_enabled'] : false;
+    $ramadan_fajr_minutes = isset($opts['ramadan_fajr_minutes_after']) ? $opts['ramadan_fajr_minutes_after'] : 20;
+    $ramadan_fajr_rounding = isset($opts['ramadan_fajr_rounding']) ? $opts['ramadan_fajr_rounding'] : 1;
+    
     // Use the new helper function to normalize all times
     $normalized_days_data = muslprti_normalize_times_for_dst($days_data);
     
-    // Find latest Athan for weekly calculation
+    // Find latest Athan for weekly calculation (only for non-Ramadan days)
     $latest_fajr = null;
     $latest_sunrise = null;
     
     if ($is_weekly) {
         foreach ($normalized_days_data as $day_data) {
+            // Skip Ramadan days when finding weekly maximum
+            $is_ramadan = $ramadan_enabled && muslprti_is_ramadan_date($day_data['date'], $opts);
+            if ($is_ramadan) {
+                continue;
+            }
+            
             if ($latest_fajr === null || 
                 muslprti_time_to_minutes($day_data['athan']['fajr']) > muslprti_time_to_minutes($latest_fajr)) {
                 $latest_fajr = clone $day_data['athan']['fajr'];
@@ -191,8 +203,12 @@ function muslprti_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_aft
         }
         
         // Apply rounding to the latest times
-        $latest_fajr = muslprti_round_up($latest_fajr, $fajr_rounding);
-        $latest_sunrise = muslprti_round_down($latest_sunrise, $fajr_rounding);
+        if ($latest_fajr) {
+            $latest_fajr = muslprti_round_up($latest_fajr, $fajr_rounding);
+        }
+        if ($latest_sunrise) {
+            $latest_sunrise = muslprti_round_down($latest_sunrise, $fajr_rounding);
+        }
     }
     
     // Process each day
@@ -200,8 +216,15 @@ function muslprti_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_aft
         $day_date = $day_data['date'];
         $day_fajr_athan = $day_data['athan']['fajr'];
         
+        // Check if this day is during Ramadan
+        $is_ramadan = $ramadan_enabled && muslprti_is_ramadan_date($day_date, $opts);
+        
         // Determine iqama time based on rule
-        if ($is_weekly) {
+        if ($is_ramadan) {
+            // Ramadan: always daily, after athan with Ramadan-specific settings
+            $day_fajr_iqama = muslprti_round_up(clone $day_fajr_athan, $ramadan_fajr_rounding);
+            $day_fajr_iqama->modify("+{$ramadan_fajr_minutes} minutes");
+        } else if ($is_weekly) {
             // Weekly calculation - use consistent time derived from latest athan/sunrise
             if ($fajr_rule === 'after_athan') {
                 // Use latest fajr time + minutes for all days
@@ -243,14 +266,17 @@ function muslprti_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_aft
         list($hours, $minutes) = explode(':', $fajr_max_time);
         $max_fajr_time->setTime((int)$hours, (int)$minutes);
         
-        // Apply minimum constraint: use the greater of calculated time or min_fajr_time
-        if (muslprti_time_to_minutes($day_fajr_iqama) < muslprti_time_to_minutes($min_fajr_time)) {
-            $day_fajr_iqama = $min_fajr_time;
-        }
-        
-        // Apply maximum constraint: use the lesser of result or max_fajr_time
-        if (muslprti_time_to_minutes($day_fajr_iqama) > muslprti_time_to_minutes($max_fajr_time)) {
-            $day_fajr_iqama = $max_fajr_time;
+        // Apply minimum/maximum constraints (skip during Ramadan to allow custom times)
+        if (!$is_ramadan) {
+            // Apply minimum constraint: use the greater of calculated time or min_fajr_time
+            if (muslprti_time_to_minutes($day_fajr_iqama) < muslprti_time_to_minutes($min_fajr_time)) {
+                $day_fajr_iqama = $min_fajr_time;
+            }
+            
+            // Apply maximum constraint: use the lesser of result or max_fajr_time
+            if (muslprti_time_to_minutes($day_fajr_iqama) > muslprti_time_to_minutes($max_fajr_time)) {
+                $day_fajr_iqama = $max_fajr_time;
+            }
         }
         
         $results[$day_index] = $day_fajr_iqama;
@@ -399,14 +425,26 @@ function muslprti_calculate_asr_iqama($days_data, $asr_rule, $asr_minutes_after,
 function muslprti_calculate_maghrib_iqama($days_data, $maghrib_minutes_after, $is_weekly, $maghrib_rounding) {
     $results = [];
     
+    // Get settings for Ramadan detection
+    $opts = get_option('muslprti_settings', []);
+    $ramadan_enabled = isset($opts['ramadan_enabled']) ? $opts['ramadan_enabled'] : false;
+    $ramadan_maghrib_minutes = isset($opts['ramadan_maghrib_minutes_after']) ? $opts['ramadan_maghrib_minutes_after'] : 10;
+    $ramadan_maghrib_rounding = isset($opts['ramadan_maghrib_rounding']) ? $opts['ramadan_maghrib_rounding'] : 1;
+    
     // Use the new helper function to normalize all times
     $normalized_days_data = muslprti_normalize_times_for_dst($days_data);
     
-    // Find latest Athan for weekly calculation
+    // Find latest Athan for weekly calculation (only for non-Ramadan days)
     $latest_maghrib = null;
     
     if ($is_weekly) {
         foreach ($normalized_days_data as $day_data) {
+            // Skip Ramadan days when finding weekly maximum
+            $is_ramadan = $ramadan_enabled && muslprti_is_ramadan_date($day_data['date'], $opts);
+            if ($is_ramadan) {
+                continue;
+            }
+            
             if ($latest_maghrib === null || 
                 muslprti_time_to_minutes($day_data['athan']['maghrib']) > muslprti_time_to_minutes($latest_maghrib)) {
                 $latest_maghrib = clone $day_data['athan']['maghrib'];
@@ -414,7 +452,9 @@ function muslprti_calculate_maghrib_iqama($days_data, $maghrib_minutes_after, $i
         }
         
         // Apply rounding to the latest time
-        $latest_maghrib = muslprti_round_up($latest_maghrib, $maghrib_rounding);
+        if ($latest_maghrib) {
+            $latest_maghrib = muslprti_round_up($latest_maghrib, $maghrib_rounding);
+        }
     }
     
     // Process each day
@@ -422,8 +462,15 @@ function muslprti_calculate_maghrib_iqama($days_data, $maghrib_minutes_after, $i
         $day_date = $day_data['date'];
         $day_maghrib_athan = $day_data['athan']['maghrib'];
         
+        // Check if this day is during Ramadan
+        $is_ramadan = $ramadan_enabled && muslprti_is_ramadan_date($day_date, $opts);
+        
         // Maghrib is always calculated as minutes after Athan
-        if ($is_weekly) {
+        if ($is_ramadan) {
+            // Ramadan: always daily with Ramadan-specific settings
+            $day_maghrib_iqama = muslprti_round_up(clone $day_maghrib_athan, $ramadan_maghrib_rounding);
+            $day_maghrib_iqama->modify("+{$ramadan_maghrib_minutes} minutes");
+        } else if ($is_weekly) {
             // Use latest maghrib time + minutes for all days
             $time_components = explode(':', $latest_maghrib->format('H:i'));
             $day_maghrib_iqama = clone $day_date;
@@ -449,14 +496,26 @@ function muslprti_calculate_maghrib_iqama($days_data, $maghrib_minutes_after, $i
 function muslprti_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_after, $isha_min_time, $isha_max_time, $is_weekly, $isha_rounding) {
     $results = [];
     
+    // Get settings for Ramadan detection
+    $opts = get_option('muslprti_settings', []);
+    $ramadan_enabled = isset($opts['ramadan_enabled']) ? $opts['ramadan_enabled'] : false;
+    $ramadan_isha_minutes = isset($opts['ramadan_isha_minutes_after']) ? $opts['ramadan_isha_minutes_after'] : 20;
+    $ramadan_isha_rounding = isset($opts['ramadan_isha_rounding']) ? $opts['ramadan_isha_rounding'] : 1;
+    
     // Use the new helper function to normalize all times
     $normalized_days_data = muslprti_normalize_times_for_dst($days_data);
     
-    // Find latest Athan for weekly calculation
+    // Find latest Athan for weekly calculation (only for non-Ramadan days)
     $latest_isha = null;
     
     if ($is_weekly) {
         foreach ($normalized_days_data as $day_data) {
+            // Skip Ramadan days when finding weekly maximum
+            $is_ramadan = $ramadan_enabled && muslprti_is_ramadan_date($day_data['date'], $opts);
+            if ($is_ramadan) {
+                continue;
+            }
+            
             if ($latest_isha === null || 
                 muslprti_time_to_minutes($day_data['athan']['isha']) > muslprti_time_to_minutes($latest_isha)) {
                 $latest_isha = clone $day_data['athan']['isha'];
@@ -464,7 +523,9 @@ function muslprti_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_aft
         }
         
         // Apply rounding to the latest time
-        $latest_isha = muslprti_round_up($latest_isha, $isha_rounding);
+        if ($latest_isha) {
+            $latest_isha = muslprti_round_up($latest_isha, $isha_rounding);
+        }
     }
     
     // Process each day
@@ -472,8 +533,15 @@ function muslprti_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_aft
         $day_date = $day_data['date'];
         $day_isha_athan = $day_data['athan']['isha'];
         
+        // Check if this day is during Ramadan
+        $is_ramadan = $ramadan_enabled && muslprti_is_ramadan_date($day_date, $opts);
+        
         // Determine iqama time based on rule
-        if ($is_weekly) {
+        if ($is_ramadan) {
+            // Ramadan: always daily, after athan with Ramadan-specific settings
+            $day_isha_iqama = muslprti_round_up(clone $day_isha_athan, $ramadan_isha_rounding);
+            $day_isha_iqama->modify("+{$ramadan_isha_minutes} minutes");
+        } else if ($is_weekly) {
             // Weekly calculation
             if ($isha_rule === 'after_athan') {
                 // Use latest isha time + minutes for all days
@@ -501,14 +569,17 @@ function muslprti_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_aft
         $max_isha_time->setTime((int)$hours, (int)$minutes);
         $max_isha_time = muslprti_normalize_time_for_dst($max_isha_time);
         
-        // Use the greater of either athan+minutes or min_isha_time
-        if (muslprti_time_to_minutes($day_isha_iqama) < muslprti_time_to_minutes($min_isha_time)) {
-            $day_isha_iqama = $min_isha_time;
-        }
-        
-        // Apply max time constraint
-        if (muslprti_time_to_minutes($day_isha_iqama) > muslprti_time_to_minutes($max_isha_time)) {
-            $day_isha_iqama = $max_isha_time;
+        // Apply minimum/maximum constraints (skip during Ramadan to allow custom times)
+        if (!$is_ramadan) {
+            // Use the greater of either athan+minutes or min_isha_time
+            if (muslprti_time_to_minutes($day_isha_iqama) < muslprti_time_to_minutes($min_isha_time)) {
+                $day_isha_iqama = $min_isha_time;
+            }
+            
+            // Apply max time constraint
+            if (muslprti_time_to_minutes($day_isha_iqama) > muslprti_time_to_minutes($max_isha_time)) {
+                $day_isha_iqama = $max_isha_time;
+            }
         }
         
         // Denormalize the result to account for DST before storing
@@ -568,4 +639,121 @@ function muslprti_get_timezone() {
     }
     
     return $tz;
+}
+
+/**
+ * Detect if a given date falls within Ramadan
+ * 
+ * @param string|DateTime $date Date to check
+ * @param array $opts Plugin settings array (optional, will fetch if not provided)
+ * @return bool True if date is in Ramadan
+ */
+function muslprti_is_ramadan_date($date, $opts = null) {
+    if ($opts === null) {
+        $opts = get_option('muslprti_settings', []);
+    }
+    
+    // Check if Ramadan rules are enabled
+    $ramadan_enabled = isset($opts['ramadan_enabled']) ? $opts['ramadan_enabled'] : false;
+    if (!$ramadan_enabled) {
+        return false;
+    }
+    
+    // Convert to DateTime if needed
+    if (is_string($date)) {
+        $date = new DateTime($date, new DateTimeZone(muslprti_get_timezone()));
+    }
+    
+    $date_string = $date->format('Y-m-d');
+    
+    // Check manual date range if not auto-detecting
+    $ramadan_auto_detect = isset($opts['ramadan_auto_detect']) ? $opts['ramadan_auto_detect'] : true;
+    
+    if (!$ramadan_auto_detect) {
+        $start = isset($opts['ramadan_manual_start']) ? $opts['ramadan_manual_start'] : '';
+        $end = isset($opts['ramadan_manual_end']) ? $opts['ramadan_manual_end'] : '';
+        
+        if (!empty($start) && !empty($end)) {
+            return ($date_string >= $start && $date_string <= $end);
+        }
+        return false;
+    }
+    
+    // Auto-detect using Hijri calendar
+    // Load Hijri date converter if not already loaded
+    if (!function_exists('muslprti_convert_to_hijri')) {
+        require_once __DIR__ . '/hijri-date-converter.php';
+    }
+    
+    $hijri_offset = isset($opts['hijri_offset']) ? intval($opts['hijri_offset']) : 0;
+    $hijri_date = muslprti_convert_to_hijri($date, false, 'en', $hijri_offset);
+    
+    // Ramadan is month 9 in Islamic calendar
+    return ($hijri_date['month'] == 9);
+}
+
+/**
+ * Get Ramadan date range for a given Gregorian year
+ * 
+ * @param int $gregorian_year Year to check
+ * @param array $opts Plugin settings (optional, will fetch if not provided)
+ * @return array|false Array with 'start' and 'end' dates (Y-m-d format), or false if not found
+ */
+function muslprti_get_ramadan_dates($gregorian_year, $opts = null) {
+    if ($opts === null) {
+        $opts = get_option('muslprti_settings', []);
+    }
+    
+    // Check cache first
+    $cache_key = 'muslprti_ramadan_dates_' . $gregorian_year;
+    $cached = wp_cache_get($cache_key, 'muslim_prayer_times');
+    
+    if ($cached !== false) {
+        return $cached;
+    }
+    
+    // Load Hijri date converter if not already loaded
+    if (!function_exists('muslprti_convert_to_hijri')) {
+        require_once __DIR__ . '/hijri-date-converter.php';
+    }
+    
+    $hijri_offset = isset($opts['hijri_offset']) ? intval($opts['hijri_offset']) : 0;
+    $timezone = muslprti_get_timezone();
+    
+    // Search for first day of Ramadan in the year
+    $start_date = new DateTime("$gregorian_year-01-01", new DateTimeZone($timezone));
+    $end_date = new DateTime("$gregorian_year-12-31", new DateTimeZone($timezone));
+    
+    $ramadan_start = null;
+    $ramadan_end = null;
+    
+    $current = clone $start_date;
+    while ($current <= $end_date) {
+        $hijri = muslprti_convert_to_hijri($current, false, 'en', $hijri_offset);
+        
+        if ($hijri['month'] == 9) {
+            if ($ramadan_start === null) {
+                $ramadan_start = clone $current;
+            }
+            $ramadan_end = clone $current;
+        } elseif ($ramadan_start !== null) {
+            // We've exited Ramadan
+            break;
+        }
+        
+        $current->modify('+1 day');
+    }
+    
+    $result = false;
+    if ($ramadan_start && $ramadan_end) {
+        $result = [
+            'start' => $ramadan_start->format('Y-m-d'),
+            'end' => $ramadan_end->format('Y-m-d')
+        ];
+    }
+    
+    // Cache for 24 hours (86400 seconds)
+    wp_cache_set($cache_key, $result, 'muslim_prayer_times', 86400);
+    
+    return $result;
 }
