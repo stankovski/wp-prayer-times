@@ -191,14 +191,26 @@ class PrayerTimes2
         $this->elevation = $elevation === null ? 0 : 1 * $elevation;
         $this->settings['location'] = [$this->latitude, $this->longitude];
         
+        // Extract and store timezone from DateTime object
+        $this->settings['timezone'] = $date->getTimezone()->getName();
+        
         $this->setTimeFormat($format);
         $this->setLatitudeAdjustmentMethod($latitudeAdjustmentMethod);
         if ($midnightMode !== null) {
             $this->setMidnightMode($midnightMode);
         }
 
-        // Set UTC time for calculations
-        $this->utcTime = $date->getTimestamp() * 1000; // Convert to milliseconds like JavaScript
+        // Set UTC time for calculations - matching times.js behavior
+        // Extract year, month, day from local date, then create UTC timestamp for that calendar date
+        // This matches: this.utcTime = Date.UTC(date[0], date[1] - 1, date[2]);
+        $year = (int)$date->format('Y');
+        $month = (int)$date->format('n');
+        $day = (int)$date->format('j');
+        
+        $utcDate = new DateTime('', new DateTimezone('UTC'));
+        $utcDate->setDate($year, $month, $day);
+        $utcDate->setTime(0, 0, 0);
+        $this->utcTime = $utcDate->getTimestamp() * 1000; // Convert to milliseconds like JavaScript
 
         $times = $this->computeTimes();
         $this->formatTimes($times);
@@ -230,13 +242,13 @@ class PrayerTimes2
         $jsMethod = $methodMapping[$method] ?? 'MWL';
         $this->method = $method;
         
-        // Apply method settings
+        // Apply defaults first (matching times.js behavior)
+        $this->settings = array_merge($this->settings, $this->methods['defaults']);
+        
+        // Then apply method-specific settings to override defaults
         if (isset($this->methods[$jsMethod])) {
             $this->settings = array_merge($this->settings, $this->methods[$jsMethod]);
         }
-        
-        // Apply defaults
-        $this->settings = array_merge($this->settings, $this->methods['defaults']);
     }
     
     /**
@@ -551,9 +563,12 @@ class PrayerTimes2
     private function convertTimes(&$times)
     {
         $lng = $this->settings['location'][1];
+        
         foreach ($times as $i => $time) {
+            // Adjust for longitude (matching times.js exactly)
             $adjustedTime = $time - $lng / 15;
-            $timestamp = $this->utcTime + ($adjustedTime * 3600000); // Convert hours to milliseconds
+            // Convert to UTC timestamp in milliseconds (matching times.js)
+            $timestamp = $this->utcTime + floor($adjustedTime * 3600000);
             $times[$i] = $this->roundTime($timestamp);
         }
     }
@@ -711,7 +726,11 @@ class PrayerTimes2
      */
     private function mod($a, $b)
     {
-        return (($a % $b) + $b) % $b;
+        $result = fmod($a, $b);
+        if ($result < 0) {
+            $result += $b;
+        }
+        return $result;
     }
 
     /**
@@ -733,7 +752,7 @@ class PrayerTimes2
         }
         
         $oneMinute = 60000; // milliseconds
-        return (int)($rounding($timestamp / $oneMinute) * $oneMinute);
+        return (float)($rounding($timestamp / $oneMinute) * $oneMinute);
     }
     
     // Utility methods
@@ -792,18 +811,12 @@ class PrayerTimes2
             $timestampSeconds += $utcOffset * 60; // utcOffset is in minutes
         }
         
-        // Create DateTime object
-        $date = new DateTime();
-        $date->setTimestamp($timestampSeconds);
+        // Create DateTime object in UTC first
+        $date = new DateTime('@' . $timestampSeconds, new DateTimezone('UTC'));
         
-        // Set timezone
-        if (isset($this->settings['timezone'])) {
-            try {
-                $date->setTimezone(new DateTimezone($this->settings['timezone']));
-            } catch (\Exception $e) {
-                // Fallback to UTC if timezone is invalid
-                $date->setTimezone(new DateTimezone('UTC'));
-            }
+        // Convert to local timezone (matching times.js behavior with toLocaleTimeString)
+        if ($utcOffset === 'auto') {
+            $date->setTimezone(new DateTimezone($this->settings['timezone']));
         }
         
         // Format based on requested format
@@ -859,6 +872,18 @@ class PrayerTimes2
         }
         
         return $result;
+    }
+    
+    /**
+     * Get timezone offset in hours
+     * @return float
+     */
+    private function getTimezoneOffsetHours()
+    {
+        if ($this->date !== null) {
+            return $this->date->getOffset() / 3600; // Convert seconds to hours
+        }
+        return 0;
     }
     
     /**

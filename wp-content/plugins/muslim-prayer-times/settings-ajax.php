@@ -2,7 +2,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-use IslamicNetwork\PrayerTimes\PrayerTimes;
+use IslamicNetwork\PrayerTimes\PrayerTimes2;
 
 // Include helper functions
 require_once __DIR__ . '/includes/helpers.php';
@@ -68,7 +68,7 @@ function muslprti_handle_generate() {
         // Include the autoloader for Islamic Network libraries
         require_once __DIR__ . '/includes/islamic-network/autoload.php';
         
-        if (!class_exists('IslamicNetwork\PrayerTimes\PrayerTimes')) {
+        if (!class_exists('IslamicNetwork\PrayerTimes\PrayerTimes2')) {
             wp_send_json_error(esc_html__('Muslim Prayer Times library not available', 'muslim-prayer-times'));
             return;
         }
@@ -132,8 +132,8 @@ function muslprti_handle_generate() {
             $start_date = clone $now;
         }
         
-        // Initialize the PrayerTimes object
-        $pt = new PrayerTimes($method, $asr_calc);
+        // Initialize the PrayerTimes2 object
+        $pt = new PrayerTimes2($method, $asr_calc);
         
         // Prepare CSV data
         $csv_data = [];
@@ -217,9 +217,9 @@ function muslprti_handle_generate() {
                 floatval($latitude),
                 floatval($longitude),
                 null,
-                PrayerTimes::LATITUDE_ADJUSTMENT_METHOD_ANGLE,
-                PrayerTimes::MIDNIGHT_MODE_STANDARD,
-                PrayerTimes::TIME_FORMAT_24H
+                PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_ANGLE,
+                PrayerTimes2::MIDNIGHT_MODE_STANDARD,
+                PrayerTimes2::TIME_FORMAT_24H
             );
             
             // Store this day's data

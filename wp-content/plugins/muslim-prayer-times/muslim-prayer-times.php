@@ -14,8 +14,8 @@ License URI: https://opensource.org/licenses/MIT
 
 if (!defined('ABSPATH')) exit;
 
-// Import the PrayerTimes class
-use IslamicNetwork\PrayerTimes\PrayerTimes;
+// Import the PrayerTimes2 class
+use IslamicNetwork\PrayerTimes\PrayerTimes2;
 
 // Define table name as a constant
 define('MUSLPRTI_IQAMA_TABLE', 'muslprti_iqama_times');
