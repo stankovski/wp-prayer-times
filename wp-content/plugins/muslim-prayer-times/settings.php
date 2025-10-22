@@ -377,6 +377,8 @@ function muslprti_settings_page() {
         $opts['fajr_minutes_before_shuruq'] = isset($_POST['muslprti_fajr_minutes_before_shuruq']) ? intval(wp_unslash($_POST['muslprti_fajr_minutes_before_shuruq'])) : 45;
         $opts['fajr_daily_change'] = isset($_POST['muslprti_fajr_daily_change']) ? 1 : 0;
         $opts['fajr_rounding'] = isset($_POST['muslprti_fajr_rounding']) ? intval(wp_unslash($_POST['muslprti_fajr_rounding'])) : 1;
+        $opts['fajr_min_time'] = isset($_POST['muslprti_fajr_min_time']) ? sanitize_text_field(wp_unslash($_POST['muslprti_fajr_min_time'])) : '05:00';
+        $opts['fajr_max_time'] = isset($_POST['muslprti_fajr_max_time']) ? sanitize_text_field(wp_unslash($_POST['muslprti_fajr_max_time'])) : '07:00';
         
         // Dhuhr rules
         $opts['dhuhr_rule'] = isset($_POST['muslprti_dhuhr_rule']) ? sanitize_text_field(wp_unslash($_POST['muslprti_dhuhr_rule'])) : 'after_athan';
@@ -471,6 +473,8 @@ function muslprti_settings_page() {
     $fajr_minutes_before_shuruq = isset($opts['fajr_minutes_before_shuruq']) ? $opts['fajr_minutes_before_shuruq'] : 45;
     $fajr_daily_change = isset($opts['fajr_daily_change']) ? $opts['fajr_daily_change'] : 0;
     $fajr_rounding = isset($opts['fajr_rounding']) ? $opts['fajr_rounding'] : 1;
+    $fajr_min_time = isset($opts['fajr_min_time']) ? $opts['fajr_min_time'] : '05:00';
+    $fajr_max_time = isset($opts['fajr_max_time']) ? $opts['fajr_max_time'] : '07:00';
     
     // Dhuhr defaults
     $dhuhr_rule = isset($opts['dhuhr_rule']) ? $opts['dhuhr_rule'] : 'after_athan';
@@ -738,6 +742,15 @@ function muslprti_settings_page() {
                                 minutes before Shuruq
                                 <p class="description">Note: For safety, this will never be less than 15 minutes before sunrise.</p>
                             </div>
+                        </div>
+                        
+                        <div class="iqama-rule-option">
+                            <p><strong>Time constraints (applies to all rules):</strong></p>
+                            <p>
+                                <label>Minimum Fajr time: <input type="time" name="muslprti_fajr_min_time" value="<?php echo esc_attr($fajr_min_time); ?>"></label><br>
+                                <label>Maximum Fajr time: <input type="time" name="muslprti_fajr_max_time" value="<?php echo esc_attr($fajr_max_time); ?>"></label>
+                            </p>
+                            <p class="description">These settings ensure Fajr Iqama is never before the minimum time or after the maximum time. For "before Shuruq" rule, the maximum is automatically limited to the calculated time before sunrise.</p>
                         </div>
                     </div>
                     

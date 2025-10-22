@@ -149,6 +149,8 @@ function muslprti_handle_generate() {
         $fajr_minutes_before_shuruq = isset($opts['fajr_minutes_before_shuruq']) ? $opts['fajr_minutes_before_shuruq'] : 45;
         $fajr_daily_change = isset($opts['fajr_daily_change']) ? $opts['fajr_daily_change'] : 0;
         $fajr_rounding = isset($opts['fajr_rounding']) ? $opts['fajr_rounding'] : 1;
+        $fajr_min_time = isset($opts['fajr_min_time']) ? $opts['fajr_min_time'] : '05:00';
+        $fajr_max_time = isset($opts['fajr_max_time']) ? $opts['fajr_max_time'] : '07:00';
         
         $dhuhr_rule = isset($opts['dhuhr_rule']) ? $opts['dhuhr_rule'] : 'after_athan';
         $dhuhr_minutes_after = isset($opts['dhuhr_minutes_after']) ? $opts['dhuhr_minutes_after'] : 15;
@@ -247,9 +249,11 @@ function muslprti_handle_generate() {
                     $week_days_data, 
                     $fajr_rule, 
                     $fajr_minutes_after, 
-                    $fajr_minutes_before_shuruq, 
+                    $fajr_minutes_before_shuruq,
                     $is_weekly && !$fajr_daily_change,
-                    $fajr_rounding
+                    $fajr_rounding,
+                    $fajr_min_time,
+                    $fajr_max_time
                 );
                 
                 $dhuhr_iqamas = muslprti_calculate_dhuhr_iqama(

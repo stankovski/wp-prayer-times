@@ -158,24 +158,24 @@ class HelpersTest extends TestCase {
         // Create test data
         $days_data = [
             0 => [
-                'date' => new DateTime('2023-01-01'),
+                'date' => new DateTime('2023-01-01', new DateTimeZone('America/New_York')),
                 'athan' => [
-                    'fajr' => new DateTime('2023-01-01 05:30:00'),
-                    'sunrise' => new DateTime('2023-01-01 07:15:00')
+                    'fajr' => new DateTime('2023-01-01 05:30:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-01-01 07:15:00', new DateTimeZone('America/New_York'))
                 ],
             ],
             1 => [
-                'date' => new DateTime('2023-01-02'),
+                'date' => new DateTime('2023-01-02', new DateTimeZone('America/New_York')),
                 'athan' => [
-                    'fajr' => new DateTime('2023-01-02 05:31:00'),
-                    'sunrise' => new DateTime('2023-01-02 07:16:00')
+                    'fajr' => new DateTime('2023-01-02 05:31:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-01-02 07:16:00', new DateTimeZone('America/New_York'))
                 ],
             ],
         ];
 
         // Test after_athan rule with daily calculation
         $results = muslprti_calculate_fajr_iqama(
-            $days_data, 'after_athan', 20, 0, false, 5
+            $days_data, 'after_athan', 20, 0, false, 5, '04:00', '08:00'
         );
         
         $this->assertEquals('05:50:00', $results[0]->format('H:i:s'));
@@ -183,7 +183,7 @@ class HelpersTest extends TestCase {
 
         // Test after_athan rule with weekly calculation
         $results = muslprti_calculate_fajr_iqama(
-            $days_data, 'after_athan', 20, 0, true, 5
+            $days_data, 'after_athan', 20, 0, true, 5, '04:00', '08:00'
         );
         
         $this->assertEquals('05:55:00', $results[0]->format('H:i:s'));
@@ -191,19 +191,19 @@ class HelpersTest extends TestCase {
 
         // Test before_shuruq rule with daily calculation
         $results = muslprti_calculate_fajr_iqama(
-            $days_data, 'before_shuruq', 0, 45, false, 5
+            $days_data, 'before_shuruq', 0, 15, false, 5, '04:00', '08:00'
         );
         
-        $this->assertEquals('06:30:00', $results[0]->format('H:i:s'));
-        $this->assertEquals('06:31:00', $results[1]->format('H:i:s'));
+        $this->assertEquals('07:00:00', $results[0]->format('H:i:s'));
+        $this->assertEquals('07:01:00', $results[1]->format('H:i:s'));
 
         // Test before_shuruq rule with weekly calculation
         $results = muslprti_calculate_fajr_iqama(
-            $days_data, 'before_shuruq', 0, 45, true, 5
+            $days_data, 'before_shuruq', 0, 15, true, 5, '04:00', '08:00'
         );
         
-        $this->assertEquals('06:30:00', $results[0]->format('H:i:s'));
-        $this->assertEquals('06:30:00', $results[1]->format('H:i:s'));
+        $this->assertEquals('07:00:00', $results[0]->format('H:i:s'));
+        $this->assertEquals('07:00:00', $results[1]->format('H:i:s'));
     }
 
     /**
@@ -237,7 +237,7 @@ class HelpersTest extends TestCase {
 
         // Test after_athan rule with daily calculation
         $results = muslprti_calculate_fajr_iqama(
-            $days_data, 'after_athan', 20, 0, false, 5
+            $days_data, 'after_athan', 20, 0, false, 5, '04:00', '08:00'
         );
         
         $this->assertEquals(0, $days_data[0]['athan']['fajr']->format('I'));
@@ -249,7 +249,7 @@ class HelpersTest extends TestCase {
 
         // Test after_athan rule with weekly calculation
         $results = muslprti_calculate_fajr_iqama(
-            $days_data, 'after_athan', 20, 0, true, 5
+            $days_data, 'after_athan', 20, 0, true, 5, '04:00', '08:00'
         );
         
         $this->assertEquals('05:50:00', $results[0]->format('H:i:s'));
@@ -258,7 +258,7 @@ class HelpersTest extends TestCase {
 
         // Test before_shuruq rule with daily calculation
         $results = muslprti_calculate_fajr_iqama(
-            $days_data, 'before_shuruq', 0, 45, false, 5
+            $days_data, 'before_shuruq', 0, 45, false, 5, '04:00', '08:00'
         );
         
         $this->assertEquals('06:30:00', $results[0]->format('H:i:s'));
@@ -267,12 +267,111 @@ class HelpersTest extends TestCase {
 
         // Test before_shuruq rule with weekly calculation
         $results = muslprti_calculate_fajr_iqama(
-            $days_data, 'before_shuruq', 0, 45, true, 5
+            $days_data, 'before_shuruq', 0, 45, true, 5, '04:00', '08:00'
         );
         
         $this->assertEquals('06:30:00', $results[0]->format('H:i:s'));
         $this->assertEquals('07:30:00', $results[1]->format('H:i:s'));
         $this->assertEquals('07:30:00', $results[2]->format('H:i:s'));
+    }
+
+    /**
+     * Test Fajr Iqama time calculation with min/max constraints
+     */
+    public function testCalculateFajrIqamaWithConstraints() {
+        // Create test data with athan time that would violate both min and max
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-01-01'),
+                'athan' => [
+                    'fajr' => new DateTime('2023-01-01 04:30:00'), // Early athan
+                    'sunrise' => new DateTime('2023-01-01 07:15:00')
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-01-02'),
+                'athan' => [
+                    'fajr' => new DateTime('2023-01-02 06:55:00'), // Late athan
+                    'sunrise' => new DateTime('2023-01-02 07:16:00')
+                ],
+            ],
+        ];
+
+        // Test after_athan rule with constraints - min should activate for day 0
+        $results = muslprti_calculate_fajr_iqama(
+            $days_data, 'after_athan', 20, 0, false, 5, '05:00', '07:00'
+        );
+        
+        // Day 0: athan + 20 min = 04:50, but min constraint raises to 05:00
+        $this->assertEquals('05:00:00', $results[0]->format('H:i:s'));
+        // Day 1: athan + 20 min = 07:15, but max constraint lowers to 07:00
+        $this->assertEquals('07:00:00', $results[1]->format('H:i:s'));
+    }
+
+    /**
+     * Test Fajr Iqama time calculation with before_shuruq rule and constraints
+     */
+    public function testCalculateFajrIqamaWithConstraintsBeforeShuruq() {
+        // Create test data
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-01-01'),
+                'athan' => [
+                    'fajr' => new DateTime('2023-01-01 04:30:00'),
+                    'sunrise' => new DateTime('2023-01-01 06:45:00') // Early sunrise
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-01-02'),
+                'athan' => [
+                    'fajr' => new DateTime('2023-01-02 05:31:00'),
+                    'sunrise' => new DateTime('2023-01-02 07:30:00') // Later sunrise
+                ],
+            ],
+        ];
+
+        // Test before_shuruq rule with constraints
+        $results = muslprti_calculate_fajr_iqama(
+            $days_data, 'before_shuruq', 0, 30, false, 5, '05:00', '07:00'
+        );
+        
+        // Day 0: sunrise - 30 min = 06:15, within bounds
+        $this->assertEquals('06:15:00', $results[0]->format('H:i:s'));
+        // Day 1: sunrise - 30 min = 07:00, exactly at max (special handling: use lesser of max or calculated)
+        $this->assertEquals('07:00:00', $results[1]->format('H:i:s'));
+    }
+
+    /**
+     * Test Fajr Iqama time calculation with constraints during DST transition
+     */
+    public function testCalculateFajrIqamaWithConstraintsDuringDST() {
+        // Create test data crossing DST boundary
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-03-11', new DateTimeZone('America/New_York')),
+                'athan' => [
+                    'fajr' => new DateTime('2023-03-11 04:30:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-03-11 07:15:00', new DateTimeZone('America/New_York'))
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-03-12', new DateTimeZone('America/New_York')),
+                'athan' => [
+                    'fajr' => new DateTime('2023-03-12 05:29:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-03-12 08:14:00', new DateTimeZone('America/New_York'))
+                ],
+            ],
+        ];
+
+        // Test after_athan rule with constraints during DST
+        $results = muslprti_calculate_fajr_iqama(
+            $days_data, 'after_athan', 20, 0, false, 5, '05:00', '07:00'
+        );
+        
+        // Day 0 (before DST): athan + 20 min = 04:50, min constraint raises to 05:00
+        $this->assertEquals('05:00:00', $results[0]->format('H:i:s'));
+        // Day 1 (after DST): athan + 20 min = 05:49 (after denormalize), within bounds
+        $this->assertEquals('05:49:00', $results[1]->format('H:i:s'));
     }
 
     /**

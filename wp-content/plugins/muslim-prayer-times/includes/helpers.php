@@ -168,7 +168,7 @@ function muslprti_round_up(DateTime $time, $rounding_minutes = 1) {
 }
 
 // Helper function to calculate Fajr Iqama times for a collection of days
-function muslprti_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_after, $fajr_minutes_before_shuruq, $is_weekly, $fajr_rounding) {
+function muslprti_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_after, $fajr_minutes_before_shuruq, $is_weekly, $fajr_rounding, $fajr_min_time = '00:00', $fajr_max_time = '23:59') {
     $results = [];
     
     // Use the new helper function to normalize all times
@@ -230,9 +230,28 @@ function muslprti_calculate_fajr_iqama($days_data, $fajr_rule, $fajr_minutes_aft
             }
         }
         
-        // Denormalize the result to account for DST before storing
+        // Denormalize the result to account for DST before applying constraints
         // Use the original date for denormalization to maintain correct DST information
         $day_fajr_iqama = muslprti_denormalize_time_for_dst($day_fajr_iqama);
+        
+        // Create min_fajr_time and max_fajr_time as DateTime objects
+        $min_fajr_time = clone $day_date;
+        list($hours, $minutes) = explode(':', $fajr_min_time);
+        $min_fajr_time->setTime((int)$hours, (int)$minutes);
+        
+        $max_fajr_time = clone $day_date;
+        list($hours, $minutes) = explode(':', $fajr_max_time);
+        $max_fajr_time->setTime((int)$hours, (int)$minutes);
+        
+        // Apply minimum constraint: use the greater of calculated time or min_fajr_time
+        if (muslprti_time_to_minutes($day_fajr_iqama) < muslprti_time_to_minutes($min_fajr_time)) {
+            $day_fajr_iqama = $min_fajr_time;
+        }
+        
+        // Apply maximum constraint: use the lesser of result or max_fajr_time
+        if (muslprti_time_to_minutes($day_fajr_iqama) > muslprti_time_to_minutes($max_fajr_time)) {
+            $day_fajr_iqama = $max_fajr_time;
+        }
         
         $results[$day_index] = $day_fajr_iqama;
     }
