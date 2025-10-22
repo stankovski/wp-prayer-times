@@ -345,6 +345,7 @@ function muslprti_settings_page() {
         $opts['tz'] = isset($_POST['muslprti_tz']) ? sanitize_text_field(wp_unslash($_POST['muslprti_tz'])) : 'America/Los_Angeles';
         $opts['method'] = isset($_POST['muslprti_method']) ? sanitize_text_field(wp_unslash($_POST['muslprti_method'])) : 'ISNA';
         $opts['asr_calc'] = isset($_POST['muslprti_asr_calc']) ? sanitize_text_field(wp_unslash($_POST['muslprti_asr_calc'])) : 'STANDARD';
+        $opts['latitude_adjustment'] = isset($_POST['muslprti_latitude_adjustment']) ? sanitize_text_field(wp_unslash($_POST['muslprti_latitude_adjustment'])) : 'MOTN';
         
         // Save Hijri day offset
         $opts['hijri_offset'] = isset($_POST['muslprti_hijri_offset']) ? intval(wp_unslash($_POST['muslprti_hijri_offset'])) : 0;
@@ -420,6 +421,7 @@ function muslprti_settings_page() {
     $tz = muslprti_get_timezone();
     $method = isset($opts['method']) ? $opts['method'] : 'ISNA';
     $asr_calc = isset($opts['asr_calc']) ? $opts['asr_calc'] : 'STANDARD';
+    $latitude_adjustment = isset($opts['latitude_adjustment']) ? $opts['latitude_adjustment'] : 'MOTN';
     $hijri_offset = isset($opts['hijri_offset']) ? $opts['hijri_offset'] : 0;
     $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
 
@@ -604,6 +606,18 @@ function muslprti_settings_page() {
                                     <option value="HANAFI" <?php selected($asr_calc, 'HANAFI'); ?>>Hanafi</option>
                                 </select>
                                 <p class="description">Standard: Shadow length = object height<br>Hanafi: Shadow length = 2 × object height</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="muslprti_latitude_adjustment">High Latitude Adjustment Method</label></th>
+                            <td>
+                                <select id="muslprti_latitude_adjustment" name="muslprti_latitude_adjustment">
+                                    <option value="MOTN" <?php selected($latitude_adjustment, 'MOTN'); ?>>Middle of the Night (Recommended)</option>
+                                    <option value="ANGLE" <?php selected($latitude_adjustment, 'ANGLE'); ?>>Angle Based</option>
+                                    <option value="ONESEVENTH" <?php selected($latitude_adjustment, 'ONESEVENTH'); ?>>One Seventh</option>
+                                    <option value="NONE" <?php selected($latitude_adjustment, 'NONE'); ?>>None</option>
+                                </select>
+                                <p class="description">Method for calculating Fajr and Isha times at high latitudes (above 48°).<br>Middle of the Night is the default used by most Islamic organizations.</p>
                             </td>
                         </tr>
                         <tr>

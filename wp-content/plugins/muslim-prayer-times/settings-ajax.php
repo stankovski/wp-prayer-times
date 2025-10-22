@@ -211,13 +211,33 @@ function muslprti_handle_generate() {
                 $week_days_data = [];
             }
             
+            // Get latitude adjustment method from settings
+            $latitude_adjustment = isset($opts['latitude_adjustment']) ? $opts['latitude_adjustment'] : 'MOTN';
+            
+            // Convert string to constant
+            $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_MOTN; // default
+            switch ($latitude_adjustment) {
+                case 'NONE':
+                    $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_NONE;
+                    break;
+                case 'MOTN':
+                    $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_MOTN;
+                    break;
+                case 'ANGLE':
+                    $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_ANGLE;
+                    break;
+                case 'ONESEVENTH':
+                    $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_ONESEVENTH;
+                    break;
+            }
+            
             // Get prayer times for the current day
             $times = $pt->getTimes(
                 $current_date,
                 floatval($latitude),
                 floatval($longitude),
                 null,
-                PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_ANGLE,
+                $latitude_adjustment_const,
                 PrayerTimes2::MIDNIGHT_MODE_STANDARD,
                 PrayerTimes2::TIME_FORMAT_24H
             );
