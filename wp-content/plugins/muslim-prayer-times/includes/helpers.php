@@ -558,33 +558,31 @@ function muslprti_calculate_isha_iqama($days_data, $isha_rule, $isha_minutes_aft
             }
         }
         
+        // Denormalize the result to account for DST before applying constraints
+        // Use the original date for denormalization to maintain correct DST information
+        $day_isha_iqama = muslprti_denormalize_time_for_dst($day_isha_iqama);
+        
         // Create min_isha_time and max_isha_time as DateTime objects
         $min_isha_time = clone $day_date;
         list($hours, $minutes) = explode(':', $isha_min_time);
         $min_isha_time->setTime((int)$hours, (int)$minutes);
-        $min_isha_time = muslprti_normalize_time_for_dst($min_isha_time);
         
         $max_isha_time = clone $day_date;
         list($hours, $minutes) = explode(':', $isha_max_time);
         $max_isha_time->setTime((int)$hours, (int)$minutes);
-        $max_isha_time = muslprti_normalize_time_for_dst($max_isha_time);
         
         // Apply minimum/maximum constraints (skip during Ramadan to allow custom times)
         if (!$is_ramadan) {
-            // Use the greater of either athan+minutes or min_isha_time
+            // Apply minimum constraint: use the greater of calculated time or min_isha_time
             if (muslprti_time_to_minutes($day_isha_iqama) < muslprti_time_to_minutes($min_isha_time)) {
                 $day_isha_iqama = $min_isha_time;
             }
             
-            // Apply max time constraint
+            // Apply maximum constraint: use the lesser of result or max_isha_time
             if (muslprti_time_to_minutes($day_isha_iqama) > muslprti_time_to_minutes($max_isha_time)) {
                 $day_isha_iqama = $max_isha_time;
             }
         }
-        
-        // Denormalize the result to account for DST before storing
-        // Use the original date for denormalization to maintain correct DST information
-        $day_isha_iqama = muslprti_denormalize_time_for_dst($day_isha_iqama);
         
         $results[$day_index] = $day_isha_iqama;
     }

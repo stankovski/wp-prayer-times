@@ -1034,4 +1034,350 @@ class HelpersTest extends TestCase {
         $wp_options = [];
         $this->assertEquals('UTC', muslprti_get_timezone());
     }
+
+    /**
+     * Test Fajr Iqama calculation with Ramadan custom times
+     */
+    public function testCalculateFajrIqamaWithRamadan() {
+        // Require the hijri date converter file
+        require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
+        
+        // Set up Ramadan settings (manual date range)
+        $this->setOption('muslprti_settings', [
+            'ramadan_enabled' => true,
+            'ramadan_auto_detect' => false,
+            'ramadan_manual_start' => '2023-03-23',
+            'ramadan_manual_end' => '2023-04-21',
+            'ramadan_fajr_minutes_after' => 30,
+            'ramadan_fajr_rounding' => 5,
+        ]);
+        
+        // Create test data with one Ramadan day and one non-Ramadan day
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-03-20', new DateTimeZone('America/New_York')), // Before Ramadan
+                'athan' => [
+                    'fajr' => new DateTime('2023-03-20 05:30:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-03-20 07:15:00', new DateTimeZone('America/New_York'))
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-03-25', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'fajr' => new DateTime('2023-03-25 04:15:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-03-25 07:10:00', new DateTimeZone('America/New_York'))
+                ],
+            ],
+        ];
+        
+        // Test that Ramadan day uses custom settings and ignores min/max constraints
+        $results = muslprti_calculate_fajr_iqama(
+            $days_data, 'after_athan', 20, 0, false, 5, '05:00', '07:00'
+        );
+        
+        // Day 0 (non-Ramadan): athan + 20 min = 05:50, within constraints
+        $this->assertEquals('05:50:00', $results[0]->format('H:i:s'));
+        
+        // Day 1 (Ramadan): athan rounded up to 04:15 + 30 min = 04:45
+        // Should NOT be constrained by min time of 05:00
+        $this->assertEquals('04:45:00', $results[1]->format('H:i:s'));
+    }
+
+    /**
+     * Test Fajr Iqama calculation with Ramadan in weekly mode
+     */
+    public function testCalculateFajrIqamaWithRamadanWeekly() {
+        // Require the hijri date converter file
+        require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
+        
+        // Set up Ramadan settings
+        $this->setOption('muslprti_settings', [
+            'ramadan_enabled' => true,
+            'ramadan_auto_detect' => false,
+            'ramadan_manual_start' => '2023-03-23',
+            'ramadan_manual_end' => '2023-04-21',
+            'ramadan_fajr_minutes_after' => 25,
+            'ramadan_fajr_rounding' => 5,
+        ]);
+        
+        // Create test data with mixed Ramadan and non-Ramadan days
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-03-22', new DateTimeZone('America/New_York')), // Before Ramadan
+                'athan' => [
+                    'fajr' => new DateTime('2023-03-22 05:30:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-03-22 07:15:00', new DateTimeZone('America/New_York'))
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-03-24', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'fajr' => new DateTime('2023-03-24 05:28:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-03-24 07:12:00', new DateTimeZone('America/New_York'))
+                ],
+            ],
+            2 => [
+                'date' => new DateTime('2023-03-25', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'fajr' => new DateTime('2023-03-25 05:27:00', new DateTimeZone('America/New_York')),
+                    'sunrise' => new DateTime('2023-03-25 07:11:00', new DateTimeZone('America/New_York'))
+                ],
+            ],
+        ];
+        
+        // Test weekly mode: Ramadan days should be calculated daily, non-Ramadan use weekly
+        $results = muslprti_calculate_fajr_iqama(
+            $days_data, 'after_athan', 20, 0, true, 5, '05:00', '07:00'
+        );
+        
+        // Day 0 (non-Ramadan, weekly): uses latest non-Ramadan fajr (only one: 05:30 rounded to 05:30) + 20 = 05:50
+        // However, the actual result will be 05:30 rounded up to 05:30, then + 20 = 05:50, then it applies to all days
+        // But weekly for a single non-Ramadan day with 05:30 athan: round up to 05:30, + 20 = 05:50
+        // Wait, let me recalculate: 05:30 athan -> normalize (no DST) -> round up to 05:30 -> +20 = 05:50 -> denormalize -> 05:50
+        // But since it's the only non-Ramadan day and weekly=true, it uses itself: 05:30 rounded to 05:30 + 20 = 05:50 for day 0
+        // For weekly, it calculates the latest across all non-Ramadan days, so 05:30 is the latest
+        $this->assertEquals('05:50:00', $results[0]->format('H:i:s'));
+        
+        // Day 1 (Ramadan, daily): 05:28 rounded to 05:30 + 25 = 05:55
+        $this->assertEquals('05:55:00', $results[1]->format('H:i:s'));
+        
+        // Day 2 (Ramadan, daily): 05:27 rounded to 05:30 + 25 = 05:55
+        $this->assertEquals('05:55:00', $results[2]->format('H:i:s'));
+    }
+
+    /**
+     * Test Maghrib Iqama calculation with Ramadan custom times
+     */
+    public function testCalculateMaghribIqamaWithRamadan() {
+        // Require the hijri date converter file
+        require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
+        
+        // Set up Ramadan settings
+        $this->setOption('muslprti_settings', [
+            'ramadan_enabled' => true,
+            'ramadan_auto_detect' => false,
+            'ramadan_manual_start' => '2023-03-23',
+            'ramadan_manual_end' => '2023-04-21',
+            'ramadan_maghrib_minutes_after' => 5,
+            'ramadan_maghrib_rounding' => 5,
+        ]);
+        
+        // Create test data
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-03-22', new DateTimeZone('America/New_York')), // Before Ramadan
+                'athan' => [
+                    'maghrib' => new DateTime('2023-03-22 18:45:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-03-25', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'maghrib' => new DateTime('2023-03-25 18:48:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+        ];
+        
+        // Test with daily calculation
+        $results = muslprti_calculate_maghrib_iqama(
+            $days_data, 10, false, 5
+        );
+        
+        // Day 0 (non-Ramadan): athan + 10 min = 18:55
+        $this->assertEquals('18:55:00', $results[0]->format('H:i:s'));
+        
+        // Day 1 (Ramadan): athan rounded to 18:50 + 5 min = 18:55
+        $this->assertEquals('18:55:00', $results[1]->format('H:i:s'));
+    }
+
+    /**
+     * Test Maghrib Iqama calculation with Ramadan in weekly mode
+     */
+    public function testCalculateMaghribIqamaWithRamadanWeekly() {
+        // Require the hijri date converter file
+        require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
+        
+        // Set up Ramadan settings
+        $this->setOption('muslprti_settings', [
+            'ramadan_enabled' => true,
+            'ramadan_auto_detect' => false,
+            'ramadan_manual_start' => '2023-03-23',
+            'ramadan_manual_end' => '2023-04-21',
+            'ramadan_maghrib_minutes_after' => 3,
+            'ramadan_maghrib_rounding' => 1,
+        ]);
+        
+        // Create test data with mixed days
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-03-22', new DateTimeZone('America/New_York')), // Before Ramadan
+                'athan' => [
+                    'maghrib' => new DateTime('2023-03-22 18:45:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-03-24', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'maghrib' => new DateTime('2023-03-24 18:47:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+            2 => [
+                'date' => new DateTime('2023-03-25', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'maghrib' => new DateTime('2023-03-25 18:48:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+        ];
+        
+        // Test weekly mode: Ramadan days calculated daily, non-Ramadan use weekly
+        $results = muslprti_calculate_maghrib_iqama(
+            $days_data, 10, true, 5
+        );
+        
+        // Day 0 (non-Ramadan, weekly): 18:45 + 10 = 18:55
+        $this->assertEquals('18:55:00', $results[0]->format('H:i:s'));
+        
+        // Day 1 (Ramadan, daily): 18:47 + 3 = 18:50
+        $this->assertEquals('18:50:00', $results[1]->format('H:i:s'));
+        
+        // Day 2 (Ramadan, daily): 18:48 + 3 = 18:51
+        $this->assertEquals('18:51:00', $results[2]->format('H:i:s'));
+    }
+
+    /**
+     * Test Isha Iqama calculation with Ramadan custom times
+     */
+    public function testCalculateIshaIqamaWithRamadan() {
+        // Require the hijri date converter file
+        require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
+        
+        // Set up Ramadan settings
+        $this->setOption('muslprti_settings', [
+            'ramadan_enabled' => true,
+            'ramadan_auto_detect' => false,
+            'ramadan_manual_start' => '2023-03-23',
+            'ramadan_manual_end' => '2023-04-21',
+            'ramadan_isha_minutes_after' => 35,
+            'ramadan_isha_rounding' => 5,
+        ]);
+        
+        // Create test data with one day that would violate max constraint
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-03-22', new DateTimeZone('America/New_York')), // Before Ramadan
+                'athan' => [
+                    'isha' => new DateTime('2023-03-22 20:10:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-03-25', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'isha' => new DateTime('2023-03-25 20:55:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+        ];
+        
+        // Test that Ramadan day ignores max constraint
+        $results = muslprti_calculate_isha_iqama(
+            $days_data, 'after_athan', 15, '19:30', '21:00', false, 5
+        );
+        
+        // Day 0 (non-Ramadan): 20:10 + 15 = 20:25, within constraints
+        $this->assertEquals('20:25:00', $results[0]->format('H:i:s'));
+        
+        // Day 1 (Ramadan): 20:55 rounded to 20:55 + 35 = 21:30
+        // Should NOT be constrained by max time of 21:00
+        $this->assertEquals('21:30:00', $results[1]->format('H:i:s'));
+    }
+
+    /**
+     * Test Isha Iqama calculation with Ramadan in weekly mode
+     */
+    public function testCalculateIshaIqamaWithRamadanWeekly() {
+        // Require the hijri date converter file
+        require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
+        
+        // Set up Ramadan settings
+        $this->setOption('muslprti_settings', [
+            'ramadan_enabled' => true,
+            'ramadan_auto_detect' => false,
+            'ramadan_manual_start' => '2023-03-23',
+            'ramadan_manual_end' => '2023-04-21',
+            'ramadan_isha_minutes_after' => 30,
+            'ramadan_isha_rounding' => 5,
+        ]);
+        
+        // Create test data
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-03-22', new DateTimeZone('America/New_York')), // Before Ramadan
+                'athan' => [
+                    'isha' => new DateTime('2023-03-22 20:10:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+            1 => [
+                'date' => new DateTime('2023-03-24', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'isha' => new DateTime('2023-03-24 20:13:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+            2 => [
+                'date' => new DateTime('2023-03-25', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'isha' => new DateTime('2023-03-25 20:14:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+        ];
+        
+        // Test weekly mode
+        $results = muslprti_calculate_isha_iqama(
+            $days_data, 'after_athan', 15, '19:30', '21:00', true, 5
+        );
+        
+        // Day 0 (non-Ramadan, weekly): 20:10 rounded to 20:10 + 15 = 20:25
+        $this->assertEquals('20:25:00', $results[0]->format('H:i:s'));
+        
+        // Day 1 (Ramadan, daily): 20:15 rounded to 20:15 + 30 = 20:45
+        $this->assertEquals('20:45:00', $results[1]->format('H:i:s'));
+        
+        // Day 2 (Ramadan, daily): 20:15 rounded to 20:15 + 30 = 20:45
+        $this->assertEquals('20:45:00', $results[2]->format('H:i:s'));
+    }
+
+    /**
+     * Test Isha Iqama calculation with Ramadan and min constraint bypass
+     */
+    public function testCalculateIshaIqamaWithRamadanMinConstraintBypass() {
+        // Require the hijri date converter file
+        require_once ABSPATH . 'plugins/muslim-prayer-times/includes/hijri-date-converter.php';
+        
+        // Set up Ramadan settings with early Isha time
+        $this->setOption('muslprti_settings', [
+            'ramadan_enabled' => true,
+            'ramadan_auto_detect' => false,
+            'ramadan_manual_start' => '2023-03-23',
+            'ramadan_manual_end' => '2023-04-21',
+            'ramadan_isha_minutes_after' => 10,
+            'ramadan_isha_rounding' => 5,
+        ]);
+        
+        // Create test data where Ramadan iqama would be below min constraint
+        $days_data = [
+            0 => [
+                'date' => new DateTime('2023-03-25', new DateTimeZone('America/New_York')), // During Ramadan
+                'athan' => [
+                    'isha' => new DateTime('2023-03-25 19:08:00', new DateTimeZone('America/New_York')),
+                ],
+            ],
+        ];
+        
+        // Test that Ramadan bypasses min constraint
+        $results = muslprti_calculate_isha_iqama(
+            $days_data, 'after_athan', 15, '19:30', '21:00', false, 5
+        );
+        
+        // Ramadan: 19:10 rounded to 19:10 + 10 = 19:20
+        // Should NOT be constrained to min time of 19:30
+        $this->assertEquals('19:20:00', $results[0]->format('H:i:s'));
+    }
 }

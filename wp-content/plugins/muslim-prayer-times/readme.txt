@@ -3,7 +3,7 @@ Contributors: stankovski
 Tags: prayer times, muslim, islamic, mosque, salah
 Requires at least: 5.0
 Tested up to: 6.8.3
-Stable tag: 1.0.2
+Stable tag: 1.1
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -150,5 +150,9 @@ Yes, all prayer time displays are fully responsive and will adapt to different s
 = 1.0 =
 Initial release of Muslim Prayer Times plugin.
 
-= 1.0.3 =
+= 1.0.2 =
 Bug fixes.
+
+= 1.1 =
+* Added support for Ramadan overwrites
+* Added High Latitude Adjustment Method
