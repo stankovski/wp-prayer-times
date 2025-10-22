@@ -224,16 +224,17 @@ function muslprti_handle_generate() {
             
             // Store this day's data
             $day_index = $processed_days;
+            $date_prefix = $current_date->format('Y-m-d') . ' ';
             $week_days_data[$day_index] = [
                 'date' => clone $current_date,
                 'formatted_date' => $current_date->format('Y-m-d'),
                 'athan' => [
-                    'fajr' => new DateTime($times['Fajr'], $dtz),
-                    'sunrise' => new DateTime($times['Sunrise'], $dtz),
-                    'dhuhr' => new DateTime($times['Dhuhr'], $dtz),
-                    'asr' => new DateTime($times['Asr'], $dtz),
-                    'maghrib' => new DateTime($times['Maghrib'], $dtz),
-                    'isha' => new DateTime($times['Isha'], $dtz)
+                    'fajr' => new DateTime($date_prefix . $times['Fajr'], $dtz),
+                    'sunrise' => new DateTime($date_prefix . $times['Sunrise'], $dtz),
+                    'dhuhr' => new DateTime($date_prefix . $times['Dhuhr'], $dtz),
+                    'asr' => new DateTime($date_prefix . $times['Asr'], $dtz),
+                    'maghrib' => new DateTime($date_prefix . $times['Maghrib'], $dtz),
+                    'isha' => new DateTime($date_prefix . $times['Isha'], $dtz)
                 ]
             ];
             
