@@ -2,8 +2,8 @@
 Contributors: stankovski
 Tags: prayer times, muslim, islamic, mosque, salah
 Requires at least: 5.0
-Tested up to: 6.8.3
-Stable tag: 1.2
+Tested up to: 6.9
+Stable tag: 1.2.1
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -18,6 +18,8 @@ Muslim Prayer Times is a powerful plugin that allows you to display daily and mo
 * Daily prayer times display with both Athan and Iqama times
 * Monthly prayer times calendar
 * Live prayer times display that updates automatically
+* SalahAPI 1.0 support for standardized prayer times data exchange
+* REST API endpoints for integration with other systems
 * Customizable calculation methods (MWL, ISNA, Egypt, etc.)
 * Blocks and shortcodes for easy integration
 * Admin interface to manage Iqama times
@@ -138,8 +140,12 @@ Yes, all prayer time displays are fully responsive and will adapt to different s
 
 == Changelog ==
 
+= 1.2.1 =
+* Tested with WordPress 6.9
+* Minor bug fixes and improvements
+
 = 1.2 =
-* Added support for SalahAPI (https://github.com/salahapi/salahapi-specification/)
+* Added support for SalahAPI 1.0 (https://github.com/salahapi/salahapi-specification/)
 * REST API endpoint for standardized prayer times data exchange
 * CSV export endpoint for prayer times data
 
