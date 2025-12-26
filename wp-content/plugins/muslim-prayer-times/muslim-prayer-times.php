@@ -3,7 +3,7 @@
 Plugin Name: Muslim Prayer Times
 Plugin URI: https://github.com/stankovski/wp-prayer-times
 Description: A WordPress plugin for managing and displaying Islamic prayer times.
-Version: 1.1
+Version: 1.2
 Requires at least: 5.0
 Requires PHP: 7.0
 Author: stankovski
@@ -24,7 +24,7 @@ require_once __DIR__ . '/includes/rest-api.php';
 define('MUSLPRTI_IQAMA_TABLE', 'muslprti_iqama_times');
 
 // Define version for database upgrades
-define('MUSLPRTI_DB_VERSION', '1.1');
+define('MUSLPRTI_DB_VERSION', '1.2');
 
 // Include the upgrade script
 require_once __DIR__ . '/includes/upgrade.php';

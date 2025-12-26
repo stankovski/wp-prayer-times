@@ -3,7 +3,7 @@ Contributors: stankovski
 Tags: prayer times, muslim, islamic, mosque, salah
 Requires at least: 5.0
 Tested up to: 6.8.3
-Stable tag: 1.1
+Stable tag: 1.2
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -138,6 +138,11 @@ Yes, all prayer time displays are fully responsive and will adapt to different s
 
 == Changelog ==
 
+= 1.2 =
+* Added support for SalahAPI (https://github.com/salahapi/salahapi-specification/)
+* REST API endpoint for standardized prayer times data exchange
+* CSV export endpoint for prayer times data
+
 = 1.0 =
 * Initial release with daily, monthly, and live prayer times features
 * Gutenberg blocks support
@@ -156,3 +161,6 @@ Bug fixes.
 = 1.1 =
 * Added support for Ramadan overwrites
 * Added High Latitude Adjustment Method
+
+= 1.2 =
+* Added REST API endpoints with SalahAPI specification support for standardized prayer times data exchange
