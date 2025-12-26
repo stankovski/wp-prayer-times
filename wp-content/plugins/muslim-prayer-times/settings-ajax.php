@@ -4,6 +4,7 @@ if (!defined('ABSPATH')) exit;
 
 // Include helper functions
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/salah-api-importer.php';
 
 // AJAX handler for geocoding
 function muslprti_handle_geocode() {
@@ -521,3 +522,86 @@ function muslprti_handle_hijri_preview() {
     ]);
 }
 add_action('wp_ajax_muslprti_preview_hijri', 'muslprti_handle_hijri_preview');
+
+// AJAX handler for importing SalahAPI from URL
+function muslprti_handle_import_salahapi_url() {
+    check_ajax_referer('muslprti_import_salahapi_nonce', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(esc_html__('Unauthorized', 'muslim-prayer-times'));
+    }
+    
+    $url = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : '';
+    
+    if (empty($url)) {
+        wp_send_json_error(esc_html__('URL is required', 'muslim-prayer-times'));
+    }
+    
+    // Fetch JSON from URL
+    $json_data = muslprti_fetch_salahapi_from_url($url);
+    
+    if (is_wp_error($json_data)) {
+        wp_send_json_error(esc_html($json_data->get_error_message()));
+    }
+    
+    // Import the JSON
+    $settings = muslprti_import_salahapi_json($json_data);
+    
+    if (is_wp_error($settings)) {
+        wp_send_json_error(esc_html($settings->get_error_message()));
+    }
+    
+    // Get current settings and merge
+    $current_settings = get_option('muslprti_settings', array());
+    $updated_settings = array_merge($current_settings, $settings);
+    
+    // Update settings
+    update_option('muslprti_settings', $updated_settings);
+    
+    wp_send_json_success(array(
+        'message' => esc_html__('SalahAPI settings imported successfully', 'muslim-prayer-times'),
+        'imported_keys' => array_keys($settings),
+    ));
+}
+add_action('wp_ajax_muslprti_import_salahapi_url', 'muslprti_handle_import_salahapi_url');
+
+// AJAX handler for importing SalahAPI from file
+function muslprti_handle_import_salahapi_file() {
+    check_ajax_referer('muslprti_import_salahapi_nonce', 'nonce');
+    
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(esc_html__('Unauthorized', 'muslim-prayer-times'));
+    }
+    
+    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        wp_send_json_error(esc_html__('File upload failed', 'muslim-prayer-times'));
+    }
+    
+    // Read file contents
+    $json_data = file_get_contents($_FILES['file']['tmp_name']);
+    
+    if ($json_data === false) {
+        wp_send_json_error(esc_html__('Failed to read file', 'muslim-prayer-times'));
+    }
+    
+    // Import the JSON
+    $settings = muslprti_import_salahapi_json($json_data);
+    
+    if (is_wp_error($settings)) {
+        wp_send_json_error(esc_html($settings->get_error_message()));
+    }
+    
+    // Get current settings and merge
+    $current_settings = get_option('muslprti_settings', array());
+    $updated_settings = array_merge($current_settings, $settings);
+    
+    // Update settings
+    update_option('muslprti_settings', $updated_settings);
+    
+    wp_send_json_success(array(
+        'message' => esc_html__('SalahAPI settings imported successfully', 'muslim-prayer-times'),
+        'imported_keys' => array_keys($settings),
+    ));
+}
+add_action('wp_ajax_muslprti_import_salahapi_file', 'muslprti_handle_import_salahapi_file');
+

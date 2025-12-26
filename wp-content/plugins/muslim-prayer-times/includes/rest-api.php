@@ -2,6 +2,8 @@
 
 if (!defined('ABSPATH')) exit;
 
+require_once __DIR__ . '/salah-api-mappings.php';
+
 /**
  * Register REST API endpoints for Muslim Prayer Times
  */
@@ -114,42 +116,10 @@ function muslprti_build_calculation_method_object($opts) {
     $asr_calc = isset($opts['asr_calc']) ? $opts['asr_calc'] : 'STANDARD';
     $latitude_adjustment = isset($opts['latitude_adjustment']) ? $opts['latitude_adjustment'] : 'MOTN';
     
-    // Map to SalahAPI format
-    $method_name_map = array(
-        'JAFARI' => 'jafari',
-        'KARACHI' => 'karachi',
-        'ISNA' => 'isna',
-        'MWL' => 'mwl',
-        'MAKKAH' => 'makkah',
-        'EGYPT' => 'egypt',
-        'TEHRAN' => 'tehran',
-        'GULF' => 'gulf',
-        'KUWAIT' => 'kuwait',
-        'QATAR' => 'qatar',
-        'SINGAPORE' => 'singapore',
-        'FRANCE' => 'france',
-        'TURKEY' => 'turkey',
-        'RUSSIA' => 'russia',
-        'DUBAI' => 'dubai',
-        'CUSTOM' => 'other',
-    );
-    
-    $asr_method_map = array(
-        'STANDARD' => 'standard',
-        'HANAFI' => 'hanafi',
-    );
-    
-    $high_lat_map = array(
-        'NONE' => 'none',
-        'MOTN' => 'middleOfTheNight',
-        'ANGLE' => 'twilightAngle',
-        'ONESEVENTH' => 'oneSeventh',
-    );
-    
     $calculation_method = array(
-        'name' => isset($method_name_map[$method]) ? $method_name_map[$method] : 'isna',
-        'asrCalculationMethod' => isset($asr_method_map[$asr_calc]) ? $asr_method_map[$asr_calc] : 'standard',
-        'highLatitudeAdjustment' => isset($high_lat_map[$latitude_adjustment]) ? $high_lat_map[$latitude_adjustment] : 'middleOfTheNight',
+        'name' => muslprti_convert_method_to_salahapi($method),
+        'asrCalculationMethod' => muslprti_convert_asr_to_salahapi($asr_calc),
+        'highLatitudeAdjustment' => muslprti_convert_high_lat_to_salahapi($latitude_adjustment),
     );
     
     // Add iqama calculation rules if configured

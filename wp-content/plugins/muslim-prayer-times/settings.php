@@ -52,7 +52,8 @@ function muslprti_admin_scripts($hook) {
         'geocode_nonce' => wp_create_nonce('muslprti_geocode_nonce'),
         'import_preview_nonce' => wp_create_nonce('muslprti_import_preview_nonce'),
         'import_nonce' => wp_create_nonce('muslprti_import_nonce'),
-        'hijri_preview_nonce' => wp_create_nonce('muslprti_hijri_preview_nonce') // Add new nonce for Hijri preview
+        'hijri_preview_nonce' => wp_create_nonce('muslprti_hijri_preview_nonce'), // Add new nonce for Hijri preview
+        'import_salahapi_nonce' => wp_create_nonce('muslprti_import_salahapi_nonce') // Add nonce for SalahAPI import
     ));
     
     // Date format preview script
@@ -1059,7 +1060,7 @@ function muslprti_settings_page() {
             <h2>API Endpoints</h2>
             <p>The following REST API endpoints are available for accessing prayer times programmatically:</p>
             
-            <h3>SalahAPI JSON Endpoint</h3>
+            <h3><img src="<?php echo esc_url(plugins_url('assets/salahapi-sm.png', __FILE__)); ?>" alt="SalahAPI" style="height: 20px; vertical-align: middle; margin-right: 8px;">SalahAPI JSON Endpoint</h3>
             <p>This endpoint returns prayer times in the standard <a href="https://github.com/salahapi/salahapi-specification" target="_blank">SalahAPI JSON format</a>.</p>
             <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0; font-family: monospace;">
                 <strong>URL:</strong> <a href="<?php echo esc_url(muslprti_get_salah_api_url()); ?>" target="_blank"><?php echo esc_url(muslprti_get_salah_api_url()); ?></a>
@@ -1076,6 +1077,32 @@ function muslprti_settings_page() {
                 - <code>fromDate</code>: Start date in YYYY-MM-DD format (e.g., 2025-01-01)<br>
                 - <code>toDate</code>: End date in YYYY-MM-DD format (e.g., 2025-01-31)<br>
                 <strong>Example:</strong> <code><?php echo esc_url(muslprti_get_csv_api_url() . '?fromDate=2025-01-01&toDate=2025-01-31'); ?></code>
+            </p>
+        </div>
+        
+        <!-- Import SalahAPI Settings Section -->
+        <div class="card muslprti-card-top-margin">
+            <h2><img src="<?php echo esc_url(plugins_url('assets/salahapi-sm.png', __FILE__)); ?>" alt="SalahAPI" style="height: 24px; vertical-align: middle; margin-right: 8px;">Import SalahAPI Settings</h2>
+            <p>Import location and calculation method settings from a <a href="https://github.com/salahapi/salahapi-specification" target="_blank">SalahAPI JSON</a> source. This will update your General Settings and Iqama Rules based on the imported data.</p>
+            
+            <h3>Import from URL</h3>
+            <p>Import settings from a remote SalahAPI endpoint.</p>
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="muslprti_salahapi_url" placeholder="https://example.com/salah-api" class="regular-text" style="width: 100%; max-width: 600px;">
+                <button type="button" id="muslprti_import_salahapi_url_btn" class="button">Import from URL</button>
+            </div>
+            <div id="muslprti_salahapi_url_result" style="margin-top: 10px;"></div>
+            
+            <h3 style="margin-top: 30px;">Import from File</h3>
+            <p>Upload a SalahAPI JSON file to import settings.</p>
+            <div style="margin-bottom: 20px;">
+                <input type="file" id="muslprti_salahapi_file" accept=".json,application/json">
+                <button type="button" id="muslprti_import_salahapi_file_btn" class="button">Import from File</button>
+            </div>
+            <div id="muslprti_salahapi_file_result" style="margin-top: 10px;"></div>
+            
+            <p class="description" style="margin-top: 20px;">
+                <strong>Note:</strong> Importing will overwrite your current General Settings (location, calculation method, ASR method, high latitude adjustment) and Iqama Rules. Prayer times in the database will not be affected - you'll need to re-generate and re-import them if needed.
             </p>
         </div>
         

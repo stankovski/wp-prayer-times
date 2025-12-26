@@ -388,4 +388,103 @@ jQuery(document).ready(function($) {
             }
         });
     });
+    
+    // Import SalahAPI from URL
+    $('#muslprti_import_salahapi_url_btn').on('click', function() {
+        var url = $('#muslprti_salahapi_url').val();
+        if (!url) {
+            $('#muslprti_salahapi_url_result').html('<div class="notice notice-error inline"><p>Please enter a URL.</p></div>');
+            return;
+        }
+        
+        $(this).text('Importing...').prop('disabled', true);
+        $('#muslprti_salahapi_url_result').html('');
+        
+        $.ajax({
+            url: muslprtiAdmin.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'muslprti_import_salahapi_url',
+                nonce: muslprtiAdmin.import_salahapi_nonce,
+                url: url
+            },
+            success: function(response) {
+                $('#muslprti_import_salahapi_url_btn').text('Import from URL').prop('disabled', false);
+                if (response.success) {
+                    $('#muslprti_salahapi_url_result').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
+                    // Reload page after 2 seconds to show updated settings
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    $('#muslprti_salahapi_url_result').html('<div class="notice notice-error inline"><p>Error: ' + response.data + '</p></div>');
+                }
+            },
+            error: function() {
+                $('#muslprti_import_salahapi_url_btn').text('Import from URL').prop('disabled', false);
+                $('#muslprti_salahapi_url_result').html('<div class="notice notice-error inline"><p>Error connecting to server.</p></div>');
+            }
+        });
+    });
+    
+    // Import SalahAPI from file
+    if ($('#muslprti_import_salahapi_file_btn').length > 0) {
+        $('#muslprti_import_salahapi_file_btn').on('click', function(e) {
+            e.preventDefault();
+            
+            var fileInput = $('#muslprti_salahapi_file');
+            
+            // Check if file input exists
+            if (fileInput.length === 0) {
+                alert('File input not found');
+                return;
+            }
+            
+            // Check if a file is selected
+            if (!fileInput[0].files || fileInput[0].files.length === 0) {
+                $('#muslprti_salahapi_file_result').html('<div class="notice notice-error inline"><p>Please select a file.</p></div>');
+                return;
+            }
+            
+            var file = fileInput[0].files[0];
+            
+            // Validate file type
+            if (!file.name.match(/\.json$/i)) {
+                $('#muslprti_salahapi_file_result').html('<div class="notice notice-error inline"><p>Please select a JSON file.</p></div>');
+                return;
+            }
+            
+            var formData = new FormData();
+            formData.append('action', 'muslprti_import_salahapi_file');
+            formData.append('nonce', muslprtiAdmin.import_salahapi_nonce);
+            formData.append('file', file);
+            
+            $(this).text('Importing...').prop('disabled', true);
+            $('#muslprti_salahapi_file_result').html('<div class="notice notice-info inline"><p>Uploading and processing file...</p></div>');
+            
+            $.ajax({
+                url: muslprtiAdmin.ajaxurl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    $('#muslprti_import_salahapi_file_btn').text('Import from File').prop('disabled', false);
+                    if (response.success) {
+                        $('#muslprti_salahapi_file_result').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
+                        // Reload page after 2 seconds to show updated settings
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        $('#muslprti_salahapi_file_result').html('<div class="notice notice-error inline"><p>Error: ' + response.data + '</p></div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#muslprti_import_salahapi_file_btn').text('Import from File').prop('disabled', false);
+                    $('#muslprti_salahapi_file_result').html('<div class="notice notice-error inline"><p>Error connecting to server: ' + error + '</p></div>');
+                }
+            });
+        });
+    }
 });

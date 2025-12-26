@@ -2,6 +2,8 @@
 
 if (!defined('ABSPATH')) exit;
 
+require_once __DIR__ . '/salah-api-mappings.php';
+
 // Include the salah-api library
 require_once __DIR__ . '/salah-api/Location.php';
 require_once __DIR__ . '/salah-api/CalculationMethod.php';
@@ -55,15 +57,7 @@ function muslprti_create_calculation_method($opts) {
     $asr_calc = isset($opts['asr_calc']) ? $opts['asr_calc'] : 'STANDARD';
     $latitude_adjustment = isset($opts['latitude_adjustment']) ? $opts['latitude_adjustment'] : 'MOTN';
     
-    // Map latitude adjustment to the format expected by the library
-    $high_latitude_adjustment_map = [
-        'NONE' => 'None',
-        'MOTN' => 'MiddleOfTheNight',
-        'ANGLE' => 'AngleBased',
-        'ONESEVENTH' => 'OneSeventh',
-    ];
-    
-    $high_latitude_adjustment = $high_latitude_adjustment_map[$latitude_adjustment] ?? 'MiddleOfTheNight';
+    $high_latitude_adjustment = muslprti_convert_high_lat_to_library($latitude_adjustment);
     
     // Create iqama calculation rules
     $iqama_rules = muslprti_create_iqama_rules($opts);
