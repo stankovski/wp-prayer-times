@@ -1,25 +1,17 @@
 <?php
-/**
- * PrayerTimes2.php: Prayer Times Calculator (based on times.js v3.2)
- * Copyright (c) 2007-2025 Hamid Zarrabi-Zadeh
- * Ported to PHP from JavaScript implementation
- * License: MIT
- */
 
-namespace IslamicNetwork\PrayerTimes;
+namespace SalahAPI\Calculations;
 
 use DateTime;
 use DateTimezone;
 
 /**
- * Class PrayerTimes2
- * @package IslamicNetwork\PrayerTimes
+ * Prayer Times Calculator
+ * Based on times.js v3.2 by Hamid Zarrabi-Zadeh
  */
-class PrayerTimes2
+class PrayerTimes
 {
-    /**
-     * Constants for all items the times are computed for
-     */
+    // Prayer time constants
     const IMSAK = 'Imsak';
     const FAJR = 'Fajr';
     const SUNRISE = 'Sunrise';
@@ -32,50 +24,36 @@ class PrayerTimes2
     const FIRST_THIRD = 'Firstthird';
     const LAST_THIRD = 'Lastthird';
 
-    /**
-     * Schools that determine the Asr shadow for the purpose of this class
-     */
-    const SCHOOL_STANDARD = 'STANDARD'; //0
-    const SCHOOL_HANAFI = 'HANAFI'; // 1
+    // Asr calculation schools
+    const SCHOOL_STANDARD = 'STANDARD';
+    const SCHOOL_HANAFI = 'HANAFI';
 
-    /**
-     * Midnight Mode - how the midnight time is determined
-     */
-    const MIDNIGHT_MODE_STANDARD = 'STANDARD'; // Mid Sunset to Sunrise
-    const MIDNIGHT_MODE_JAFARI = 'JAFARI'; // Mid Sunset to Fajr
+    // Midnight calculation modes
+    const MIDNIGHT_MODE_STANDARD = 'STANDARD';
+    const MIDNIGHT_MODE_JAFARI = 'JAFARI';
 
-    /**
-     * Higher Latitude Adjustment Methods
-     */
-    const LATITUDE_ADJUSTMENT_METHOD_MOTN = 'MIDDLE_OF_THE_NIGHT'; // 1
-    const LATITUDE_ADJUSTMENT_METHOD_ANGLE = 'ANGLE_BASED'; // 3, angle/60th of night
-    const LATITUDE_ADJUSTMENT_METHOD_ONESEVENTH = 'ONE_SEVENTH'; // 2
-    const LATITUDE_ADJUSTMENT_METHOD_NONE = 'NONE'; // 0
+    // Higher latitude adjustment methods
+    const LATITUDE_ADJUSTMENT_METHOD_MOTN = 'MIDDLE_OF_THE_NIGHT';
+    const LATITUDE_ADJUSTMENT_METHOD_ANGLE = 'ANGLE_BASED';
+    const LATITUDE_ADJUSTMENT_METHOD_ONESEVENTH = 'ONE_SEVENTH';
+    const LATITUDE_ADJUSTMENT_METHOD_NONE = 'NONE';
 
-    /**
-     * Formats in which data can be output
-     */
-    const TIME_FORMAT_24H = '24h'; // 24-hour format
-    const TIME_FORMAT_12H = '12h'; // 12-hour format
-    const TIME_FORMAT_12hNS = '12hNS'; // 12-hour format with no suffix
-    const TIME_FORMAT_FLOAT = 'Float'; // floating point number
+    // Time formats
+    const TIME_FORMAT_24H = '24h';
+    const TIME_FORMAT_12H = '12h';
+    const TIME_FORMAT_12hNS = '12hNS';
+    const TIME_FORMAT_FLOAT = 'Float';
     const TIME_FORMAT_ISO8601 = 'iso8601';
 
-    /**
-     * High Latitude Adjustment Methods from times.js
-     */
     const HIGH_LATS_NONE = 'None';
     const HIGH_LATS_NIGHT_MIDDLE = 'NightMiddle';
     const HIGH_LATS_ONE_SEVENTH = 'OneSeventh';
     const HIGH_LATS_ANGLE_BASED = 'AngleBased';
 
-    /**
-     * If we're unable to calculate a time, we'll return this
-     */
     const INVALID_TIME = '-----';
 
     /**
-     * Calculation methods configuration (from times.js)
+     * Calculation methods configuration
      */
     private $methods = [
         'MWL' => ['fajr' => 18, 'isha' => 17],
@@ -92,7 +70,7 @@ class PrayerTimes2
     ];
 
     /**
-     * Settings configuration (from times.js)
+     * Settings configuration
      */
     private $settings = [
         'dhuhr' => '0 min',
@@ -107,19 +85,13 @@ class PrayerTimes2
         'iterations' => 1
     ];
 
-    /**
-     * Prayer time labels
-     */
     private $labels = [
         'Fajr', 'Sunrise', 'Dhuhr', 'Asr',
         'Sunset', 'Maghrib', 'Isha', 'Midnight'
     ];
 
-    // Internal calculation variables
     private $utcTime;
     private $adjusted = false;
-
-    // Compatibility properties with original PrayerTimes.php
     private $date;
     private $method;
     private $school = self::SCHOOL_STANDARD;
@@ -130,14 +102,11 @@ class PrayerTimes2
     private $longitude;
     private $elevation;
     private $asrShadowFactor = null;
-    private $shafaq = 'general'; // Only valid for METHOD_MOONSIGHTING
+    private $shafaq = 'general';
     private $offset = [];
 
     /**
-     * Constructor - matches PrayerTimes.php API
-     * @param string $method
-     * @param string $school
-     * @param null $asrShadowFactor
+     * Constructor
      */
     public function __construct($method = Method::METHOD_MWL, $school = self::SCHOOL_STANDARD, $asrShadowFactor = null)
     {
@@ -147,23 +116,11 @@ class PrayerTimes2
             $this->asrShadowFactor = $asrShadowFactor;
         }
         $this->settings['timezone'] = date_default_timezone_get();
-        $this->settings['location'][1] = -(new DateTime())->getOffset() / 240; // Convert seconds to hours/4
+        $this->settings['location'][1] = -(new DateTime())->getOffset() / 240;
     }
-
-    // Public API methods (matching PrayerTimes.php interface)
-    // These will be implemented in the next tasks
 
     /**
      * Get prayer times for today
-     * @param $latitude
-     * @param $longitude
-     * @param $timezone
-     * @param null $elevation
-     * @param string $latitudeAdjustmentMethod
-     * @param null $midnightMode
-     * @param string $format
-     * @return array
-     * @throws \Exception
      */
     public function getTimesForToday($latitude, $longitude, $timezone, $elevation = null, $latitudeAdjustmentMethod = self::LATITUDE_ADJUSTMENT_METHOD_ANGLE, $midnightMode = null, $format = self::TIME_FORMAT_24H)
     {
@@ -173,25 +130,14 @@ class PrayerTimes2
 
     /**
      * Get prayer times for specific date
-     * @param DateTime $date
-     * @param $latitude
-     * @param $longitude
-     * @param $elevation
-     * @param string $latitudeAdjustmentMethod
-     * @param string $midnightMode
-     * @param string $format
-     * @return array
      */
     public function getTimes(DateTime $date, $latitude, $longitude, $elevation = null, $latitudeAdjustmentMethod = self::LATITUDE_ADJUSTMENT_METHOD_ANGLE, $midnightMode = null, $format = self::TIME_FORMAT_24H)
     {
-        // Store parameters
         $this->date = $date;
         $this->latitude = 1 * $latitude;
         $this->longitude = 1 * $longitude;
         $this->elevation = $elevation === null ? 0 : 1 * $elevation;
         $this->settings['location'] = [$this->latitude, $this->longitude];
-        
-        // Extract and store timezone from DateTime object
         $this->settings['timezone'] = $date->getTimezone()->getName();
         
         $this->setTimeFormat($format);
@@ -200,9 +146,6 @@ class PrayerTimes2
             $this->setMidnightMode($midnightMode);
         }
 
-        // Set UTC time for calculations - matching times.js behavior
-        // Extract year, month, day from local date, then create UTC timestamp for that calendar date
-        // This matches: this.utcTime = Date.UTC(date[0], date[1] - 1, date[2]);
         $year = (int)$date->format('Y');
         $month = (int)$date->format('n');
         $day = (int)$date->format('j');
@@ -210,22 +153,18 @@ class PrayerTimes2
         $utcDate = new DateTime('', new DateTimezone('UTC'));
         $utcDate->setDate($year, $month, $day);
         $utcDate->setTime(0, 0, 0);
-        $this->utcTime = $utcDate->getTimestamp() * 1000; // Convert to milliseconds like JavaScript
+        $this->utcTime = $utcDate->getTimestamp() * 1000;
 
         $times = $this->computeTimes();
         $this->formatTimes($times);
         return $this->convertTimesToPrayerTimesFormat($times);
     }
 
-    // Setter methods (matching PrayerTimes.php API)
-    
     /**
      * Set calculation method
-     * @param string $method
      */
     public function setMethod($method = Method::METHOD_MWL)
     {
-        // Map Method constants to times.js method names
         $methodMapping = [
             Method::METHOD_MWL => 'MWL',
             Method::METHOD_ISNA => 'ISNA',
@@ -242,10 +181,8 @@ class PrayerTimes2
         $jsMethod = $methodMapping[$method] ?? 'MWL';
         $this->method = $method;
         
-        // Apply defaults first (matching times.js behavior)
         $this->settings = array_merge($this->settings, $this->methods['defaults']);
         
-        // Then apply method-specific settings to override defaults
         if (isset($this->methods[$jsMethod])) {
             $this->settings = array_merge($this->settings, $this->methods[$jsMethod]);
         }
@@ -253,7 +190,6 @@ class PrayerTimes2
     
     /**
      * Set school for Asr calculation
-     * @param string $school
      */
     public function setSchool($school = self::SCHOOL_STANDARD)
     {
@@ -263,7 +199,6 @@ class PrayerTimes2
     
     /**
      * Set midnight calculation mode
-     * @param string $mode
      */
     public function setMidnightMode($mode = self::MIDNIGHT_MODE_STANDARD)
     {
@@ -273,13 +208,11 @@ class PrayerTimes2
     
     /**
      * Set latitude adjustment method for high latitudes
-     * @param string $method
      */
     public function setLatitudeAdjustmentMethod($method = self::LATITUDE_ADJUSTMENT_METHOD_ANGLE)
     {
         $this->latitudeAdjustmentMethod = $method;
         
-        // Map to times.js naming
         $mapping = [
             self::LATITUDE_ADJUSTMENT_METHOD_NONE => 'None',
             self::LATITUDE_ADJUSTMENT_METHOD_MOTN => 'NightMiddle',
@@ -292,13 +225,11 @@ class PrayerTimes2
     
     /**
      * Set time format
-     * @param string $format
      */
     public function setTimeFormat($format = self::TIME_FORMAT_24H)
     {
         $this->timeFormat = $format;
         
-        // Map to times.js format
         $formatMapping = [
             self::TIME_FORMAT_24H => '24h',
             self::TIME_FORMAT_12H => '12h',
@@ -312,7 +243,6 @@ class PrayerTimes2
     
     /**
      * Set shafaq for moonsighting method
-     * @param string $shafaq
      */
     public function setShafaq(string $shafaq)
     {
@@ -321,14 +251,12 @@ class PrayerTimes2
     
     /**
      * Set custom calculation method
-     * @param Method $method
      */
     public function setCustomMethod(Method $method)
     {
         $this->method = Method::METHOD_CUSTOM;
         $methodVars = get_object_vars($method);
         
-        // Convert custom method to times.js format
         if (isset($methodVars['params'])) {
             $params = $methodVars['params'];
             $customMethod = [];
@@ -345,15 +273,6 @@ class PrayerTimes2
     
     /**
      * Tune prayer times with minute offsets
-     * @param int $imsak
-     * @param int $fajr
-     * @param int $sunrise
-     * @param int $dhuhr
-     * @param int $asr
-     * @param int $maghrib
-     * @param int $sunset
-     * @param int $isha
-     * @param int $midnight
      */
     public function tune($imsak = 0, $fajr = 0, $sunrise = 0, $dhuhr = 0, $asr = 0, $maghrib = 0, $sunset = 0, $isha = 0, $midnight = 0)
     {
@@ -369,7 +288,6 @@ class PrayerTimes2
             self::MIDNIGHT => $midnight
         ];
         
-        // Convert to times.js format
         $this->settings['tune'] = [
             'fajr' => $fajr,
             'sunrise' => $sunrise,
@@ -382,11 +300,8 @@ class PrayerTimes2
         ];
     }
 
-    // Getter methods (matching PrayerTimes.php API)
-    
     /**
      * Get all available calculation methods
-     * @return array
      */
     public function getMethods()
     {
@@ -395,7 +310,6 @@ class PrayerTimes2
     
     /**
      * Get current calculation method
-     * @return string
      */
     public function getMethod()
     {
@@ -404,7 +318,6 @@ class PrayerTimes2
     
     /**
      * Get metadata about current configuration
-     * @return array
      */
     public function getMeta(): array
     {
@@ -432,20 +345,11 @@ class PrayerTimes2
     }
     
     /**
-     * Handle moonsighting method recalculation (compatibility method)
-     * @param array $times
-     * @return array
+     * Handle moonsighting method recalculation
      */
     public function moonsightingRecalculation(array $times): array
     {
         if ($this->method == Method::METHOD_MOONSIGHTING) {
-            // For moonsighting method, we would need the MoonSighting library
-            // This is a placeholder implementation for compatibility
-            // In a real implementation, you would use:
-            // $fajrMS = new Fajr($this->date, $this->latitude);
-            // $ishaMS = new Isha($this->date, $this->latitude, $this->shafaq);
-            
-            // For now, just return the times unchanged
             return $times;
         }
         
@@ -453,23 +357,18 @@ class PrayerTimes2
     }
     
     /**
-     * Load calculation methods (compatibility method)
+     * Load calculation methods
      */
     public function loadMethods()
     {
-        // This is handled in the constructor for times.js compatibility
         // Method data is already loaded in $this->methods
     }
 
-    // Core calculation methods (ported from times.js)
-    
     /**
-     * Main computation method - computes prayer times
-     * @return array
+     * Main computation method
      */
     private function computeTimes()
     {
-        // Default times (like times.js)
         $times = [
             'fajr' => 5,
             'sunrise' => 6,
@@ -481,7 +380,6 @@ class PrayerTimes2
             'midnight' => 24
         ];
 
-        // Process times for the specified number of iterations
         for ($i = 0; $i < $this->settings['iterations']; $i++) {
             $times = $this->processTimes($times);
         }
@@ -496,8 +394,6 @@ class PrayerTimes2
 
     /**
      * Process prayer times using angle calculations
-     * @param array $times
-     * @return array
      */
     private function processTimes($times)
     {
@@ -517,14 +413,12 @@ class PrayerTimes2
     }
 
     /**
-     * Update times with minute-based adjustments and midnight mode
-     * @param array $times
+     * Update times with minute-based adjustments
      */
     private function updateTimes(&$times)
     {
         $params = $this->settings;
 
-        // Apply minute-based adjustments for Maghrib and Isha
         if ($this->isMin($params['maghrib'] ?? '0 min')) {
             $times['maghrib'] = $times['sunset'] + $this->value($params['maghrib'] ?? '0 min') / 60;
         }
@@ -532,19 +426,16 @@ class PrayerTimes2
             $times['isha'] = $times['maghrib'] + $this->value($params['isha'] ?? '0 min') / 60;
         }
         
-        // Handle Jafari midnight mode
         if (($params['midnight'] ?? 'Standard') == 'Jafari') {
             $nextFajr = $this->angleTime($params['fajr'] ?? 18, 29, -1) + 24;
             $times['midnight'] = ($times['sunset'] + ($this->adjusted ? $times['fajr'] + 24 : $nextFajr)) / 2;
         }
         
-        // Apply Dhuhr adjustment
         $times['dhuhr'] += $this->value($params['dhuhr'] ?? '0 min') / 60;
     }
 
     /**
      * Apply user-defined time adjustments
-     * @param array $times
      */
     private function tuneTimes(&$times)
     {
@@ -557,17 +448,14 @@ class PrayerTimes2
     }
 
     /**
-     * Convert times to proper timezone and longitude adjustment
-     * @param array $times
+     * Convert times to proper timezone
      */
     private function convertTimes(&$times)
     {
         $lng = $this->settings['location'][1];
         
         foreach ($times as $i => $time) {
-            // Adjust for longitude (matching times.js exactly)
             $adjustedTime = $time - $lng / 15;
-            // Convert to UTC timestamp in milliseconds (matching times.js)
             $timestamp = $this->utcTime + floor($adjustedTime * 3600000);
             $times[$i] = $this->roundTime($timestamp);
         }
@@ -575,7 +463,6 @@ class PrayerTimes2
     
     /**
      * Adjust times for higher latitudes
-     * @param array $times
      */
     private function adjustHighLats(&$times)
     {
@@ -594,12 +481,6 @@ class PrayerTimes2
 
     /**
      * Adjust individual time for higher latitudes
-     * @param float $time
-     * @param float $base
-     * @param mixed $angle
-     * @param float $night
-     * @param int $direction
-     * @return float
      */
     private function adjustTime($time, $base, $angle, $night, $direction = 1)
     {
@@ -620,12 +501,8 @@ class PrayerTimes2
         return $time;
     }
     
-    // Astronomical calculation methods (ported from times.js)
-    
     /**
-     * Compute sun position (declination and equation of time)
-     * @param float $time
-     * @return object
+     * Compute sun position
      */
     private function sunPosition($time)
     {
@@ -647,8 +524,6 @@ class PrayerTimes2
 
     /**
      * Compute mid-day time
-     * @param float $time
-     * @return float
      */
     private function midDay($time)
     {
@@ -658,11 +533,7 @@ class PrayerTimes2
     }
 
     /**
-     * Compute the time when sun reaches a specific angle below horizon
-     * @param float $angle
-     * @param float $time
-     * @param int $direction 1 for sunset/isha, -1 for fajr/sunrise
-     * @return float
+     * Compute time at specific angle
      */
     private function angleTime($angle, $time, $direction = 1)
     {
@@ -672,7 +543,7 @@ class PrayerTimes2
         $denominator = $this->cos($lat) * $this->cos($decl);
         
         if (abs($numerator / $denominator) > 1) {
-            return NAN; // Sun never reaches this angle at this location/date
+            return NAN;
         }
         
         $diff = $this->arccos($numerator / $denominator) / 15;
@@ -681,9 +552,6 @@ class PrayerTimes2
 
     /**
      * Compute asr angle
-     * @param string|float $asrParam
-     * @param float $time
-     * @return float
      */
     private function asrAngle($asrParam, $time)
     {
@@ -695,12 +563,8 @@ class PrayerTimes2
         return -$this->arccot($shadowFactor + $this->tan(abs($lat - $decl)));
     }
     
-    // Utility methods (ported from times.js)
-    
     /**
      * Convert string to number
-     * @param string $str
-     * @return float
      */
     private function value($str)
     {
@@ -710,8 +574,6 @@ class PrayerTimes2
 
     /**
      * Detect if input contains 'min'
-     * @param string $str
-     * @return bool
      */
     private function isMin($str)
     {
@@ -720,9 +582,6 @@ class PrayerTimes2
 
     /**
      * Positive modulo
-     * @param float $a
-     * @param float $b
-     * @return float
      */
     private function mod($a, $b)
     {
@@ -735,8 +594,6 @@ class PrayerTimes2
 
     /**
      * Round time timestamp
-     * @param float $timestamp
-     * @return float
      */
     private function roundTime($timestamp)
     {
@@ -751,15 +608,12 @@ class PrayerTimes2
             return $timestamp;
         }
         
-        $oneMinute = 60000; // milliseconds
+        $oneMinute = 60000;
         return (float)($rounding($timestamp / $oneMinute) * $oneMinute);
     }
     
-    // Utility methods
-    
     /**
      * Format all times
-     * @param array $times
      */
     private function formatTimes(&$times)
     {
@@ -770,8 +624,6 @@ class PrayerTimes2
 
     /**
      * Format individual time
-     * @param float $timestamp
-     * @return string|float
      */
     private function formatTime($timestamp)
     {
@@ -795,50 +647,39 @@ class PrayerTimes2
 
     /**
      * Convert timestamp to string
-     * @param float $timestamp
-     * @param string $format
-     * @return string
      */
     private function timeToString($timestamp, $format)
     {
         $utcOffset = $this->settings['utcOffset'];
         
-        // Convert timestamp from milliseconds to seconds for PHP
         $timestampSeconds = $timestamp / 1000;
         
-        // Apply UTC offset if not auto
         if ($utcOffset !== 'auto') {
-            $timestampSeconds += $utcOffset * 60; // utcOffset is in minutes
+            $timestampSeconds += $utcOffset * 60;
         }
         
-        // Create DateTime object in UTC first
         $date = new DateTime('@' . $timestampSeconds, new DateTimezone('UTC'));
         
-        // Convert to local timezone (matching times.js behavior with toLocaleTimeString)
         if ($utcOffset === 'auto') {
             $date->setTimezone(new DateTimezone($this->settings['timezone']));
         }
         
-        // Format based on requested format
         if ($format == '24h') {
             return $date->format('H:i');
         } elseif ($format == '12h') {
             return $date->format('g:i A');
         } elseif ($format == '12H') {
-            return $date->format('g:i'); // 12-hour without AM/PM
+            return $date->format('g:i');
         } else {
-            return $date->format('H:i'); // Default to 24h
+            return $date->format('H:i');
         }
     }
 
     /**
-     * Convert times to the format expected by PrayerTimes.php API
-     * @param array $times
-     * @return array
+     * Convert times to expected format
      */
     private function convertTimesToPrayerTimesFormat($times)
     {
-        // Map JavaScript naming to PrayerTimes.php constants
         $mapping = [
             'fajr' => self::FAJR,
             'sunrise' => self::SUNRISE,
@@ -857,39 +698,26 @@ class PrayerTimes2
             }
         }
         
-        // Add additional times that PrayerTimes.php provides
-        if (isset($result[self::SUNSET]) && isset($result[self::FAJR])) {
-            // Calculate first third and last third of night
-            $nightLength = 24 + $result[self::SUNRISE] - $result[self::SUNSET];
-            $result[self::FIRST_THIRD] = $this->formatTime($this->convertTimestamp($result[self::SUNSET]) + ($nightLength / 3) * 3600000);
-            $result[self::LAST_THIRD] = $this->formatTime($this->convertTimestamp($result[self::SUNSET]) + (2 * $nightLength / 3) * 3600000);
-        }
-        
-        // Add Imsak if not present (10 minutes before Fajr by default)
-        if (!isset($result[self::IMSAK]) && isset($result[self::FAJR])) {
-            $fajrTimestamp = $this->convertTimestamp($result[self::FAJR]);
-            $result[self::IMSAK] = $this->formatTime($fajrTimestamp - 10 * 60000); // 10 minutes before
-        }
+        // Note: Imsak, First Third, and Last Third are typically calculated separately
+        // For now, we'll just provide the main prayer times
+        // These additional times would need to be calculated before formatting
         
         return $result;
     }
     
     /**
      * Get timezone offset in hours
-     * @return float
      */
     private function getTimezoneOffsetHours()
     {
         if ($this->date !== null) {
-            return $this->date->getOffset() / 3600; // Convert seconds to hours
+            return $this->date->getOffset() / 3600;
         }
         return 0;
     }
     
     /**
-     * Helper method to convert formatted time back to timestamp for calculations
-     * @param mixed $time
-     * @return float
+     * Convert formatted time back to timestamp
      */
     private function convertTimestamp($time)
     {
@@ -897,13 +725,9 @@ class PrayerTimes2
             return $time;
         }
         
-        // If it's a formatted string, we need to parse it back
-        // This is a simplified approach - in a real implementation you might want more robust parsing
         if (is_string($time) && preg_match('/(\d{1,2}):(\d{2})/', $time, $matches)) {
             $hours = (int)$matches[1];
             $minutes = (int)$matches[2];
-            
-            // Convert to milliseconds from start of day
             return ($hours * 3600 + $minutes * 60) * 1000;
         }
         
@@ -911,14 +735,14 @@ class PrayerTimes2
     }
     
     // Trigonometry methods (degree-based)
-    private function dtr($d) { return $d * M_PI / 180; }
-    private function rtd($r) { return $r * 180 / M_PI; }
+    private function dtr($d) { return (float)$d * M_PI / 180; }
+    private function rtd($r) { return (float)$r * 180 / M_PI; }
     private function sin($d) { return sin($this->dtr($d)); }
     private function cos($d) { return cos($this->dtr($d)); }
     private function tan($d) { return tan($this->dtr($d)); }
     private function arcsin($d) { return $this->rtd(asin($d)); }
     private function arccos($d) { return $this->rtd(acos($d)); }
     private function arctan($d) { return $this->rtd(atan($d)); }
-    private function arccot($x) { return $this->rtd(atan(1 / $x)); }
+    private function arccot($x) { return $this->rtd(atan(1 / (float)$x)); }
     private function arctan2($y, $x) { return $this->rtd(atan2($y, $x)); }
 }

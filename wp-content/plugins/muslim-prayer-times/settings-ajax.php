@@ -2,8 +2,6 @@
 
 if (!defined('ABSPATH')) exit;
 
-use IslamicNetwork\PrayerTimes\PrayerTimes2;
-
 // Include helper functions
 require_once __DIR__ . '/includes/helpers.php';
 
@@ -65,21 +63,9 @@ function muslprti_handle_generate() {
     }
     
     try {
-        // Include the autoloader for Islamic Network libraries
-        require_once __DIR__ . '/includes/islamic-network/autoload.php';
-        
-        if (!class_exists('IslamicNetwork\PrayerTimes\PrayerTimes2')) {
-            wp_send_json_error(esc_html__('Muslim Prayer Times library not available', 'muslim-prayer-times'));
-            return;
-        }
-        
         // Get saved settings
         $opts = get_option('muslprti_settings', []);
-        $latitude = isset($opts['lat']) ? floatval($opts['lat']) : 47.7623;
-        $longitude = isset($opts['lng']) ? floatval($opts['lng']) : -122.2054;
         $timezone = isset($opts['tz']) ? sanitize_text_field($opts['tz']) : 'America/Los_Angeles';
-        $method = isset($opts['method']) ? sanitize_text_field($opts['method']) : 'ISNA';
-        $asr_calc = isset($opts['asr_calc']) ? sanitize_text_field($opts['asr_calc']) : 'STANDARD';
         
         // Create DateTime objects for the current date and timezone
         $dtz = new DateTimeZone($timezone);
@@ -115,8 +101,6 @@ function muslprti_handle_generate() {
                     return;
                 }
                 
-                $days_to_generate = $days_diff;
-                
             } catch (Exception $e) {
                 wp_send_json_error(esc_html__('Invalid date format: ', 'muslim-prayer-times') . esc_html($e->getMessage()));
                 return;
@@ -130,243 +114,15 @@ function muslprti_handle_generate() {
             
             // Use current date as start date
             $start_date = clone $now;
+            $end_date = clone $now;
+            $end_date->modify('+' . ($days_to_generate - 1) . ' days');
         }
         
-        // Initialize the PrayerTimes2 object
-        $pt = new PrayerTimes2($method, $asr_calc);
+        // Create Builder instance using the helper function
+        $builder = muslprti_create_builder($opts);
         
-        // Prepare CSV data
-        $csv_data = [];
-        $csv_data[] = ['day', 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama'];
-        
-        // Get Iqama configuration
-        $iqama_frequency = isset($opts['iqama_frequency']) ? $opts['iqama_frequency'] : 'weekly';
-        $is_weekly = ($iqama_frequency === 'weekly');
-        
-        // Rules for each prayer
-        $fajr_rule = isset($opts['fajr_rule']) ? $opts['fajr_rule'] : 'after_athan';
-        $fajr_minutes_after = isset($opts['fajr_minutes_after']) ? $opts['fajr_minutes_after'] : 20;
-        $fajr_minutes_before_shuruq = isset($opts['fajr_minutes_before_shuruq']) ? $opts['fajr_minutes_before_shuruq'] : 45;
-        $fajr_daily_change = isset($opts['fajr_daily_change']) ? $opts['fajr_daily_change'] : 0;
-        $fajr_rounding = isset($opts['fajr_rounding']) ? $opts['fajr_rounding'] : 1;
-        $fajr_min_time = isset($opts['fajr_min_time']) ? $opts['fajr_min_time'] : '05:00';
-        $fajr_max_time = isset($opts['fajr_max_time']) ? $opts['fajr_max_time'] : '07:00';
-        
-        $dhuhr_rule = isset($opts['dhuhr_rule']) ? $opts['dhuhr_rule'] : 'after_athan';
-        $dhuhr_minutes_after = isset($opts['dhuhr_minutes_after']) ? $opts['dhuhr_minutes_after'] : 15;
-        $dhuhr_fixed_standard = isset($opts['dhuhr_fixed_standard']) ? $opts['dhuhr_fixed_standard'] : '13:30';
-        $dhuhr_fixed_dst = isset($opts['dhuhr_fixed_dst']) ? $opts['dhuhr_fixed_dst'] : '13:30';
-        $dhuhr_daily_change = isset($opts['dhuhr_daily_change']) ? $opts['dhuhr_daily_change'] : 0;
-        $dhuhr_rounding = isset($opts['dhuhr_rounding']) ? $opts['dhuhr_rounding'] : 1;
-        
-        $asr_rule = isset($opts['asr_rule']) ? $opts['asr_rule'] : 'after_athan';
-        $asr_minutes_after = isset($opts['asr_minutes_after']) ? $opts['asr_minutes_after'] : 15;
-        $asr_fixed_standard = isset($opts['asr_fixed_standard']) ? $opts['asr_fixed_standard'] : '16:30';
-        $asr_fixed_dst = isset($opts['asr_fixed_dst']) ? $opts['asr_fixed_dst'] : '16:30';
-        $asr_daily_change = isset($opts['asr_daily_change']) ? $opts['asr_daily_change'] : 0;
-        $asr_rounding = isset($opts['asr_rounding']) ? $opts['asr_rounding'] : 1;
-        
-        $maghrib_minutes_after = isset($opts['maghrib_minutes_after']) ? $opts['maghrib_minutes_after'] : 5;
-        $maghrib_daily_change = isset($opts['maghrib_daily_change']) ? $opts['maghrib_daily_change'] : 0;
-        $maghrib_rounding = isset($opts['maghrib_rounding']) ? $opts['maghrib_rounding'] : 1;
-        
-        $isha_rule = isset($opts['isha_rule']) ? $opts['isha_rule'] : 'after_athan';
-        $isha_minutes_after = isset($opts['isha_minutes_after']) ? $opts['isha_minutes_after'] : 15;
-        $isha_min_time = isset($opts['isha_min_time']) ? $opts['isha_min_time'] : '19:30';
-        $isha_max_time = isset($opts['isha_max_time']) ? $opts['isha_max_time'] : '22:00';
-        $isha_daily_change = isset($opts['isha_daily_change']) ? $opts['isha_daily_change'] : 0;
-        $isha_rounding = isset($opts['isha_rounding']) ? $opts['isha_rounding'] : 1;
-        
-        // Find the next Friday or use current date if it's Friday (or use start_date for custom range)
-        if (isset($_POST['period']) && sanitize_text_field(wp_unslash($_POST['period'])) === 'custom') {
-            // For custom date range, use the specified start date
-            $current_date = clone $start_date;
-        } else {
-            // For standard periods, find the next Friday from now
-            $current_date = clone $now;
-            $day_of_week = $current_date->format('w');  // 0 (Sun) - 6 (Sat)
-            
-            if ($day_of_week != 5) { // 5 is Friday
-                // Calculate days since the last Friday
-                $days_since_friday = ($day_of_week + 2) % 7;
-                $current_date->modify("-{$days_since_friday} days");
-            }
-        }
-        
-        // Process days in weekly batches
-        $processed_days = 0;
-        $current_week_start = null;
-        $week_number = 0;
-        
-        while ($processed_days < $days_to_generate) {
-            // Check if it's a new week (Friday)
-            $is_friday = $current_date->format('w') == 5;
-            
-            if ($is_friday || $current_week_start === null) {
-                // Start a new week
-                $week_number++;
-                $current_week_start = clone $current_date;
-                
-                // Initialize data structure for this week's days
-                $week_days_data = [];
-            }
-            
-            // Get latitude adjustment method from settings
-            $latitude_adjustment = isset($opts['latitude_adjustment']) ? $opts['latitude_adjustment'] : 'MOTN';
-            
-            // Convert string to constant
-            $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_MOTN; // default
-            switch ($latitude_adjustment) {
-                case 'NONE':
-                    $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_NONE;
-                    break;
-                case 'MOTN':
-                    $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_MOTN;
-                    break;
-                case 'ANGLE':
-                    $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_ANGLE;
-                    break;
-                case 'ONESEVENTH':
-                    $latitude_adjustment_const = PrayerTimes2::LATITUDE_ADJUSTMENT_METHOD_ONESEVENTH;
-                    break;
-            }
-            
-            // Get prayer times for the current day
-            $times = $pt->getTimes(
-                $current_date,
-                floatval($latitude),
-                floatval($longitude),
-                null,
-                $latitude_adjustment_const,
-                PrayerTimes2::MIDNIGHT_MODE_STANDARD,
-                PrayerTimes2::TIME_FORMAT_24H
-            );
-            
-            // Store this day's data
-            $day_index = $processed_days;
-            $date_prefix = $current_date->format('Y-m-d') . ' ';
-            $week_days_data[$day_index] = [
-                'date' => clone $current_date,
-                'formatted_date' => $current_date->format('Y-m-d'),
-                'athan' => [
-                    'fajr' => new DateTime($date_prefix . $times['Fajr'], $dtz),
-                    'sunrise' => new DateTime($date_prefix . $times['Sunrise'], $dtz),
-                    'dhuhr' => new DateTime($date_prefix . $times['Dhuhr'], $dtz),
-                    'asr' => new DateTime($date_prefix . $times['Asr'], $dtz),
-                    'maghrib' => new DateTime($date_prefix . $times['Maghrib'], $dtz),
-                    'isha' => new DateTime($date_prefix . $times['Isha'], $dtz)
-                ]
-            ];
-            
-            // End of a week or last day of generation?
-            $is_thursday = $current_date->format('w') == 4; // 4 is Thursday
-            $is_last_day = ($processed_days + 1) >= $days_to_generate;
-            
-            if ($is_thursday || $is_last_day || $iqama_frequency === 'daily') {
-                // Process the current batch of days
-                
-                // Calculate iqama times using our helper functions
-                $fajr_iqamas = muslprti_calculate_fajr_iqama(
-                    $week_days_data, 
-                    $fajr_rule, 
-                    $fajr_minutes_after, 
-                    $fajr_minutes_before_shuruq,
-                    $is_weekly && !$fajr_daily_change,
-                    $fajr_rounding,
-                    $fajr_min_time,
-                    $fajr_max_time
-                );
-                
-                $dhuhr_iqamas = muslprti_calculate_dhuhr_iqama(
-                    $week_days_data, 
-                    $dhuhr_rule, 
-                    $dhuhr_minutes_after, 
-                    $dhuhr_fixed_standard, 
-                    $dhuhr_fixed_dst, 
-                    $is_weekly && !$dhuhr_daily_change,
-                    $dhuhr_rounding
-                );
-                
-                $asr_iqamas = muslprti_calculate_asr_iqama(
-                    $week_days_data, 
-                    $asr_rule, 
-                    $asr_minutes_after, 
-                    $asr_fixed_standard, 
-                    $asr_fixed_dst, 
-                    $is_weekly && !$asr_daily_change,
-                    $asr_rounding
-                );
-                
-                $maghrib_iqamas = muslprti_calculate_maghrib_iqama(
-                    $week_days_data, 
-                    $maghrib_minutes_after, 
-                    $is_weekly && !$maghrib_daily_change,
-                    $maghrib_rounding
-                );
-                
-                $isha_iqamas = muslprti_calculate_isha_iqama(
-                    $week_days_data, 
-                    $isha_rule, 
-                    $isha_minutes_after, 
-                    $isha_min_time, 
-                    $isha_max_time, 
-                    $is_weekly && !$isha_daily_change,
-                    $isha_rounding
-                );
-                
-                // Add rows to CSV data
-                foreach ($week_days_data as $day_index => $day_data) {
-                    $day_formatted = $day_data['formatted_date'];
-                    
-                    // Get athan times for the day
-                    $fajr_athan = $day_data['athan']['fajr'];
-                    $sunrise = $day_data['athan']['sunrise'];
-                    $dhuhr_athan = $day_data['athan']['dhuhr'];
-                    $asr_athan = $day_data['athan']['asr'];
-                    $maghrib_athan = $day_data['athan']['maghrib'];
-                    $isha_athan = $day_data['athan']['isha'];
-                    
-                    // Get iqama times for the day
-                    $fajr_iqama = $fajr_iqamas[$day_index];
-                    $dhuhr_iqama = $dhuhr_iqamas[$day_index];
-                    $asr_iqama = $asr_iqamas[$day_index];
-                    $maghrib_iqama = $maghrib_iqamas[$day_index];
-                    $isha_iqama = $isha_iqamas[$day_index];
-                    
-                    // Add row to CSV data
-                    $csv_data[] = [
-                        $day_formatted,
-                        $fajr_athan->format('g:i A'),
-                        $fajr_iqama->format('g:i A'),
-                        $sunrise->format('g:i A'),
-                        $dhuhr_athan->format('g:i A'),
-                        $dhuhr_iqama->format('g:i A'),
-                        $asr_athan->format('g:i A'),
-                        $asr_iqama->format('g:i A'),
-                        $maghrib_athan->format('g:i A'),
-                        $maghrib_iqama->format('g:i A'),
-                        $isha_athan->format('g:i A'),
-                        $isha_iqama->format('g:i A')
-                    ];
-                }
-                
-                // Reset for next week if weekly frequency
-                if ($is_weekly) {
-                    $week_days_data = [];
-                }
-            }
-            
-            // Move to next day
-            $current_date->modify('+1 day');
-            $processed_days++;
-        }
-        
-        // Sort the CSV data by date (skip header row)
-        $header = array_shift($csv_data);
-        usort($csv_data, function($a, $b) {
-            return strcmp($a[0], $b[0]);
-        });
-        array_unshift($csv_data, $header);
+        // Generate prayer times using the Builder
+        $csv_data = $builder->build($start_date, $end_date);
         
         // Convert data to CSV format
         $csv_content = '';

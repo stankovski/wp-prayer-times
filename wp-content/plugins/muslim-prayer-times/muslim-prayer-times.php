@@ -14,8 +14,8 @@ License URI: https://opensource.org/licenses/MIT
 
 if (!defined('ABSPATH')) exit;
 
-// Import the PrayerTimes2 class
-use IslamicNetwork\PrayerTimes\PrayerTimes2;
+// Include the salah-api helper which loads all necessary classes
+require_once __DIR__ . '/includes/salah-api-helper.php';
 
 // Define table name as a constant
 define('MUSLPRTI_IQAMA_TABLE', 'muslprti_iqama_times');
@@ -112,9 +112,6 @@ function muslprti_register_block_category($categories) {
 }
 // For WordPress 5.8+
 add_filter('block_categories_all', 'muslprti_register_block_category');
-// For backwards compatibility (pre WordPress 5.8)
-add_filter('block_categories', 'muslprti_register_block_category');
-
 
 // --- Settings Page ---
 require_once __DIR__ . '/settings.php';

@@ -2,8 +2,6 @@
 
 if (!defined('ABSPATH')) exit;
 
-use IslamicNetwork\PrayerTimes\PrayerTimes2;
-
 // Include the admin AJAX handlers
 require_once plugin_dir_path(__FILE__) . 'settings-ajax.php';
 

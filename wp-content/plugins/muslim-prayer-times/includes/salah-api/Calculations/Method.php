@@ -1,69 +1,55 @@
 <?php
 
-namespace IslamicNetwork\PrayerTimes;
+namespace SalahAPI\Calculations;
 
-use IslamicNetwork\MoonSighting\Isha;
-
+/**
+ * Calculation method definitions and configurations
+ */
 class Method
 {
-    /**
-     * All methods available for computation
-     */
-    const METHOD_JAFARI = 'JAFARI'; // 0;
-    const METHOD_KARACHI = 'KARACHI'; // 1;
-    const METHOD_ISNA = 'ISNA'; // 2;
-    const METHOD_MWL = 'MWL'; // 3
-    const METHOD_MAKKAH = 'MAKKAH'; // 4;
-    const METHOD_EGYPT = 'EGYPT'; // 5;
-    const METHOD_TEHRAN = 'TEHRAN'; // 7;
-    const METHOD_GULF = 'GULF'; // 8
-    const METHOD_KUWAIT = 'KUWAIT'; // 9
-    const METHOD_QATAR = 'QATAR'; // 10
-    const METHOD_SINGAPORE = 'SINGAPORE'; // 11
-    const METHOD_FRANCE = 'FRANCE'; // 12
-    const METHOD_TURKEY = 'TURKEY'; // 13
-    const METHOD_RUSSIA = 'RUSSIA'; // 14
-    const METHOD_MOONSIGHTING = 'MOONSIGHTING'; // 15
-    const METHOD_DUBAI = 'DUBAI'; // 16
-    const METHOD_JAKIM  = 'JAKIM'; // 17
-    const METHOD_TUNISIA = 'TUNISIA'; // 18
-    const METHOD_ALGERIA = 'ALGERIA'; // 19
-    const METHOD_KEMENAG = 'KEMENAG'; // 20
-    const METHOD_MOROCCO = 'MOROCCO'; // 21
-    const METHOD_PORTUGAL = 'PORTUGAL'; // 22
-    const METHOD_JORDAN = 'JORDAN'; // 23
-    const METHOD_CUSTOM = 'CUSTOM'; // 99
+    // Available calculation methods
+    const METHOD_JAFARI = 'JAFARI';
+    const METHOD_KARACHI = 'KARACHI';
+    const METHOD_ISNA = 'ISNA';
+    const METHOD_MWL = 'MWL';
+    const METHOD_MAKKAH = 'MAKKAH';
+    const METHOD_EGYPT = 'EGYPT';
+    const METHOD_TEHRAN = 'TEHRAN';
+    const METHOD_GULF = 'GULF';
+    const METHOD_KUWAIT = 'KUWAIT';
+    const METHOD_QATAR = 'QATAR';
+    const METHOD_SINGAPORE = 'SINGAPORE';
+    const METHOD_FRANCE = 'FRANCE';
+    const METHOD_TURKEY = 'TURKEY';
+    const METHOD_RUSSIA = 'RUSSIA';
+    const METHOD_MOONSIGHTING = 'MOONSIGHTING';
+    const METHOD_DUBAI = 'DUBAI';
+    const METHOD_JAKIM = 'JAKIM';
+    const METHOD_TUNISIA = 'TUNISIA';
+    const METHOD_ALGERIA = 'ALGERIA';
+    const METHOD_KEMENAG = 'KEMENAG';
+    const METHOD_MOROCCO = 'MOROCCO';
+    const METHOD_PORTUGAL = 'PORTUGAL';
+    const METHOD_JORDAN = 'JORDAN';
+    const METHOD_CUSTOM = 'CUSTOM';
 
-    /**
-     * Name of custom method
-     * @var string
-     */
     public $name;
-
-    /**
-     * Default configuration parameters
-     * @var array
-     */
     public $params = [];
 
     /**
      * Constructor
-     * @param string $name
      */
     public function __construct($name = 'Custom')
     {
         $this->name = $name;
-        // Default Params
         $this->params = [
             PrayerTimes::FAJR => 15,
             PrayerTimes::ISHA => 15
         ];
-
     }
 
     /**
-     * Set the Fajr Angle
-     * @param float $angle 18 or 18.5 for degrees
+     * Set the Fajr angle
      */
     public function setFajrAngle($angle): void
     {
@@ -71,8 +57,7 @@ class Method
     }
 
     /**
-     * Set Maghrib angle or minutes after sunset. Example 18 or 18.5 or '20 min'
-     * @param string $angleOrMinsAfterSunset
+     * Set Maghrib angle or minutes after sunset
      */
     public function setMaghribAngleOrMins($angleOrMinsAfterSunset): void
     {
@@ -80,14 +65,16 @@ class Method
     }
 
     /**
-     * Set Isha angle or mins after Maghrib. Example 18 or 18.5 or '90 min'
-     * @param string $angleOrMinsAfterMaghrib
+     * Set Isha angle or minutes after Maghrib
      */
     public function setIshaAngleOrMins($angleOrMinsAfterMaghrib): void
     {
         $this->params[PrayerTimes::ISHA] = $angleOrMinsAfterMaghrib;
     }
 
+    /**
+     * Get all available method codes
+     */
     public static function getMethodCodes(): array
     {
         return [
@@ -118,17 +105,20 @@ class Method
         ];
     }
 
+    /**
+     * Get all calculation methods with their configurations
+     */
     public static function getMethods(): array
     {
         return [
-             self::METHOD_MWL => [
+            self::METHOD_MWL => [
                 'id' => 3,
                 'name' => 'Muslim World League',
                 'params' => [
                     PrayerTimes::FAJR => 18,
                     PrayerTimes::ISHA => 17
                 ],
-                'location' => [ // Goodge Street, London, UK
+                'location' => [
                     'latitude' => 51.5194682,
                     'longitude' => -0.1360365,
                 ]
@@ -140,7 +130,7 @@ class Method
                     PrayerTimes::FAJR => 15,
                     PrayerTimes::ISHA => 15
                 ],
-                'location' => [ // Plainfield, Indiana, USA
+                'location' => [
                     'latitude' => 39.70421229999999,
                     'longitude' => -86.39943869999999,
                 ]
@@ -152,7 +142,7 @@ class Method
                     PrayerTimes::FAJR => 19.5,
                     PrayerTimes::ISHA => 17.5
                 ],
-                'location' => [ // Cairo, Egype
+                'location' => [
                     'latitude' => 30.0444196,
                     'longitude' => 31.2357116,
                 ]
@@ -161,10 +151,10 @@ class Method
                 'id' => 4,
                 'name' => 'Umm Al-Qura University, Makkah',
                 'params' => [
-                    PrayerTimes::FAJR => 18.5, // Fajr was 19 degrees before 1430 hijri
+                    PrayerTimes::FAJR => 18.5,
                     PrayerTimes::ISHA => '90 min'
                 ],
-                'location' => [ // Makkah, Saudi Arabia
+                'location' => [
                     'latitude' => 21.3890824,
                     'longitude' => 39.8579118
                 ]
@@ -176,7 +166,7 @@ class Method
                     PrayerTimes::FAJR => 18,
                     PrayerTimes::ISHA => 18
                 ],
-                'location' => [ // Karachi, Pakistan
+                'location' => [
                     'latitude' => 24.8614622,
                     'longitude' => 67.0099388
                 ]
@@ -190,7 +180,7 @@ class Method
                     PrayerTimes::MAGHRIB => 4.5,
                     PrayerTimes::MIDNIGHT => self::METHOD_JAFARI
                 ],
-                'location' => [ // Tehran, Iran
+                'location' => [
                     'latitude' => 35.6891975,
                     'longitude' => 51.3889736
                 ]
@@ -204,7 +194,7 @@ class Method
                     PrayerTimes::MAGHRIB => 4,
                     PrayerTimes::MIDNIGHT => self::METHOD_JAFARI
                 ],
-                'location' => [ // Qum, Iran
+                'location' => [
                     'latitude' => 34.6415764,
                     'longitude' => 50.8746035
                 ]
@@ -216,7 +206,7 @@ class Method
                     PrayerTimes::FAJR => 19.5,
                     PrayerTimes::ISHA => '90 min'
                 ],
-                'location' => [ // Khasbat Al Reed Island, Abu Dhabi, UAE
+                'location' => [
                     'latitude' => 24.1323638,
                     'longitude' => 53.3199527
                 ]
@@ -228,7 +218,7 @@ class Method
                     PrayerTimes::FAJR => 18,
                     PrayerTimes::ISHA => 17.5
                 ],
-                'location' => [ // Kuwait City, Kuwait
+                'location' => [
                     'latitude' => 29.375859,
                     'longitude' => 47.9774052
                 ]
@@ -240,7 +230,7 @@ class Method
                     PrayerTimes::FAJR => 18,
                     PrayerTimes::ISHA => '90 min'
                 ],
-                'location' => [ // Doha, Qatar
+                'location' => [
                     'latitude' => 25.2854473,
                     'longitude' => 51.5310398
                 ]
@@ -276,7 +266,7 @@ class Method
                     PrayerTimes::FAJR => 18,
                     PrayerTimes::ISHA => 17
                 ],
-                'location' => [ // Ankara, Turkey
+                'location' => [
                     'latitude' => 39.9333635,
                     'longitude' => 32.8597419
                 ]
@@ -288,17 +278,16 @@ class Method
                     PrayerTimes::FAJR => 16,
                     PrayerTimes::ISHA => 15
                 ],
-                'location' => [ // Ufa city, Republic Bashkortostan, Russia
+                'location' => [
                     'latitude' => 54.73479099999999,
                     'longitude' => 55.9578555
                 ]
-
             ],
             self::METHOD_MOONSIGHTING => [
                 'id' => 15,
                 'name' => 'Moonsighting Committee Worldwide (Moonsighting.com)',
                 'params' => [
-                    'shafaq' => Isha::SHAFAQ_GENERAL
+                    'shafaq' => 'general'
                 ]
             ],
             self::METHOD_DUBAI => [
@@ -308,7 +297,7 @@ class Method
                     PrayerTimes::FAJR => 18.2,
                     PrayerTimes::ISHA => 18.2,
                 ],
-                'location' => [ // Dubai, UAE
+                'location' => [
                     'latitude' => 25.0762677,
                     'longitude' => 55.087404
                 ]
@@ -320,7 +309,7 @@ class Method
                     PrayerTimes::FAJR => 20,
                     PrayerTimes::ISHA => 18,
                 ],
-                'location' => [ // Kuala Lumpur, Malaysia
+                'location' => [
                     'latitude' => 3.139003,
                     'longitude' => 101.686855
                 ]
@@ -332,7 +321,7 @@ class Method
                     PrayerTimes::FAJR => 18,
                     PrayerTimes::ISHA => 18,
                 ],
-                'location' => [ // Tunis, Tunisia
+                'location' => [
                     'latitude' => 36.8064948,
                     'longitude' => 10.1815316
                 ]
@@ -344,7 +333,7 @@ class Method
                     PrayerTimes::FAJR => 18,
                     PrayerTimes::ISHA => 17,
                 ],
-                'location' => [ // Algiers, Algeria
+                'location' => [
                     'latitude' => 36.753768,
                     'longitude' => 3.0587561
                 ]
@@ -356,7 +345,7 @@ class Method
                     PrayerTimes::FAJR => 20,
                     PrayerTimes::ISHA => 18,
                 ],
-                'location' => [ // Jakarta, Indonesia
+                'location' => [
                     'latitude' => -6.2087634,
                     'longitude' => 106.845599
                 ]
@@ -368,7 +357,7 @@ class Method
                     PrayerTimes::FAJR => 19,
                     PrayerTimes::ISHA => 17,
                 ],
-                'location' => [ // Rabat, Morocco
+                'location' => [
                     'latitude' => 33.9715904,
                     'longitude' => -6.8498129
                 ]
@@ -381,7 +370,7 @@ class Method
                     PrayerTimes::MAGHRIB => '3 min',
                     PrayerTimes::ISHA => '77 min',
                 ],
-                'location' => [ // Lisbon, Portugal
+                'location' => [
                     'latitude' => 38.7222524,
                     'longitude' => -9.1393366
                 ]
@@ -394,7 +383,7 @@ class Method
                     PrayerTimes::MAGHRIB => '5 min',
                     PrayerTimes::ISHA => 18,
                 ],
-                'location' => [ // Amman, Jordan
+                'location' => [
                     'latitude' => 31.9461222,
                     'longitude' => 35.923844
                 ]
