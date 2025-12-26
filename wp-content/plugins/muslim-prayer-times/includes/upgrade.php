@@ -21,7 +21,8 @@ function muslprti_upgrade_database() {
     
     // Only add the column if it doesn't exist
     if (empty($column_exists)) {
-        $wpdb->query("ALTER TABLE $table_name ADD COLUMN sunrise time DEFAULT NULL AFTER fajr_iqama");
+        // Table name must be escaped separately as wpdb->prepare() doesn't handle identifiers
+        $wpdb->query("ALTER TABLE " . esc_sql($table_name) . " ADD COLUMN sunrise time DEFAULT NULL AFTER fajr_iqama");
         update_option('muslprti_db_version', '1.1');
     }
     

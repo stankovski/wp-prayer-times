@@ -203,7 +203,7 @@ class TimeHelpers
         $parts = explode(':', $timeString);
         
         if (count($parts) !== 2) {
-            throw new \InvalidArgumentException("Invalid time format: {$timeString}");
+            throw new \InvalidArgumentException("Invalid time format: " . esc_html($timeString));
         }
         
         $hours = (int)$parts[0];

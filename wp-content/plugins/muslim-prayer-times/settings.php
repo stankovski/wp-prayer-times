@@ -976,7 +976,7 @@ function muslprti_settings_page() {
                                 if ($ramadan_dates) {
                                     echo sprintf(
                                         'Ramadan %d: %s to %s',
-                                        $current_year,
+                                        esc_html($current_year),
                                         esc_html(muslprti_date('F j, Y', strtotime($ramadan_dates['start']))),
                                         esc_html(muslprti_date('F j, Y', strtotime($ramadan_dates['end'])))
                                     );
@@ -985,7 +985,7 @@ function muslprti_settings_page() {
                                     if ($ramadan_dates) {
                                         echo sprintf(
                                             'Next Ramadan (%d): %s to %s',
-                                            $current_year + 1,
+                                            esc_html($current_year + 1),
                                             esc_html(muslprti_date('F j, Y', strtotime($ramadan_dates['start']))),
                                             esc_html(muslprti_date('F j, Y', strtotime($ramadan_dates['end'])))
                                         );

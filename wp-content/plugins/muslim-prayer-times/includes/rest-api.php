@@ -51,25 +51,35 @@ function muslprti_salah_api_endpoint($request) {
     
     // Build Info Object
     $info = array(
-        'title' => get_bloginfo('name') . ' Prayer Times',
-        'description' => 'Islamic prayer times provided by ' . get_bloginfo('name'),
+        'title' => sanitize_text_field(get_bloginfo('name')) . ' Prayer Times',
+        'description' => 'Islamic prayer times provided by ' . sanitize_text_field(get_bloginfo('name')),
         'version' => '1.0.0',
     );
     
     // Get admin email if available
     $admin_email = get_option('admin_email');
-    if ($admin_email) {
+    if ($admin_email && is_email($admin_email)) {
         $info['contact'] = array(
-            'name' => get_bloginfo('name'),
-            'email' => $admin_email,
+            'name' => sanitize_text_field(get_bloginfo('name')),
+            'email' => sanitize_email($admin_email),
         );
     }
     
     // Build Location Object
+    // Sanitize and validate timezone
+    $default_timezone = 'America/Los_Angeles';
+    $timezone = isset($opts['tz']) ? sanitize_text_field($opts['tz']) : $default_timezone;
+    
+    // Validate timezone against PHP's list of valid timezones
+    $valid_timezones = timezone_identifiers_list();
+    if (!in_array($timezone, $valid_timezones, true)) {
+        $timezone = $default_timezone;
+    }
+    
     $location = array(
         'latitude' => isset($opts['lat']) ? floatval($opts['lat']) : 47.7623,
         'longitude' => isset($opts['lng']) ? floatval($opts['lng']) : -122.2054,
-        'timezone' => isset($opts['tz']) ? $opts['tz'] : 'America/Los_Angeles',
+        'timezone' => $timezone,
         'dateFormat' => 'YYYY-MM-DD',
         'timeFormat' => 'HH:mm',
     );
@@ -314,6 +324,7 @@ function muslprti_build_jumuah_rules_array($opts) {
 function muslprti_prayer_times_csv_endpoint($request) {
     global $wpdb;
     
+    // Check cache first
     $from_date = $request->get_param('fromDate');
     $to_date = $request->get_param('toDate');
     
@@ -327,18 +338,55 @@ function muslprti_prayer_times_csv_endpoint($request) {
         $to_date = $from_date;
     }
     
-    // Validate date format
+    // Validate date format and actual date validity
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from_date) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to_date)) {
         return new WP_Error('invalid_date', 'Date must be in YYYY-MM-DD format', array('status' => 400));
     }
     
+    // Validate that dates are actually valid (e.g., not 2025-02-30)
+    $from_date_obj = DateTime::createFromFormat('Y-m-d', $from_date);
+    $to_date_obj = DateTime::createFromFormat('Y-m-d', $to_date);
+    
+    if (!$from_date_obj || $from_date_obj->format('Y-m-d') !== $from_date ||
+        !$to_date_obj || $to_date_obj->format('Y-m-d') !== $to_date) {
+        return new WP_Error('invalid_date', 'Invalid date provided', array('status' => 400));
+    }
+    
+    // Ensure from_date is not after to_date
+    if ($from_date_obj > $to_date_obj) {
+        return new WP_Error('invalid_date_range', 'Start date must be before or equal to end date', array('status' => 400));
+    }
+    
+    // Limit date range to prevent abuse (max 1 year)
+    $date_diff = $from_date_obj->diff($to_date_obj);
+    $days_diff = $date_diff->days;
+    if ($days_diff > 366) {
+        return new WP_Error('date_range_too_large', 'Date range cannot exceed 1 year', array('status' => 400));
+    }
+    
+    // Check cache for this date range
+    $cache_key = 'muslprti_csv_' . md5($from_date . '_' . $to_date);
+    $cached_data = wp_cache_get($cache_key, 'muslim_prayer_times');
+    
+    if (false !== $cached_data) {
+        // Return cached CSV content directly to avoid JSON encoding
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: inline; filename="prayer-times.csv"');
+        header('Content-Length: ' . strlen($cached_data));
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo $cached_data;
+        exit;
+    }
+    
+    // Table name is safe - MUSLPRTI_IQAMA_TABLE is a constant, not user input
     $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
     
     // Query prayer times from database
+    // Note: Table name must be escaped outside of prepare() as prepare() only handles placeholders
     $query = $wpdb->prepare(
         "SELECT day, fajr_athan, fajr_iqama, sunrise, dhuhr_athan, dhuhr_iqama, 
                 asr_athan, asr_iqama, maghrib_athan, maghrib_iqama, isha_athan, isha_iqama
-         FROM {$table_name}
+         FROM " . esc_sql($table_name) . "
          WHERE day >= %s AND day <= %s
          ORDER BY day ASC",
         $from_date,
@@ -351,30 +399,46 @@ function muslprti_prayer_times_csv_endpoint($request) {
         return new WP_Error('no_data', 'No prayer times found for the specified date range', array('status' => 404));
     }
     
-    // Set proper headers for CSV output
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: inline; filename="prayer-times.csv"');
-    
-    // Open output stream
-    $output = fopen('php://output', 'w');
-    
-    // Add header row
+    // Build CSV content in memory without using fopen()
+    // Define headers
     $headers = array(
         'day', 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama',
         'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama'
     );
-    fputcsv($output, $headers);
+    
+    // Build CSV content as string
+    $csv_lines = array();
+    
+    // Add header row
+    $csv_lines[] = implode(',', array_map(function($header) {
+        return '"' . str_replace('"', '""', $header) . '"';
+    }, $headers));
     
     // Add data rows
     foreach ($results as $row) {
         $csv_row = array();
         foreach ($headers as $header) {
-            $csv_row[] = isset($row[$header]) ? $row[$header] : '';
+            $value = isset($row[$header]) ? $row[$header] : '';
+            $csv_row[] = '"' . str_replace('"', '""', $value) . '"';
         }
-        fputcsv($output, $csv_row);
+        $csv_lines[] = implode(',', $csv_row);
     }
     
-    fclose($output);
+    // Combine all lines
+    $csv_content = implode("\n", $csv_lines);
+    
+    // Cache the CSV content for 5 minutes
+    wp_cache_set($cache_key, $csv_content, 'muslim_prayer_times', 300);
+    
+    // For CSV, we need to output directly to avoid JSON encoding
+    // Set headers for CSV download
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: inline; filename="prayer-times.csv"');
+    header('Content-Length: ' . strlen($csv_content));
+    
+    // Output CSV content and exit
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    echo $csv_content;
     exit;
 }
 
