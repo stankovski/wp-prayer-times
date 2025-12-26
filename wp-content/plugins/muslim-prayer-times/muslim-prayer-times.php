@@ -17,6 +17,9 @@ if (!defined('ABSPATH')) exit;
 // Include the salah-api helper which loads all necessary classes
 require_once __DIR__ . '/includes/salah-api-helper.php';
 
+// Include REST API endpoints
+require_once __DIR__ . '/includes/rest-api.php';
+
 // Define table name as a constant
 define('MUSLPRTI_IQAMA_TABLE', 'muslprti_iqama_times');
 

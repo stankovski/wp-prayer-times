@@ -1054,6 +1054,31 @@ function muslprti_settings_page() {
             </div>
         </div>
         
+        <!-- API Endpoints Section -->
+        <div class="card muslprti-card-top-margin">
+            <h2>API Endpoints</h2>
+            <p>The following REST API endpoints are available for accessing prayer times programmatically:</p>
+            
+            <h3>SalahAPI JSON Endpoint</h3>
+            <p>This endpoint returns prayer times in the standard <a href="https://github.com/salahapi/salahapi-specification" target="_blank">SalahAPI JSON format</a>.</p>
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0; font-family: monospace;">
+                <strong>URL:</strong> <a href="<?php echo esc_url(muslprti_get_salah_api_url()); ?>" target="_blank"><?php echo esc_url(muslprti_get_salah_api_url()); ?></a>
+            </div>
+            <p class="description">This endpoint includes location, calculation method, iqama rules, and links to CSV data.</p>
+            
+            <h3>CSV Prayer Times Endpoint</h3>
+            <p>This endpoint returns prayer times in CSV format for a specified date range.</p>
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0; font-family: monospace;">
+                <strong>URL:</strong> <a href="<?php echo esc_url(muslprti_get_csv_api_url()); ?>" target="_blank"><?php echo esc_url(muslprti_get_csv_api_url()); ?></a>
+            </div>
+            <p class="description">
+                <strong>Optional Parameters:</strong><br>
+                - <code>fromDate</code>: Start date in YYYY-MM-DD format (e.g., 2025-01-01)<br>
+                - <code>toDate</code>: End date in YYYY-MM-DD format (e.g., 2025-01-31)<br>
+                <strong>Example:</strong> <code><?php echo esc_url(muslprti_get_csv_api_url() . '?fromDate=2025-01-01&toDate=2025-01-31'); ?></code>
+            </p>
+        </div>
+        
         <!-- Export/Import Section (kept as is) -->
         <div class="card muslprti-card-top-margin">            
             <h2>Export/Import Prayer Times</h2>
