@@ -574,6 +574,52 @@ function muslprti_settings_page() {
                 </ul>
                 <p>Each block is highly customizable through the block editor interface. You can adjust colors, display options, and more to match your site's design.</p>
             </div>
+            
+            <div class="available-blocks">
+                <h3>Available Shortcodes</h3>
+                <p>You can also use shortcodes anywhere in your posts, pages, or widgets:</p>
+                <table class="widefat striped" style="margin-top: 15px; background: white;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">Shortcode</th>
+                            <th style="width: 45%;">Description</th>
+                            <th style="width: 20%;">Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>[muslprti_daily_prayer_times]</code></td>
+                            <td>Display today's prayer times with navigation arrows</td>
+                            <td><small>Attributes: tableStyle, fontSize, showSunrise, showDate, showHijriDate</small></td>
+                        </tr>
+                        <tr>
+                            <td><code>[muslprti_monthly_prayer_times]</code></td>
+                            <td>Display a full month of prayer times in a table</td>
+                            <td><small>Attributes: tableStyle, fontSize, showSunrise, showIqama, highlightToday</small></td>
+                        </tr>
+                        <tr>
+                            <td><code>[muslprti_live_prayer_times]</code></td>
+                            <td>Live prayer times with clock (ideal for digital displays)</td>
+                            <td><small>Attributes: showDate, showHijriDate, showSunrise, showSeconds, timeFormat</small></td>
+                        </tr>
+                        <tr>
+                            <td><code>[muslprti_current_date]</code></td>
+                            <td>Display the current Gregorian date</td>
+                            <td><code>[muslprti_current_date format="F j, Y"]</code><br><small>Format uses PHP date format</small></td>
+                        </tr>
+                        <tr>
+                            <td><code>[muslprti_current_hijri_date]</code></td>
+                            <td>Display the current Hijri (Islamic) date</td>
+                            <td><code>[muslprti_current_hijri_date language="en"]</code><br><small>Language: 'en' or 'ar'</small></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="margin-top: 10px;"><strong>Example Usage:</strong></p>
+                <pre style="background: #f8f8f8; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">Today's Gregorian date: [muslprti_current_date format="l, F j, Y"]
+Today's Hijri date: [muslprti_current_hijri_date language="en"]
+
+[muslprti_daily_prayer_times showSunrise="true" showHijriDate="true"]</pre>
+            </div>
         </div>
         
         <!-- Accordion Container -->

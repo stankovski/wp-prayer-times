@@ -120,3 +120,51 @@ function muslprti_daily_prayer_times_shortcode($atts) {
     return muslprti_render_daily_prayer_times_block($block_atts);
 }
 add_shortcode('muslprti_daily_prayer_times', 'muslprti_daily_prayer_times_shortcode');
+
+/**
+ * Current Date shortcode
+ * 
+ * @param array $atts Shortcode attributes
+ * @return string Current date in specified format
+ */
+function muslprti_current_date_shortcode($atts) {
+    // Default attributes
+    $defaults = array(
+        'format' => 'F j, Y', // Default format: January 1, 2026
+    );
+    
+    $atts = shortcode_atts($defaults, $atts);
+    
+    // Get current date with plugin's timezone
+    return muslprti_date($atts['format']);
+}
+add_shortcode('muslprti_current_date', 'muslprti_current_date_shortcode');
+
+/**
+ * Current Hijri Date shortcode
+ * 
+ * @param array $atts Shortcode attributes
+ * @return string Current date in Hijri calendar
+ */
+function muslprti_current_hijri_date_shortcode($atts) {
+    // Default attributes
+    $defaults = array(
+        'language' => 'en', // 'en' or 'ar'
+    );
+    
+    $atts = shortcode_atts($defaults, $atts);
+    
+    // Load Hijri date converter
+    require_once plugin_dir_path(__FILE__) . 'hijri-date-converter.php';
+    
+    // Get current date
+    $today = muslprti_date('Y-m-d');
+    
+    // Get Hijri offset from settings
+    $opts = get_option('muslprti_settings', []);
+    $hijri_offset = isset($opts['hijri_offset']) ? $opts['hijri_offset'] : 0;
+    
+    // Convert to Hijri date
+    return muslprti_convert_to_hijri($today, true, $atts['language'], $hijri_offset);
+}
+add_shortcode('muslprti_current_hijri_date', 'muslprti_current_hijri_date_shortcode');
