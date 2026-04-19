@@ -15,6 +15,13 @@ function muslprti_register_rest_routes() {
         'permission_callback' => '__return_true', // Public endpoint
     ));
     
+    // Register the last-updated endpoint
+    register_rest_route('muslim-prayer-times/v1', '/last-updated', array(
+        'methods'  => 'GET',
+        'callback' => 'muslprti_last_updated_endpoint',
+        'permission_callback' => '__return_true', // Public endpoint
+    ));
+    
     // Register the CSV endpoint
     register_rest_route('muslim-prayer-times/v1', '/prayer-times-csv', array(
         'methods'  => 'GET',
@@ -315,6 +322,18 @@ function muslprti_build_jumuah_rules_array($opts) {
     }
     
     return $jumuah_rules;
+}
+
+/**
+ * Last-updated endpoint callback
+ * Returns the timestamp of the last prayer times update
+ */
+function muslprti_last_updated_endpoint($request) {
+    $updated_at = get_option('muslprti_prayer_times_updated_at', null);
+    
+    return rest_ensure_response(array(
+        'lastUpdated' => $updated_at,
+    ));
 }
 
 /**

@@ -487,6 +487,9 @@ function muslprti_handle_import() {
         }
     }
     
+    // Record the timestamp of the last prayer times update
+    update_option('muslprti_prayer_times_updated_at', gmdate('Y-m-d\TH:i:s\Z'));
+
     wp_send_json_success(array(
         'success_count' => $success_count,
         'error_count' => $error_count,
