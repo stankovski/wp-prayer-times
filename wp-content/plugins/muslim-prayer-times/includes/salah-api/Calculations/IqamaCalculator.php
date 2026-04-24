@@ -155,68 +155,40 @@ class IqamaCalculator
         // Extract rule parameters with defaults
         $params = self::getRuleParameters($rule);
         
-        if ($isWeekly) {
-            // For weekly calculation, compute per-day candidate iqamas from original
-            // (non-normalized) wall clock times to avoid DST double-normalization issues.
-            // Then pick the candidate that guarantees the constraint holds for ALL days.
-            $bestCandidateMinutes = null;
-            $isBeforeEnd = ($params['beforeEndMinutes'] > 0 && $endPrayerName !== null);
-            
-            foreach ($daysData as $dayData) {
-                $dayAthan = $dayData['athan'][$prayerName] ?? null;
-                if ($dayAthan === null) {
-                    continue;
-                }
-                
-                if ($isBeforeEnd && isset($dayData['athan'][$endPrayerName])) {
-                    $dayEndTime = $dayData['athan'][$endPrayerName];
-                    $candidate = TimeHelpers::roundDown(clone $dayEndTime, $params['roundMinutes']);
-                    $candidate->modify("-{$params['beforeEndMinutes']} minutes");
-                    $candidateMinutes = (int)$candidate->format('G') * 60 + (int)$candidate->format('i');
-                    // For beforeEndMinutes, earliest candidate guarantees all days
-                    if ($bestCandidateMinutes === null || $candidateMinutes < $bestCandidateMinutes) {
-                        $bestCandidateMinutes = $candidateMinutes;
-                    }
-                } else {
-                    $candidate = TimeHelpers::roundUp(clone $dayAthan, $params['roundMinutes']);
-                    $candidate->modify("+{$params['afterAthanMinutes']} minutes");
-                    $candidateMinutes = (int)$candidate->format('G') * 60 + (int)$candidate->format('i');
-                    // For afterAthanMinutes, latest candidate guarantees all days
-                    if ($bestCandidateMinutes === null || $candidateMinutes > $bestCandidateMinutes) {
-                        $bestCandidateMinutes = $candidateMinutes;
-                    }
-                }
-            }
-            
-            if ($bestCandidateMinutes !== null) {
-                $bestHour = intdiv($bestCandidateMinutes, 60);
-                $bestMin = $bestCandidateMinutes % 60;
-                $bestTimeStr = sprintf('%02d:%02d', $bestHour, $bestMin);
-                
-                foreach ($daysData as $dayIndex => $dayData) {
-                    $dayDate = $dayData['date'];
-                    $dayIqama = TimeHelpers::parseTimeString($dayDate, $bestTimeStr);
-                    
-                    // Apply min/max constraints
-                    $minTime = TimeHelpers::parseTimeString($dayDate, $params['earliestTime']);
-                    $maxTime = TimeHelpers::parseTimeString($dayDate, $params['latestTime']);
-                    
-                    if ($dayIqama < $minTime) {
-                        $dayIqama = $minTime;
-                    }
-                    if ($dayIqama > $maxTime) {
-                        $dayIqama = $maxTime;
-                    }
-                    
-                    $results[$dayIndex] = $dayIqama;
-                }
-            }
-            
-            return $results;
-        }
-        
-        // Daily calculation path: normalize/denormalize is safe for single-day computation
+        // Normalize all times
         $normalizedDaysData = TimeHelpers::normalizeTimesForDst($daysData);
+        
+        // Find latest Athan and/or end time for weekly calculation
+        $latestAthan = null;
+        $latestEndTime = null;
+        
+        if ($isWeekly) {
+            foreach ($normalizedDaysData as $dayData) {
+                // Get the athan time for this prayer
+                if (isset($dayData['athan'][$prayerName])) {
+                    $dayAthan = $dayData['athan'][$prayerName];
+                    if ($latestAthan === null || TimeHelpers::timeToMinutes($dayAthan) > TimeHelpers::timeToMinutes($latestAthan)) {
+                        $latestAthan = clone $dayAthan;
+                    }
+                }
+                
+                // Get the end time if specified (e.g., sunrise for Fajr)
+                if ($endPrayerName !== null && isset($dayData['athan'][$endPrayerName])) {
+                    $dayEndTime = $dayData['athan'][$endPrayerName];
+                    if ($latestEndTime === null || TimeHelpers::timeToMinutes($dayEndTime) > TimeHelpers::timeToMinutes($latestEndTime)) {
+                        $latestEndTime = clone $dayEndTime;
+                    }
+                }
+            }
+            
+            // Apply rounding to the latest times
+            if ($latestAthan) {
+                $latestAthan = TimeHelpers::roundUp($latestAthan, $params['roundMinutes']);
+            }
+            if ($latestEndTime) {
+                $latestEndTime = TimeHelpers::roundDown($latestEndTime, $params['roundMinutes']);
+            }
+        }
         
         // Process each day
         foreach ($normalizedDaysData as $dayIndex => $dayData) {
@@ -227,18 +199,39 @@ class IqamaCalculator
                 continue; // Skip if athan time is not available
             }
             
-            // Daily calculation
-            if ($params['beforeEndMinutes'] > 0 && $endPrayerName !== null && isset($dayData['athan'][$endPrayerName])) {
-                // Calculate based on time before end
-                $dayEndTime = $dayData['athan'][$endPrayerName];
-                $dayIqama = clone $dayEndTime;
-                $dayIqama = TimeHelpers::roundDown($dayIqama, $params['roundMinutes']);
-                $dayIqama->modify("-{$params['beforeEndMinutes']} minutes");
+            // Determine iqama time based on rule
+            if ($isWeekly) {
+                // Weekly calculation: use the latest athan time across the week
+                if ($params['beforeEndMinutes'] > 0 && $latestEndTime !== null) {
+                    // Calculate based on time before end (e.g., before sunrise for Fajr)
+                    $dayIqama = clone $latestEndTime;
+                    $dayIqama->modify("-{$params['beforeEndMinutes']} minutes");
+                } else {
+                    // Calculate based on time after athan
+                    $dayIqama = clone $latestAthan;
+                    $dayIqama->modify("+{$params['afterAthanMinutes']} minutes");
+                }
+                
+                // Set the date to the current day's date for proper constraint comparison
+                $dayIqama->setDate(
+                    (int)$dayDate->format('Y'),
+                    (int)$dayDate->format('m'),
+                    (int)$dayDate->format('d')
+                );
             } else {
-                // Calculate based on time after athan
-                $dayIqama = clone $dayAthan;
-                $dayIqama = TimeHelpers::roundUp($dayIqama, $params['roundMinutes']);
-                $dayIqama->modify("+{$params['afterAthanMinutes']} minutes");
+                // Daily calculation
+                if ($params['beforeEndMinutes'] > 0 && $endPrayerName !== null && isset($dayData['athan'][$endPrayerName])) {
+                    // Calculate based on time before end
+                    $dayEndTime = $dayData['athan'][$endPrayerName];
+                    $dayIqama = clone $dayEndTime;
+                    $dayIqama = TimeHelpers::roundDown($dayIqama, $params['roundMinutes']);
+                    $dayIqama->modify("-{$params['beforeEndMinutes']} minutes");
+                } else {
+                    // Calculate based on time after athan
+                    $dayIqama = clone $dayAthan;
+                    $dayIqama = TimeHelpers::roundUp($dayIqama, $params['roundMinutes']);
+                    $dayIqama->modify("+{$params['afterAthanMinutes']} minutes");
+                }
             }
             
             // Denormalize the result to account for DST before applying constraints
