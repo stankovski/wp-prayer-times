@@ -93,7 +93,8 @@ jQuery(document).ready(function($) {
         var data = {
             action: 'muslprti_generate_times',
             nonce: muslprtiAdmin.export_nonce,
-            period: selectedPeriod
+            period: selectedPeriod,
+            include_asr_methods: $('#muslprti_generate_include_asr').is(':checked') ? '1' : '0'
         };
         
         // Add custom date range if selected
@@ -182,7 +183,8 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: {
                 action: 'muslprti_export_db',
-                nonce: muslprtiAdmin.export_db_nonce
+                nonce: muslprtiAdmin.export_db_nonce,
+                include_asr_methods: $('#muslprti_export_include_asr').is(':checked') ? '1' : '0'
             },
             success: function(response) {
                 $('#muslprti_export_db_btn').text('Export Existing Prayer Times').prop('disabled', false);
@@ -238,6 +240,7 @@ jQuery(document).ready(function($) {
         formData.append('action', 'muslprti_import_preview');
         formData.append('nonce', muslprtiAdmin.import_preview_nonce);
         formData.append('import_file', file);
+        formData.append('date_format', $('#muslprti_date_format').val());
         
         $(this).text('Previewing...').prop('disabled', true);
         
@@ -257,7 +260,12 @@ jQuery(document).ready(function($) {
                     
                     // Enable import button
                     $('#muslprti_import_btn').prop('disabled', false);
-                    
+
+                    // Detect optional SalahAPI 1.1 dual-Asr athan columns.
+                    var hasAsrMethods = preview.some(function(row) {
+                        return ('asr_athan_standard' in row) || ('asr_athan_hanafi' in row);
+                    });
+
                     // Generate preview table
                     var html = '<h4>Preview (' + preview.length + ' rows of ' + data.total_rows + ' total)</h4>';
                     html += '<div style="max-height: 300px; overflow-y: auto;">';
@@ -272,6 +280,9 @@ jQuery(document).ready(function($) {
                     html += '<th>Asr Athan</th><th>Asr Iqama</th>';
                     html += '<th>Maghrib Athan</th><th>Maghrib Iqama</th>';
                     html += '<th>Isha Athan</th><th>Isha Iqama</th>';
+                    if (hasAsrMethods) {
+                        html += '<th>Asr Athan (Standard)</th><th>Asr Athan (Hanafi)</th>';
+                    }
                     html += '</tr></thead>';
                     
                     // Table body
@@ -300,6 +311,10 @@ jQuery(document).ready(function($) {
                         html += '<td>' + (row.maghrib_iqama || '') + '</td>';
                         html += '<td>' + (row.isha_athan || '') + '</td>';
                         html += '<td>' + (row.isha_iqama || '') + '</td>';
+                        if (hasAsrMethods) {
+                            html += '<td>' + (row.asr_athan_standard || '') + '</td>';
+                            html += '<td>' + (row.asr_athan_hanafi || '') + '</td>';
+                        }
                         html += '</tr>';
                     });
                     
@@ -339,6 +354,7 @@ jQuery(document).ready(function($) {
         formData.append('action', 'muslprti_import');
         formData.append('nonce', muslprtiAdmin.import_nonce);
         formData.append('import_file', file);
+        formData.append('date_format', $('#muslprti_date_format').val());
         
         $(this).text('Importing...').prop('disabled', true);
         

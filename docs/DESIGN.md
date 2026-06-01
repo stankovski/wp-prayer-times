@@ -82,6 +82,8 @@ dhuhr_athan    time
 dhuhr_iqama    time
 asr_athan      time
 asr_iqama      time
+asr_athan_standard  time (added in DB v1.4 migration; optional SalahAPI 1.1 dual-Asr column)
+asr_athan_hanafi    time (added in DB v1.4 migration; optional SalahAPI 1.1 dual-Asr column)
 maghrib_athan  time
 maghrib_iqama  time
 isha_athan     time
@@ -91,6 +93,14 @@ updated_at     datetime (ON UPDATE CURRENT_TIMESTAMP)
 ```
 
 - One row per calendar day. Times stored as local wall-clock `time` values.
+- `asr_athan_standard` / `asr_athan_hanafi` are optional (default `NULL`). They hold the Asr
+  athan computed with both the Standard (Shafi) and Hanafi schools, per the SalahAPI 1.1 CSV
+  fields. Generate, export and import all treat them as opt-in:
+  - **Generate** adds the columns when the "Include Asr Standard &amp; Hanafi" box is checked
+    (passes `$include_asr_methods` through `muslprti_create_builder()` to `Builder`).
+  - **Export** appends the columns when the matching box is checked.
+  - **Import** stores them only when the CSV header contains them; otherwise they are left
+    untouched (`NULL`).
 - DST handling is explicit in `includes/helpers.php` (`muslprti_time_to_minutes`,
   `muslprti_normalize_time_for_dst`, etc.) — be careful when changing stored vs. displayed time.
 

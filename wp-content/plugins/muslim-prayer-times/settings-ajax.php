@@ -155,7 +155,8 @@ function muslprti_handle_generate() {
         }
 
         // Create Builder instance using the helper function.
-        $builder = muslprti_create_builder( $opts );
+        $include_asr_methods = isset( $_POST['include_asr_methods'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['include_asr_methods'] ) );
+        $builder             = muslprti_create_builder( $opts, 0, $include_asr_methods );
 
         // Generate prayer times using the Builder.
         $csv_data = $builder->build( $start_date, $end_date );
@@ -212,6 +213,9 @@ function muslprti_handle_export_db() {
     global $wpdb;
     $table_name = $wpdb->prefix . MUSLPRTI_IQAMA_TABLE;
 
+    // Optionally include the SalahAPI 1.1 dual-Asr athan columns.
+    $include_asr_methods = isset( $_POST['include_asr_methods'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['include_asr_methods'] ) );
+
     try {
         // Get the current date.
         $now        = new DateTime( 'now', new DateTimeZone( muslprti_get_timezone() ) );
@@ -241,8 +245,13 @@ function muslprti_handle_export_db() {
         }
 
         // Prepare CSV data with header.
-        $csv_data   = array();
-        $csv_data[] = array( 'day', 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama' );
+        $csv_data = array();
+        $header   = array( 'day', 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama' );
+        if ( $include_asr_methods ) {
+            $header[] = 'asr_athan_standard';
+            $header[] = 'asr_athan_hanafi';
+        }
+        $csv_data[] = $header;
 
         // Generate all days for the next 365 days.
         $current_date = clone $now;
@@ -251,8 +260,8 @@ function muslprti_handle_export_db() {
 
             if ( isset( $existing_days[ $date_str ] ) ) {
                 // Day exists in database, use stored values.
-                $row        = $existing_days[ $date_str ];
-                $csv_data[] = array(
+                $row     = $existing_days[ $date_str ];
+                $csv_row = array(
                     $row['day'],
                     $row['fajr_athan'] ? muslprti_date( $time_fmt, strtotime( $row['fajr_athan'] ) ) : '',
                     $row['fajr_iqama'] ? muslprti_date( $time_fmt, strtotime( $row['fajr_iqama'] ) ) : '',
@@ -266,22 +275,16 @@ function muslprti_handle_export_db() {
                     $row['isha_athan'] ? muslprti_date( $time_fmt, strtotime( $row['isha_athan'] ) ) : '',
                     $row['isha_iqama'] ? muslprti_date( $time_fmt, strtotime( $row['isha_iqama'] ) ) : '',
                 );
+                if ( $include_asr_methods ) {
+                    $csv_row[] = ! empty( $row['asr_athan_standard'] ) ? muslprti_date( $time_fmt, strtotime( $row['asr_athan_standard'] ) ) : '';
+                    $csv_row[] = ! empty( $row['asr_athan_hanafi'] ) ? muslprti_date( $time_fmt, strtotime( $row['asr_athan_hanafi'] ) ) : '';
+                }
+                $csv_data[] = $csv_row;
             } else {
                 // Day doesn't exist, add empty row with just the date.
-                $csv_data[] = array(
-                    $date_str,
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                );
+                $csv_row    = array_fill( 0, count( $header ), '' );
+                $csv_row[0] = $date_str;
+                $csv_data[] = $csv_row;
             }
 
             $current_date->modify( '+1 day' );
@@ -428,7 +431,7 @@ function muslprti_handle_import_preview() {
                 }
             }
 
-            $time_fields = array( 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama' );
+            $time_fields = array( 'fajr_athan', 'fajr_iqama', 'sunrise', 'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama', 'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama', 'asr_athan_standard', 'asr_athan_hanafi' );
             foreach ( $time_fields as $tf ) {
                 if ( isset( $row[ $tf ] ) ) {
                     $row[ $tf ] = muslprti_parse_time_to_24h( $row[ $tf ] );
@@ -512,6 +515,9 @@ function muslprti_handle_import() {
     $header = str_getcsv( array_shift( $lines ) );
     $header = array_map( 'trim', array_map( 'strtolower', $header ) );
 
+    // Get the selected date format.
+    $date_format = isset( $_POST['date_format'] ) ? sanitize_text_field( wp_unslash( $_POST['date_format'] ) ) : 'Y-m-d';
+
     // Process data rows.
     $success_count = 0;
     $error_count   = 0;
@@ -544,28 +550,41 @@ function muslprti_handle_import() {
                 if ( $date_obj ) {
                     $row_data['day'] = $date_obj->format( 'Y-m-d' );
 
+                    $insert_data   = array(
+                        'day'           => $row_data['day'],
+                        'fajr_athan'    => muslprti_parse_time_to_24h( isset( $row_data['fajr_athan'] ) ? $row_data['fajr_athan'] : '' ),
+                        'fajr_iqama'    => muslprti_parse_time_to_24h( isset( $row_data['fajr_iqama'] ) ? $row_data['fajr_iqama'] : '' ),
+                        'sunrise'       => muslprti_parse_time_to_24h( isset( $row_data['sunrise'] ) ? $row_data['sunrise'] : '' ),
+                        'dhuhr_athan'   => muslprti_parse_time_to_24h( isset( $row_data['dhuhr_athan'] ) ? $row_data['dhuhr_athan'] : '' ),
+                        'dhuhr_iqama'   => muslprti_parse_time_to_24h( isset( $row_data['dhuhr_iqama'] ) ? $row_data['dhuhr_iqama'] : '' ),
+                        'asr_athan'     => muslprti_parse_time_to_24h( isset( $row_data['asr_athan'] ) ? $row_data['asr_athan'] : '' ),
+                        'asr_iqama'     => muslprti_parse_time_to_24h( isset( $row_data['asr_iqama'] ) ? $row_data['asr_iqama'] : '' ),
+                        'maghrib_athan' => muslprti_parse_time_to_24h( isset( $row_data['maghrib_athan'] ) ? $row_data['maghrib_athan'] : '' ),
+                        'maghrib_iqama' => muslprti_parse_time_to_24h( isset( $row_data['maghrib_iqama'] ) ? $row_data['maghrib_iqama'] : '' ),
+                        'isha_athan'    => muslprti_parse_time_to_24h( isset( $row_data['isha_athan'] ) ? $row_data['isha_athan'] : '' ),
+                        'isha_iqama'    => muslprti_parse_time_to_24h( isset( $row_data['isha_iqama'] ) ? $row_data['isha_iqama'] : '' ),
+                    );
+                    $insert_format = array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' );
+
+                    // Optionally store the SalahAPI 1.1 dual-Asr athan columns when present in the CSV.
+                    if ( array_key_exists( 'asr_athan_standard', $row_data ) ) {
+                        $insert_data['asr_athan_standard'] = muslprti_parse_time_to_24h( $row_data['asr_athan_standard'] );
+                        $insert_format[]                   = '%s';
+                    }
+                    if ( array_key_exists( 'asr_athan_hanafi', $row_data ) ) {
+                        $insert_data['asr_athan_hanafi'] = muslprti_parse_time_to_24h( $row_data['asr_athan_hanafi'] );
+                        $insert_format[]                 = '%s';
+                    }
+
                     // Insert or update the row.
                     $result = $wpdb->replace( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct replace required for import; not suitable for long-lived caching.
                         $table_name,
-                        array(
-                            'day'           => $row_data['day'],
-                            'fajr_athan'    => muslprti_parse_time_to_24h( isset( $row_data['fajr_athan'] ) ? $row_data['fajr_athan'] : '' ),
-                            'fajr_iqama'    => muslprti_parse_time_to_24h( isset( $row_data['fajr_iqama'] ) ? $row_data['fajr_iqama'] : '' ),
-                            'sunrise'       => muslprti_parse_time_to_24h( isset( $row_data['sunrise'] ) ? $row_data['sunrise'] : '' ),
-                            'dhuhr_athan'   => muslprti_parse_time_to_24h( isset( $row_data['dhuhr_athan'] ) ? $row_data['dhuhr_athan'] : '' ),
-                            'dhuhr_iqama'   => muslprti_parse_time_to_24h( isset( $row_data['dhuhr_iqama'] ) ? $row_data['dhuhr_iqama'] : '' ),
-                            'asr_athan'     => muslprti_parse_time_to_24h( isset( $row_data['asr_athan'] ) ? $row_data['asr_athan'] : '' ),
-                            'asr_iqama'     => muslprti_parse_time_to_24h( isset( $row_data['asr_iqama'] ) ? $row_data['asr_iqama'] : '' ),
-                            'maghrib_athan' => muslprti_parse_time_to_24h( isset( $row_data['maghrib_athan'] ) ? $row_data['maghrib_athan'] : '' ),
-                            'maghrib_iqama' => muslprti_parse_time_to_24h( isset( $row_data['maghrib_iqama'] ) ? $row_data['maghrib_iqama'] : '' ),
-                            'isha_athan'    => muslprti_parse_time_to_24h( isset( $row_data['isha_athan'] ) ? $row_data['isha_athan'] : '' ),
-                            'isha_iqama'    => muslprti_parse_time_to_24h( isset( $row_data['isha_iqama'] ) ? $row_data['isha_iqama'] : '' ),
-                        ),
-                        array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+                        $insert_data,
+                        $insert_format
                     );
 
                     if ( false !== $result ) {
-                        ++$imported_count;
+                        ++$success_count;
                     }
                 } else {
                     ++$error_count;

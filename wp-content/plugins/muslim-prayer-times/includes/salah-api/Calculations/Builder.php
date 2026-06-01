@@ -32,6 +32,9 @@ class Builder
     private Location $location;
     private CalculationMethod $calculationMethod;
     private int $elevation;
+    private bool $includeAsrMethods;
+    private ?PrayerTimes $asrStandardCalculator = null;
+    private ?PrayerTimes $asrHanafiCalculator = null;
 
     /**
      * Constructor
@@ -39,21 +42,39 @@ class Builder
      * @param Location $location Location configuration
      * @param CalculationMethod $calculationMethod Calculation method configuration
      * @param int $elevation Elevation in meters (default: 0)
+     * @param bool $includeAsrMethods When true, the generated CSV includes the optional
+     *                                `asr_athan_standard` and `asr_athan_hanafi` columns
+     *                                (SalahAPI 1.1 feature).
      */
     public function __construct(
         Location $location,
         CalculationMethod $calculationMethod,
-        int $elevation = 0
+        int $elevation = 0,
+        bool $includeAsrMethods = false
     ) {
         $this->location = $location;
         $this->calculationMethod = $calculationMethod;
         $this->elevation = $elevation;
+        $this->includeAsrMethods = $includeAsrMethods;
         
         // Initialize the prayer times calculator
         $this->prayerTimes = new PrayerTimes(
             $calculationMethod->name,
-            $calculationMethod->asrCalculationMethod ?? PrayerTimes::SCHOOL_STANDARD
+            $this->normalizeAsrSchool($calculationMethod->asrCalculationMethod)
         );
+
+        // When dual Asr export is requested, prepare dedicated calculators for each
+        // Asr school so both can be computed regardless of the configured method.
+        if ($this->includeAsrMethods) {
+            $this->asrStandardCalculator = new PrayerTimes(
+                $calculationMethod->name,
+                PrayerTimes::SCHOOL_STANDARD
+            );
+            $this->asrHanafiCalculator = new PrayerTimes(
+                $calculationMethod->name,
+                PrayerTimes::SCHOOL_HANAFI
+            );
+        }
     }
 
     /**
@@ -82,6 +103,23 @@ class Builder
         ];
         
         return $mapping[$method] ?? PrayerTimes::LATITUDE_ADJUSTMENT_METHOD_MOTN;
+    }
+
+    /**
+     * Normalize Asr calculation method from config format to PrayerTimes school constant
+     *
+     * @param string|null $method Asr calculation method from config (e.g. "standard", "hanafi")
+     * @return string Normalized school constant
+     */
+    private function normalizeAsrSchool(?string $method): string
+    {
+        if ($method === null) {
+            return PrayerTimes::SCHOOL_STANDARD;
+        }
+
+        return strtolower($method) === 'hanafi'
+            ? PrayerTimes::SCHOOL_HANAFI
+            : PrayerTimes::SCHOOL_STANDARD;
     }
 
     /**
@@ -147,17 +185,47 @@ class Builder
                     'isha' => new DateTime($datePrefix . $times[PrayerTimes::ISHA], $dtz),
                 ]
             ];
+
+            // Optionally compute Asr athan in both Standard and Hanafi formats
+            if ($this->includeAsrMethods) {
+                $standardTimes = $this->asrStandardCalculator->getTimes(
+                    $currentDate,
+                    $this->location->latitude,
+                    $this->location->longitude,
+                    $this->elevation,
+                    $this->normalizeHighLatitudeAdjustment($this->calculationMethod->highLatitudeAdjustment),
+                    null,
+                    PrayerTimes::TIME_FORMAT_24H
+                );
+                $hanafiTimes = $this->asrHanafiCalculator->getTimes(
+                    $currentDate,
+                    $this->location->latitude,
+                    $this->location->longitude,
+                    $this->elevation,
+                    $this->normalizeHighLatitudeAdjustment($this->calculationMethod->highLatitudeAdjustment),
+                    null,
+                    PrayerTimes::TIME_FORMAT_24H
+                );
+
+                $allDaysData[$i]['athan']['asr_standard'] = new DateTime($datePrefix . $standardTimes[PrayerTimes::ASR], $dtz);
+                $allDaysData[$i]['athan']['asr_hanafi'] = new DateTime($datePrefix . $hanafiTimes[PrayerTimes::ASR], $dtz);
+            }
             
             $currentDate->modify('+1 day');
         }
         
         // Now process in weekly batches or all at once
         $csvData = [];
-        $csvData[] = [
+        $header = [
             'day', 'fajr_athan', 'fajr_iqama', 'sunrise',
             'dhuhr_athan', 'dhuhr_iqama', 'asr_athan', 'asr_iqama',
             'maghrib_athan', 'maghrib_iqama', 'isha_athan', 'isha_iqama'
         ];
+        if ($this->includeAsrMethods) {
+            $header[] = 'asr_athan_standard';
+            $header[] = 'asr_athan_hanafi';
+        }
+        $csvData[] = $header;
         
         if ($isWeekly) {
             $csvData = array_merge($csvData, $this->processWeekly($allDaysData, $dtz));
@@ -282,7 +350,7 @@ class Builder
             $date = $dayData['date'];
             $athan = $dayData['athan'];
             
-            $csvRows[] = [
+            $row = [
                 $date->format('Y-m-d'),
                 $athan['fajr']->format('H:i'),
                 isset($fajrIqamaTimes[$dayIndex]) ? $fajrIqamaTimes[$dayIndex]->format('H:i') : '',
@@ -296,6 +364,13 @@ class Builder
                 $athan['isha']->format('H:i'),
                 isset($ishaIqamaTimes[$dayIndex]) ? $ishaIqamaTimes[$dayIndex]->format('H:i') : '',
             ];
+
+            if ($this->includeAsrMethods) {
+                $row[] = isset($athan['asr_standard']) ? $athan['asr_standard']->format('H:i') : '';
+                $row[] = isset($athan['asr_hanafi']) ? $athan['asr_hanafi']->format('H:i') : '';
+            }
+
+            $csvRows[] = $row;
         }
         
         return $csvRows;

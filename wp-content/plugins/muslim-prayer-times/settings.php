@@ -1173,6 +1173,12 @@ Today's Hijri date: [muslprti_current_hijri_date language="en"]
                     <label for="muslprti_end_date">End date:</label>
                     <input type="date" id="muslprti_end_date">
                 </div>
+                <p>
+                    <label>
+                        <input type="checkbox" id="muslprti_generate_include_asr">
+                        <?php esc_html_e( 'Include Asr Standard &amp; Hanafi athan columns (SalahAPI 1.1)', 'muslim-prayer-times' ); ?>
+                    </label>
+                </p>
             </div>
             
             <h3 style="margin-top:20px;">2. Import Prayer Times</h3>
@@ -1217,6 +1223,12 @@ Today's Hijri date: [muslprti_current_hijri_date language="en"]
                 The file can be re-imported again.</p>
             <div>
                 <button type="button" id="muslprti_export_db_btn" class="button">Export Existing Prayer Times</button>
+                <p>
+                    <label>
+                        <input type="checkbox" id="muslprti_export_include_asr">
+                        <?php esc_html_e( 'Include Asr Standard &amp; Hanafi athan columns (SalahAPI 1.1)', 'muslim-prayer-times' ); ?>
+                    </label>
+                </p>
             </div>
         </div>
     </div>

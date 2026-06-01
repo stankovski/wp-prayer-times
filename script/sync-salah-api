@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# Sync the SalahAPI calculation library from the upstream salahapi-php
+# repository into this plugin's bundled copy.
+#
+# Usage:
+#   script/sync-salah-api [SOURCE_DIR]
+#
+# SOURCE_DIR defaults to /Users/stankovski/code/salahapi-php/src
+set -euo pipefail
+
+SOURCE_DIR="${1:-/Users/stankovski/code/salahapi-php/src}"
+
+# Resolve the repository root (the parent of this script's directory).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+DEST_DIR="$REPO_ROOT/wp-content/plugins/muslim-prayer-times/includes/salah-api"
+
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Error: source directory does not exist: $SOURCE_DIR" >&2
+    exit 1
+fi
+
+mkdir -p "$DEST_DIR"
+
+echo "Syncing SalahAPI library"
+echo "  from: $SOURCE_DIR"
+echo "  to:   $DEST_DIR"
+
+# Mirror the source into the destination, removing files that no longer
+# exist upstream. Only PHP sources are copied.
+rsync -a --delete \
+    --include='*/' \
+    --include='*.php' \
+    --exclude='*' \
+    "$SOURCE_DIR/" "$DEST_DIR/"
+
+echo "Done."

@@ -440,11 +440,13 @@ function muslprti_create_ramadan_override($opts, $prayer, $minutes_after, $round
  * 
  * @param array $opts WordPress plugin settings
  * @param int $elevation Elevation in meters (default: 0)
+ * @param bool $include_asr_methods When true, the generated CSV includes the optional
+ *                                   asr_athan_standard and asr_athan_hanafi columns (SalahAPI 1.1)
  * @return Builder Builder instance
  */
-function muslprti_create_builder($opts, $elevation = 0) {
+function muslprti_create_builder($opts, $elevation = 0, $include_asr_methods = false) {
     $location = muslprti_create_location($opts);
     $calculation_method = muslprti_create_calculation_method($opts);
     
-    return new Builder($location, $calculation_method, $elevation);
+    return new Builder($location, $calculation_method, $elevation, $include_asr_methods);
 }

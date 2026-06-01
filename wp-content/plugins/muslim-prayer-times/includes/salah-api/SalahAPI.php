@@ -5,7 +5,7 @@ namespace SalahAPI;
 /**
  * SalahAPI - Prayer Times Document
  * 
- * Represents a SalahAPI document structure as defined in version 1.0 of the specification.
+ * Represents a SalahAPI document structure as defined in version 1.1 of the specification.
  */
 class SalahAPI
 {
@@ -44,7 +44,7 @@ class SalahAPI
      * @param DailyPrayerTimes|null $dailyPrayerTimes Daily prayer times CSV reference
      */
     public function __construct(
-        string $salahapi = '1.0',
+        string $salahapi = '1.1',
         ?Info $info = null,
         ?Location $location = null,
         ?CalculationMethod $calculationMethod = null,
@@ -116,7 +116,7 @@ class SalahAPI
         }
 
         return new self(
-            $data['salahapi'] ?? '1.0',
+            $data['salahapi'] ?? '1.1',
             $info,
             $location,
             $calculationMethod,
