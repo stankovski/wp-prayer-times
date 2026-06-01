@@ -4,9 +4,55 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1410bf5c3da379f5b8dd6fbaa9b31d45",
+    "content-hash": "8a32df20520fc19d95aecb2aef40c881",
     "packages": [],
     "packages-dev": [
+        {
+            "name": "frozzare/wp-test-suite",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wpup/test-suite.git",
+                "reference": "17b80e9890c3b68e0b4886f9137b0bf09f5c430c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wpup/test-suite/zipball/17b80e9890c3b68e0b4886f9137b0bf09f5c430c",
+                "reference": "17b80e9890c3b68e0b4886f9137b0bf09f5c430c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/class-wp-test-suite.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fredrik Forsmo",
+                    "email": "fredrik.forsmo@gmail.com"
+                }
+            ],
+            "description": "Run WordPress test easy",
+            "keywords": [
+                "easy",
+                "suite",
+                "test",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/wpup/test-suite/issues",
+                "source": "https://github.com/wpup/test-suite/tree/v1.0.4"
+            },
+            "time": "2015-05-14T16:15:53+00:00"
+        },
         {
             "name": "myclabs/deep-copy",
             "version": "1.13.1",

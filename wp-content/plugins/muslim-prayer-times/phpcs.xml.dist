@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ruleset name="MuslimPrayerTimes">
+	<description>WordPress Coding Standards for the plugin, but using 4-space indentation instead of tabs.</description>
+
+	<!-- Scan all PHP files in the plugin by default. -->
+	<file>.</file>
+
+	<!-- Exclude third-party / vendored code. -->
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/includes/salah-api/*</exclude-pattern>
+
+	<!-- Treat a tab as 4 columns so alignment math matches our spaces. -->
+	<arg name="tab-width" value="4"/>
+
+	<rule ref="WordPress">
+		<!-- We intentionally indent with spaces, not tabs. -->
+		<exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+	</rule>
+
+	<!-- Enforce 4-space indentation instead of the WordPress default tabs. -->
+	<rule ref="Generic.WhiteSpace.ScopeIndent">
+		<properties>
+			<property name="indent" value="4"/>
+			<property name="tabIndent" value="false"/>
+		</properties>
+	</rule>
+</ruleset>
