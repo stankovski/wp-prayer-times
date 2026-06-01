@@ -271,4 +271,94 @@ class AsrMethodsTest extends TestCase {
 		$this->assertSame( '17:55', $insert_data['asr_athan_hanafi'] );
 		$this->assertCount( 6, $insert_format );
 	}
+
+	// -----------------------------------------------------------------------
+	// CSV REST endpoint asr method override (mirrors
+	// muslprti_prayer_times_csv_endpoint()).
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Replicate the asr_athan override applied by the CSV endpoint: when an Asr
+	 * method is requested, asr_athan is sourced from the matching dual-Asr
+	 * column, falling back to the stored asr_athan when that column is empty.
+	 *
+	 * @param array  $results    Rows keyed by column name.
+	 * @param string $asr_method '', 'standard', or 'hanafi'.
+	 * @return array Rows with asr_athan possibly overridden.
+	 */
+	private function apply_asr_method( array $results, string $asr_method ): array {
+		if ( '' !== $asr_method ) {
+			$asr_column = 'standard' === $asr_method ? 'asr_athan_standard' : 'asr_athan_hanafi';
+			foreach ( $results as &$result_row ) {
+				if ( ! empty( $result_row[ $asr_column ] ) ) {
+					$result_row['asr_athan'] = $result_row[ $asr_column ];
+				}
+			}
+			unset( $result_row );
+		}
+
+		return $results;
+	}
+
+	public function test_csv_default_keeps_stored_asr_athan() {
+		$results = array(
+			array(
+				'day'                => '2026-06-01',
+				'asr_athan'          => '16:45',
+				'asr_athan_standard' => '16:45',
+				'asr_athan_hanafi'   => '17:55',
+			),
+		);
+
+		$out = $this->apply_asr_method( $results, '' );
+
+		$this->assertSame( '16:45', $out[0]['asr_athan'] );
+	}
+
+	public function test_csv_standard_method_uses_standard_column() {
+		$results = array(
+			array(
+				'day'                => '2026-06-01',
+				'asr_athan'          => '17:00',
+				'asr_athan_standard' => '16:45',
+				'asr_athan_hanafi'   => '17:55',
+			),
+		);
+
+		$out = $this->apply_asr_method( $results, 'standard' );
+
+		$this->assertSame( '16:45', $out[0]['asr_athan'] );
+	}
+
+	public function test_csv_hanafi_method_uses_hanafi_column() {
+		$results = array(
+			array(
+				'day'                => '2026-06-01',
+				'asr_athan'          => '17:00',
+				'asr_athan_standard' => '16:45',
+				'asr_athan_hanafi'   => '17:55',
+			),
+		);
+
+		$out = $this->apply_asr_method( $results, 'hanafi' );
+
+		$this->assertSame( '17:55', $out[0]['asr_athan'] );
+	}
+
+	public function test_csv_method_falls_back_when_column_empty() {
+		$results = array(
+			array(
+				'day'                => '2026-06-01',
+				'asr_athan'          => '17:00',
+				'asr_athan_standard' => '',
+				'asr_athan_hanafi'   => null,
+			),
+		);
+
+		$standard = $this->apply_asr_method( $results, 'standard' );
+		$this->assertSame( '17:00', $standard[0]['asr_athan'] );
+
+		$hanafi = $this->apply_asr_method( $results, 'hanafi' );
+		$this->assertSame( '17:00', $hanafi[0]['asr_athan'] );
+	}
 }

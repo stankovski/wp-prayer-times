@@ -40,6 +40,12 @@ function muslprti_register_rest_routes() {
                 'format' => 'date',
                 'description' => 'End date in YYYY-MM-DD format',
             ),
+            'asrMethod' => array(
+                'required' => false,
+                'type' => 'string',
+                'enum' => array('standard', 'hanafi'),
+                'description' => 'Asr calculation method. When set to "standard" or "hanafi", the asr_athan column is sourced from asr_athan_standard or asr_athan_hanafi respectively. Defaults to the stored asr_athan value.',
+            ),
         ),
     ));
 }
@@ -346,6 +352,20 @@ function muslprti_prayer_times_csv_endpoint($request) {
     // Check cache first
     $from_date = $request->get_param('fromDate');
     $to_date = $request->get_param('toDate');
+
+    // Optional Asr calculation method. Valid values: 'standard' or 'hanafi'.
+    // When set, the asr_athan column is sourced from the matching dual-Asr
+    // column (asr_athan_standard / asr_athan_hanafi). Otherwise the stored
+    // asr_athan value is used as-is.
+    $asr_method = $request->get_param('asrMethod');
+    if (!empty($asr_method)) {
+        $asr_method = strtolower(sanitize_text_field($asr_method));
+        if (!in_array($asr_method, array('standard', 'hanafi'), true)) {
+            return new WP_Error('invalid_asr_method', 'asrMethod must be "standard" or "hanafi"', array('status' => 400));
+        }
+    } else {
+        $asr_method = '';
+    }
     
     // Default to current month if no dates provided
     if (empty($from_date) && empty($to_date)) {
@@ -384,7 +404,7 @@ function muslprti_prayer_times_csv_endpoint($request) {
     }
     
     // Check cache for this date range
-    $cache_key = 'muslprti_csv_' . md5($from_date . '_' . $to_date);
+    $cache_key = 'muslprti_csv_' . md5($from_date . '_' . $to_date . '_' . $asr_method);
     $cached_data = wp_cache_get($cache_key, 'muslim_prayer_times');
     
     if (false !== $cached_data) {
@@ -404,7 +424,8 @@ function muslprti_prayer_times_csv_endpoint($request) {
     // Note: Table name must be escaped outside of prepare() as prepare() only handles placeholders
     $query = $wpdb->prepare(
         "SELECT day, fajr_athan, fajr_iqama, sunrise, dhuhr_athan, dhuhr_iqama, 
-                asr_athan, asr_iqama, maghrib_athan, maghrib_iqama, isha_athan, isha_iqama
+                asr_athan, asr_iqama, asr_athan_standard, asr_athan_hanafi,
+                maghrib_athan, maghrib_iqama, isha_athan, isha_iqama
          FROM " . esc_sql($table_name) . "
          WHERE day >= %s AND day <= %s
          ORDER BY day ASC",
@@ -416,6 +437,19 @@ function muslprti_prayer_times_csv_endpoint($request) {
     
     if (empty($results)) {
         return new WP_Error('no_data', 'No prayer times found for the specified date range', array('status' => 404));
+    }
+    
+    // When an Asr method is requested, override the asr_athan value with the
+    // matching dual-Asr column. Fall back to the stored asr_athan when the
+    // requested method column is empty.
+    if ('' !== $asr_method) {
+        $asr_column = 'standard' === $asr_method ? 'asr_athan_standard' : 'asr_athan_hanafi';
+        foreach ($results as &$result_row) {
+            if (!empty($result_row[$asr_column])) {
+                $result_row['asr_athan'] = $result_row[$asr_column];
+            }
+        }
+        unset($result_row);
     }
     
     // Build CSV content in memory without using fopen()

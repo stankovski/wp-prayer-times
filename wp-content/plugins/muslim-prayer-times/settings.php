@@ -1122,7 +1122,8 @@ Today's Hijri date: [muslprti_current_hijri_date language="en"]
                 <strong>Optional Parameters:</strong><br>
                 - <code>fromDate</code>: Start date in YYYY-MM-DD format (e.g., 2025-01-01)<br>
                 - <code>toDate</code>: End date in YYYY-MM-DD format (e.g., 2025-01-31)<br>
-                <strong>Example:</strong> <code><?php echo esc_url(muslprti_get_csv_api_url() . '?fromDate=2025-01-01&toDate=2025-01-31'); ?></code>
+                - <code>asrMethod</code>: <code>standard</code> or <code>hanafi</code>. Sets the <code>asr_athan</code> column from the matching Asr athan time. If omitted, the stored <code>asr_athan</code> value is used.<br>
+                <strong>Example:</strong> <code><?php echo esc_url(muslprti_get_csv_api_url() . '?fromDate=2025-01-01&toDate=2025-01-31&asrMethod=hanafi'); ?></code>
             </p>
         </div>
         
