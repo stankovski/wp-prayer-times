@@ -37,6 +37,7 @@ function muslprti_register_monthly_prayer_times_block() {
 
     // Register the block
     register_block_type('prayer-times/monthly-prayer-times', array(
+        'api_version' => 3,
         'editor_script' => 'muslprti-monthly-prayer-times-block',
         'editor_style' => 'muslprti-monthly-prayer-times-style',
         'style' => 'muslprti-monthly-prayer-times-style',

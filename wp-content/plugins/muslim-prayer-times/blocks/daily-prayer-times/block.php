@@ -46,6 +46,7 @@ function muslprti_register_daily_prayer_times_block() {
 
     // Register the block
     register_block_type('prayer-times/daily-prayer-times', array(
+        'api_version' => 3,
         'editor_script' => 'muslprti-daily-prayer-times-block',
         'editor_style' => 'muslprti-daily-prayer-times-style',
         'style' => 'muslprti-daily-prayer-times-style',
