@@ -361,4 +361,67 @@ class AsrMethodsTest extends TestCase {
 		$hanafi = $this->apply_asr_method( $results, 'hanafi' );
 		$this->assertSame( '17:00', $hanafi[0]['asr_athan'] );
 	}
+
+	// -----------------------------------------------------------------------
+	// CSV REST endpoint time format (mirrors the formatting loop in
+	// muslprti_prayer_times_csv_endpoint()).
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Resolve the effective time format the endpoint would use: an explicit
+	 * 'timeFormat' param wins, otherwise the stored Time Format setting is used.
+	 *
+	 * @param string $param   The timeFormat request param ('' when absent).
+	 * @param string $setting The plugin Time Format setting ('12hour'/'24hour').
+	 * @return string PHP date() format string.
+	 */
+	private function resolve_time_fmt( string $param, string $setting ): string {
+		if ( '' !== $param ) {
+			$time_format = $param;
+		} else {
+			$time_format = '12hour' === $setting ? '12hour' : '24hour';
+		}
+
+		return '12hour' === $time_format ? 'g:i A' : 'H:i';
+	}
+
+	/**
+	 * Format a stored DB time value the same way the endpoint does.
+	 *
+	 * @param string $value    Stored time value.
+	 * @param string $time_fmt PHP date() format string.
+	 * @return string
+	 */
+	private function format_time( string $value, string $time_fmt ): string {
+		if ( '' === $value ) {
+			return '';
+		}
+		$timestamp = strtotime( $value );
+		return false !== $timestamp ? gmdate( $time_fmt, $timestamp ) : $value;
+	}
+
+	public function test_csv_time_format_defaults_to_24hour_setting() {
+		$time_fmt = $this->resolve_time_fmt( '', '24hour' );
+		$this->assertSame( '16:45', $this->format_time( '16:45:00', $time_fmt ) );
+	}
+
+	public function test_csv_time_format_defaults_to_12hour_setting() {
+		$time_fmt = $this->resolve_time_fmt( '', '12hour' );
+		$this->assertSame( '4:45 PM', $this->format_time( '16:45:00', $time_fmt ) );
+	}
+
+	public function test_csv_time_format_param_overrides_setting() {
+		// Setting is 24hour but the param requests 12hour.
+		$time_fmt = $this->resolve_time_fmt( '12hour', '24hour' );
+		$this->assertSame( '4:45 PM', $this->format_time( '16:45:00', $time_fmt ) );
+
+		// Setting is 12hour but the param requests 24hour.
+		$time_fmt = $this->resolve_time_fmt( '24hour', '12hour' );
+		$this->assertSame( '16:45', $this->format_time( '16:45:00', $time_fmt ) );
+	}
+
+	public function test_csv_time_format_leaves_empty_values_empty() {
+		$time_fmt = $this->resolve_time_fmt( '', '24hour' );
+		$this->assertSame( '', $this->format_time( '', $time_fmt ) );
+	}
 }

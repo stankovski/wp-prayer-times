@@ -46,6 +46,12 @@ function muslprti_register_rest_routes() {
                 'enum' => array('standard', 'hanafi'),
                 'description' => 'Asr calculation method. When set to "standard" or "hanafi", the asr_athan column is sourced from asr_athan_standard or asr_athan_hanafi respectively. Defaults to the stored asr_athan value.',
             ),
+            'timeFormat' => array(
+                'required' => false,
+                'type' => 'string',
+                'enum' => array('12hour', '24hour'),
+                'description' => 'Output time format for the prayer time columns. "12hour" produces h:mm AM/PM, "24hour" produces HH:mm. Defaults to the plugin Time Format setting.',
+            ),
         ),
     ));
 }
@@ -88,13 +94,16 @@ function muslprti_salah_api_endpoint($request) {
     if (!in_array($timezone, $valid_timezones, true)) {
         $timezone = $default_timezone;
     }
-    
+
+    // Determine the time format token from the plugin Time Format setting.
+    $time_format_token = (isset($opts['time_format']) && '12hour' === $opts['time_format']) ? 'h:mm A' : 'HH:mm';
+
     $location = array(
         'latitude' => isset($opts['lat']) ? floatval($opts['lat']) : 47.7623,
         'longitude' => isset($opts['lng']) ? floatval($opts['lng']) : -122.2054,
         'timezone' => $timezone,
         'dateFormat' => 'YYYY-MM-DD',
-        'timeFormat' => 'HH:mm',
+        'timeFormat' => $time_format_token,
     );
     
     // Build CalculationMethod Object
@@ -116,12 +125,12 @@ function muslprti_salah_api_endpoint($request) {
             ),
         ),
         'dateFormat' => 'YYYY-MM-DD',
-        'timeFormat' => 'HH:mm',
+        'timeFormat' => $time_format_token,
     );
     
     // Build the complete SalahAPI response
     $response = array(
-        'salahapi' => '1.0',
+        'salahapi' => '1.1',
         'info' => $info,
         'location' => $location,
         'calculationMethod' => $calculation_method,
@@ -366,6 +375,20 @@ function muslprti_prayer_times_csv_endpoint($request) {
     } else {
         $asr_method = '';
     }
+
+    // Optional output time format. Valid values: '12hour' or '24hour'. When not
+    // specified, fall back to the plugin Time Format setting.
+    $time_format = $request->get_param('timeFormat');
+    if (!empty($time_format)) {
+        $time_format = strtolower(sanitize_text_field($time_format));
+        if (!in_array($time_format, array('12hour', '24hour'), true)) {
+            return new WP_Error('invalid_time_format', 'timeFormat must be "12hour" or "24hour"', array('status' => 400));
+        }
+    } else {
+        $opts = get_option('muslprti_settings', array());
+        $time_format = (isset($opts['time_format']) && '12hour' === $opts['time_format']) ? '12hour' : '24hour';
+    }
+    $time_fmt = '12hour' === $time_format ? 'g:i A' : 'H:i';
     
     // Default to current month if no dates provided
     if (empty($from_date) && empty($to_date)) {
@@ -404,7 +427,7 @@ function muslprti_prayer_times_csv_endpoint($request) {
     }
     
     // Check cache for this date range
-    $cache_key = 'muslprti_csv_' . md5($from_date . '_' . $to_date . '_' . $asr_method);
+    $cache_key = 'muslprti_csv_' . md5($from_date . '_' . $to_date . '_' . $asr_method . '_' . $time_format);
     $cached_data = wp_cache_get($cache_key, 'muslim_prayer_times');
     
     if (false !== $cached_data) {
@@ -472,6 +495,14 @@ function muslprti_prayer_times_csv_endpoint($request) {
         $csv_row = array();
         foreach ($headers as $header) {
             $value = isset($row[$header]) ? $row[$header] : '';
+            // Format the prayer time columns according to the requested time
+            // format. The 'day' column is a date and is left untouched.
+            if ('day' !== $header && '' !== $value) {
+                $timestamp = strtotime($value);
+                if (false !== $timestamp) {
+                    $value = muslprti_date($time_fmt, $timestamp);
+                }
+            }
             $csv_row[] = '"' . str_replace('"', '""', $value) . '"';
         }
         $csv_lines[] = implode(',', $csv_row);

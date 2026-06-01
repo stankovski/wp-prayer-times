@@ -115,9 +115,9 @@ Namespace `muslim-prayer-times/v1`, all public (`permission_callback => '__retur
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/salah-api` | GET | Full prayer-time config in SalahAPI JSON format |
+| `/salah-api` | GET | Full prayer-time config in SalahAPI 1.1 JSON format; `location`/`dailyPrayerTimes` `timeFormat` reflects the Time Format setting |
 | `/last-updated` | GET | Timestamp of latest data update |
-| `/prayer-times-csv` | GET | CSV of stored times; optional `fromDate`/`toDate` (YYYY-MM-DD), optional `asrMethod` (`standard`/`hanafi`) to source `asr_athan` from the dual-Asr columns |
+| `/prayer-times-csv` | GET | CSV of stored times; optional `fromDate`/`toDate` (YYYY-MM-DD), optional `asrMethod` (`standard`/`hanafi`) to source `asr_athan` from the dual-Asr columns, optional `timeFormat` (`12hour`/`24hour`, defaults to the Time Format setting) |
 
 Registered in [rest-api.php](../wp-content/plugins/muslim-prayer-times/includes/rest-api.php)
 via `rest_api_init`. These endpoints are public — keep them read-only and avoid leaking
