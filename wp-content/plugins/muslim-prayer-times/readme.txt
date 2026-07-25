@@ -3,7 +3,7 @@ Contributors: stankovski
 Tags: prayer times, muslim, islamic, mosque, salah
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -144,6 +144,7 @@ Yes, all prayer time displays are fully responsive and will adapt to different s
 * Added support for SalahAPI 1.1 dual-Asr athan columns (asr_athan_standard and asr_athan_hanafi)
 * Optional inclusion of both Asr athan times in Generate, Export, and Import
 * Database migration adds the two new columns
+* Tested with WordPress 7.0
 
 = 1.2.1 =
 * Tested with WordPress 6.9
