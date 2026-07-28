@@ -28,13 +28,19 @@ class Builder
         'Saturday' => 6,
     ];
 
-    private PrayerTimes $prayerTimes;
     private Location $location;
     private CalculationMethod $calculationMethod;
     private int $elevation;
     private bool $includeAsrMethods;
-    private ?PrayerTimes $asrStandardCalculator = null;
-    private ?PrayerTimes $asrHanafiCalculator = null;
+
+    /** Asr school driving every prayer time, including the Asr used for iqama. */
+    private string $iqamaAsrSchool;
+
+    /** Asr school used for the `asr_athan` output column only. */
+    private string $athanAsrSchool;
+
+    /** @var array<string, PrayerTimes> Lazily created calculators keyed by Asr school. */
+    private array $calculators = [];
 
     /**
      * Constructor
@@ -45,36 +51,58 @@ class Builder
      * @param bool $includeAsrMethods When true, the generated CSV includes the optional
      *                                `asr_athan_standard` and `asr_athan_hanafi` columns
      *                                (SalahAPI 1.1 feature).
+     * @param string|null $asrAthanMethod Asr method used for the `asr_athan` output column.
+     *                                    Defaults to the calculation method used for iqama.
      */
     public function __construct(
         Location $location,
         CalculationMethod $calculationMethod,
         int $elevation = 0,
-        bool $includeAsrMethods = false
+        bool $includeAsrMethods = false,
+        ?string $asrAthanMethod = null
     ) {
         $this->location = $location;
         $this->calculationMethod = $calculationMethod;
         $this->elevation = $elevation;
         $this->includeAsrMethods = $includeAsrMethods;
-        
-        // Initialize the prayer times calculator
-        $this->prayerTimes = new PrayerTimes(
-            $calculationMethod->name,
-            $this->normalizeAsrSchool($calculationMethod->asrCalculationMethod)
+        $this->iqamaAsrSchool = $this->normalizeAsrSchool($calculationMethod->asrCalculationMethod);
+        $this->athanAsrSchool = $this->normalizeAsrSchool(
+            $asrAthanMethod ?? $calculationMethod->asrCalculationMethod
         );
+    }
 
-        // When dual Asr export is requested, prepare dedicated calculators for each
-        // Asr school so both can be computed regardless of the configured method.
-        if ($this->includeAsrMethods) {
-            $this->asrStandardCalculator = new PrayerTimes(
-                $calculationMethod->name,
-                PrayerTimes::SCHOOL_STANDARD
-            );
-            $this->asrHanafiCalculator = new PrayerTimes(
-                $calculationMethod->name,
-                PrayerTimes::SCHOOL_HANAFI
-            );
-        }
+    /**
+     * Get the prayer times calculator for an Asr school, creating it on first use
+     *
+     * @param string $asrSchool PrayerTimes school constant
+     * @return PrayerTimes
+     */
+    private function calculatorFor(string $asrSchool): PrayerTimes
+    {
+        return $this->calculators[$asrSchool] ??= new PrayerTimes(
+            $this->calculationMethod->name,
+            $asrSchool
+        );
+    }
+
+    /**
+     * Calculate a day's prayer times using the given Asr school
+     *
+     * @param DateTime $date Day to calculate
+     * @param string $asrSchool PrayerTimes school constant
+     * @return array Prayer times keyed by PrayerTimes constants, in 24h format
+     */
+    private function calculateTimes(DateTime $date, string $asrSchool): array
+    {
+        return $this->calculatorFor($asrSchool)->getTimes(
+            $date,
+            $this->location->latitude,
+            $this->location->longitude,
+            $this->elevation,
+            $this->normalizeHighLatitudeAdjustment($this->calculationMethod->highLatitudeAdjustment),
+            null,
+            PrayerTimes::TIME_FORMAT_24H
+        );
     }
 
     /**
@@ -161,55 +189,40 @@ class Builder
         $currentDate = clone $startDate;
         
         for ($i = 0; $i < $daysToGenerate; $i++) {
-            // Get prayer times for this day
-            $times = $this->prayerTimes->getTimes(
-                $currentDate,
-                $this->location->latitude,
-                $this->location->longitude,
-                $this->elevation,
-                $this->normalizeHighLatitudeAdjustment($this->calculationMethod->highLatitudeAdjustment),
-                null,
-                PrayerTimes::TIME_FORMAT_24H
-            );
-            
-            // Store day data with DateTime objects
+            // Every prayer except the Asr athan comes from the iqama Asr school.
+            $times = $this->calculateTimes($currentDate, $this->iqamaAsrSchool);
+
             $datePrefix = $currentDate->format('Y-m-d') . ' ';
-            $allDaysData[$i] = [
-                'date' => clone $currentDate,
-                'athan' => [
-                    'fajr' => new DateTime($datePrefix . $times[PrayerTimes::FAJR], $dtz),
-                    'sunrise' => new DateTime($datePrefix . $times[PrayerTimes::SUNRISE], $dtz),
-                    'dhuhr' => new DateTime($datePrefix . $times[PrayerTimes::ZHUHR], $dtz),
-                    'asr' => new DateTime($datePrefix . $times[PrayerTimes::ASR], $dtz),
-                    'maghrib' => new DateTime($datePrefix . $times[PrayerTimes::MAGHRIB], $dtz),
-                    'isha' => new DateTime($datePrefix . $times[PrayerTimes::ISHA], $dtz),
-                ]
+            $toDateTime = function (string $time) use ($datePrefix, $dtz): DateTime {
+                return new DateTime($datePrefix . $time, $dtz);
+            };
+
+            // Memoized so each school is only calculated once per day.
+            $asrBySchool = [$this->iqamaAsrSchool => $times[PrayerTimes::ASR]];
+            $asrFor = function (string $asrSchool) use (&$asrBySchool, $currentDate): string {
+                return $asrBySchool[$asrSchool] ??=
+                    $this->calculateTimes($currentDate, $asrSchool)[PrayerTimes::ASR];
+            };
+
+            $athan = [
+                'fajr' => $toDateTime($times[PrayerTimes::FAJR]),
+                'sunrise' => $toDateTime($times[PrayerTimes::SUNRISE]),
+                'dhuhr' => $toDateTime($times[PrayerTimes::ZHUHR]),
+                'asr' => $toDateTime($times[PrayerTimes::ASR]),
+                'asr_athan' => $toDateTime($asrFor($this->athanAsrSchool)),
+                'maghrib' => $toDateTime($times[PrayerTimes::MAGHRIB]),
+                'isha' => $toDateTime($times[PrayerTimes::ISHA]),
             ];
 
-            // Optionally compute Asr athan in both Standard and Hanafi formats
             if ($this->includeAsrMethods) {
-                $standardTimes = $this->asrStandardCalculator->getTimes(
-                    $currentDate,
-                    $this->location->latitude,
-                    $this->location->longitude,
-                    $this->elevation,
-                    $this->normalizeHighLatitudeAdjustment($this->calculationMethod->highLatitudeAdjustment),
-                    null,
-                    PrayerTimes::TIME_FORMAT_24H
-                );
-                $hanafiTimes = $this->asrHanafiCalculator->getTimes(
-                    $currentDate,
-                    $this->location->latitude,
-                    $this->location->longitude,
-                    $this->elevation,
-                    $this->normalizeHighLatitudeAdjustment($this->calculationMethod->highLatitudeAdjustment),
-                    null,
-                    PrayerTimes::TIME_FORMAT_24H
-                );
-
-                $allDaysData[$i]['athan']['asr_standard'] = new DateTime($datePrefix . $standardTimes[PrayerTimes::ASR], $dtz);
-                $allDaysData[$i]['athan']['asr_hanafi'] = new DateTime($datePrefix . $hanafiTimes[PrayerTimes::ASR], $dtz);
+                $athan['asr_standard'] = $toDateTime($asrFor(PrayerTimes::SCHOOL_STANDARD));
+                $athan['asr_hanafi'] = $toDateTime($asrFor(PrayerTimes::SCHOOL_HANAFI));
             }
+
+            $allDaysData[$i] = [
+                'date' => clone $currentDate,
+                'athan' => $athan,
+            ];
             
             $currentDate->modify('+1 day');
         }
@@ -357,7 +370,7 @@ class Builder
                 $athan['sunrise']->format('H:i'),
                 $athan['dhuhr']->format('H:i'),
                 isset($dhuhrIqamaTimes[$dayIndex]) ? $dhuhrIqamaTimes[$dayIndex]->format('H:i') : '',
-                $athan['asr']->format('H:i'),
+                $athan['asr_athan']->format('H:i'),
                 isset($asrIqamaTimes[$dayIndex]) ? $asrIqamaTimes[$dayIndex]->format('H:i') : '',
                 $athan['maghrib']->format('H:i'),
                 isset($maghribIqamaTimes[$dayIndex]) ? $maghribIqamaTimes[$dayIndex]->format('H:i') : '',

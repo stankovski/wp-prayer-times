@@ -288,6 +288,8 @@ function muslprti_render_daily_prayer_times_block($attributes) {
             $output .= '</div>';
             continue;
         }
+
+        $prayer_times = muslprti_apply_asr_athan_method($prayer_times);
         
         // Format times for display (convert from 24h to 12h format)
         $formatted_times = array();

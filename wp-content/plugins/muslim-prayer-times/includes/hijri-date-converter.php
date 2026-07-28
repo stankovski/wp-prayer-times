@@ -35,33 +35,33 @@ function muslprti_convert_to_hijri($date, $long_format = true, $language = 'en',
     
     // Get month names
     $month_names_en = [
-        1 => 'Muharram',
-        2 => 'Safar',
-        3 => 'Rabi\' al-Awwal',
-        4 => 'Rabi\' al-Thani',
-        5 => 'Jumada al-Awwal',
-        6 => 'Jumada al-Thani',
+        1 => 'Muḥarram',
+        2 => 'Ṣafar',
+        3 => 'Rabīʿ al-awwal',
+        4 => 'Rabīʿ al-thānī',
+        5 => 'Jumādá al-ūlá',
+        6 => 'Jumādá al-ākhirah',
         7 => 'Rajab',
-        8 => 'Sha\'ban',
-        9 => 'Ramadan',
-        10 => 'Shawwal',
-        11 => 'Dhu al-Qi\'dah',
-        12 => 'Dhu al-Hijjah'
+        8 => 'Shaʿbān',
+        9 => 'Ramaḍān',
+        10 => 'Shawwāl',
+        11 => 'Dhū al-Qaʿdah',
+        12 => 'Dhū al-Ḥijjah'
     ];
     
     $month_names_ar = [
         1 => 'مُحَرَّم',
         2 => 'صَفَر',
-        3 => 'رَبِيع ٱلْأَوَّل',
-        4 => 'رَبِيع ٱلثَّانِي',
-        5 => 'جُمَادَىٰ ٱلْأُولَىٰ',
-        6 => 'جُمَادَىٰ ٱلثَّانِيَة',
+        3 => 'رَبيع الأوّل',
+        4 => 'رَبيع الثاني',
+        5 => 'جُمادى الأولى',
+        6 => 'جُمادى الآخرة',
         7 => 'رَجَب',
-        8 => 'شَعْبَان',
-        9 => 'رَمَضَان',
-        10 => 'شَوَّال',
-        11 => 'ذُو ٱلْقَعْدَة',
-        12 => 'ذُو ٱلْحِجَّة'
+        8 => 'شَعْبان',
+        9 => 'رَمَضان',
+        10 => 'شَوّال',
+        11 => 'ذوالقعدة',
+        12 => 'ذوالحجة'
     ];
     
     $month_names = ($language === 'ar') ? $month_names_ar : $month_names_en;
@@ -77,15 +77,7 @@ function muslprti_convert_to_hijri($date, $long_format = true, $language = 'en',
     
     // Return formatted string if long_format is true
     if ($long_format) {
-        if ($language === 'ar') {
-            // Use Arabic numerals - convert using TimeHelpers
-            require_once __DIR__ . '/salah-api/Calculations/TimeHelpers.php';
-            $day_ar = \SalahAPI\Calculations\TimeHelpers::convertToArabicNumerals($hijri['day']);
-            $year_ar = \SalahAPI\Calculations\TimeHelpers::convertToArabicNumerals($hijri['year']);
-            return $day_ar . ' ' . $month_name . ' ' . $year_ar;
-        } else {
-            return $hijri['day'] . ' ' . $month_name . ' ' . $hijri['year'];
-        }
+        return sprintf('%d %s %dH', $hijri['day'], $month_name, $hijri['year']);
     }
     
     return $result;

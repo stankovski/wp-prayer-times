@@ -447,6 +447,10 @@ function muslprti_create_ramadan_override($opts, $prayer, $minutes_after, $round
 function muslprti_create_builder($opts, $elevation = 0, $include_asr_methods = false) {
     $location = muslprti_create_location($opts);
     $calculation_method = muslprti_create_calculation_method($opts);
+    // Null lets the Builder fall back to the Asr calculation method.
+    $asr_athan_method = (isset($opts['asr_athan_method']) && '' !== $opts['asr_athan_method'])
+        ? $opts['asr_athan_method']
+        : null;
     
-    return new Builder($location, $calculation_method, $elevation, $include_asr_methods);
+    return new Builder($location, $calculation_method, $elevation, $include_asr_methods, $asr_athan_method);
 }

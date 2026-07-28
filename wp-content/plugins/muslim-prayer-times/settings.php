@@ -353,6 +353,8 @@ function muslprti_settings_page() {
         $opts['tz'] = isset($_POST['muslprti_tz']) ? sanitize_text_field(wp_unslash($_POST['muslprti_tz'])) : 'America/Los_Angeles';
         $opts['method'] = isset($_POST['muslprti_method']) ? sanitize_text_field(wp_unslash($_POST['muslprti_method'])) : 'ISNA';
         $opts['asr_calc'] = isset($_POST['muslprti_asr_calc']) ? sanitize_text_field(wp_unslash($_POST['muslprti_asr_calc'])) : 'STANDARD';
+        $asr_athan_method = isset($_POST['muslprti_asr_athan_method']) ? strtolower(sanitize_text_field(wp_unslash($_POST['muslprti_asr_athan_method']))) : 'standard';
+        $opts['asr_athan_method'] = in_array($asr_athan_method, array('standard', 'hanafi'), true) ? $asr_athan_method : 'standard';
         $opts['latitude_adjustment'] = isset($_POST['muslprti_latitude_adjustment']) ? sanitize_text_field(wp_unslash($_POST['muslprti_latitude_adjustment'])) : 'MOTN';
         
         // Save Hijri day offset
@@ -441,6 +443,7 @@ function muslprti_settings_page() {
     $tz = muslprti_get_timezone();
     $method = isset($opts['method']) ? $opts['method'] : 'ISNA';
     $asr_calc = isset($opts['asr_calc']) ? $opts['asr_calc'] : 'STANDARD';
+    $asr_athan_method = isset($opts['asr_athan_method']) ? $opts['asr_athan_method'] : strtolower($asr_calc);
     $latitude_adjustment = isset($opts['latitude_adjustment']) ? $opts['latitude_adjustment'] : 'MOTN';
     $hijri_offset = isset($opts['hijri_offset']) ? $opts['hijri_offset'] : 0;
     $time_format = isset($opts['time_format']) ? $opts['time_format'] : '12hour';
@@ -683,7 +686,17 @@ Today's Hijri date: [muslprti_current_hijri_date language="en"]
                                     <option value="STANDARD" <?php selected($asr_calc, 'STANDARD'); ?>>Standard (Shafi'i, Maliki, Hanbali)</option>
                                     <option value="HANAFI" <?php selected($asr_calc, 'HANAFI'); ?>>Hanafi</option>
                                 </select>
-                                <p class="description">Standard: Shadow length = object height<br>Hanafi: Shadow length = 2 × object height</p>
+                                <p class="description">Determines which Asr calculation is used to calculate Asr iqama.<br>Standard: Shadow length = object height<br>Hanafi: Shadow length = 2 × object height</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="muslprti_asr_athan_method">Asr Athan Method</label></th>
+                            <td>
+                                <select id="muslprti_asr_athan_method" name="muslprti_asr_athan_method">
+                                    <option value="standard" <?php selected($asr_athan_method, 'standard'); ?>>Standard</option>
+                                    <option value="hanafi" <?php selected($asr_athan_method, 'hanafi'); ?>>Hanafi</option>
+                                </select>
+                                <p class="description">Determines how Asr athan is displayed by selecting the Standard or Hanafi time stored in the prayer-times database.<br>If this differs from Asr Calculation Method, the displayed Asr athan may fall after the Asr iqama.</p>
                             </td>
                         </tr>
                         <tr>

@@ -310,6 +310,7 @@ function muslprti_generate_monthly_prayer_times_table($prayer_times, $showSunris
     $output .= '<tbody>';
     
     foreach ($prayer_times as $day) {
+        $day = muslprti_apply_asr_athan_method($day);
         $date_obj = new DateTime($day['day']);
         $is_friday = $date_obj->format('N') == 5; // 5 = Friday in ISO-8601
         $is_today = $day['day'] === $today;

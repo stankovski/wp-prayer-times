@@ -121,6 +121,8 @@ function muslprti_get_times_for_date($request) {
         
         $prayer_times = $future_time;
     }
+
+    $prayer_times = muslprti_apply_asr_athan_method($prayer_times);
     
     // Format the prayer times for display
     $formatted_times = array();

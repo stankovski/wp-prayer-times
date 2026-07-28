@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 $muslprti_salah_api = ABSPATH . 'plugins/muslim-prayer-times/includes/salah-api/';
 require_once $muslprti_salah_api . 'Location.php';
 require_once $muslprti_salah_api . 'CalculationMethod.php';
+require_once $muslprti_salah_api . 'IqamaCalculationRules.php';
+require_once $muslprti_salah_api . 'PrayerCalculationRule.php';
 require_once $muslprti_salah_api . 'Calculations/PrayerTimes.php';
 require_once $muslprti_salah_api . 'Calculations/Method.php';
 require_once $muslprti_salah_api . 'Calculations/TimeHelpers.php';
@@ -17,6 +19,8 @@ require_once $muslprti_salah_api . 'Calculations/Builder.php';
 
 use SalahAPI\Location;
 use SalahAPI\CalculationMethod;
+use SalahAPI\IqamaCalculationRules;
+use SalahAPI\PrayerCalculationRule;
 use SalahAPI\Calculations\Builder;
 
 /**
@@ -33,14 +37,17 @@ class AsrMethodsTest extends TestCase {
 	/**
 	 * Build a Builder for a fixed test location/method.
 	 *
-	 * @param bool $include_asr_methods Whether to request the dual-Asr columns.
+	 * @param bool        $include_asr_methods Whether to request the dual-Asr columns.
+	 * @param string|null $asr_athan_method    Method used for the asr_athan output column.
 	 * @return Builder
 	 */
-	private function make_builder( bool $include_asr_methods ): Builder {
-		$location = new Location( 47.7623, -122.2054, 'America/Los_Angeles', 'Y-m-d', 'H:i' );
-		$method   = new CalculationMethod( 'ISNA', null, null, 'standard', null, null );
+	private function make_builder( bool $include_asr_methods, ?string $asr_athan_method = null ): Builder {
+		$location   = new Location( 47.7623, -122.2054, 'America/Los_Angeles', 'Y-m-d', 'H:i' );
+		$asr_rule   = new PrayerCalculationRule( null, 'daily', 1, null, null, 15 );
+		$iqama_rules = new IqamaCalculationRules( null, null, null, $asr_rule );
+		$method     = new CalculationMethod( 'ISNA', null, null, 'standard', null, $iqama_rules );
 
-		return new Builder( $location, $method, 0, $include_asr_methods );
+		return new Builder( $location, $method, 0, $include_asr_methods, $asr_athan_method );
 	}
 
 	/**
@@ -89,6 +96,41 @@ class AsrMethodsTest extends TestCase {
 				'Hanafi Asr must not be earlier than Standard Asr'
 			);
 		}
+	}
+
+	/**
+	 * Generated asr_athan follows the configured method without changing iqama.
+	 */
+	public function test_generate_asr_athan_follows_athan_method() {
+		$standard = $this->make_builder( false, 'standard' )->build( '2026-06-01', '2026-06-01' );
+		$hanafi   = $this->make_builder( false, 'hanafi' )->build( '2026-06-01', '2026-06-01' );
+		$header   = $standard[0];
+
+		$asr_idx   = array_search( 'asr_athan', $header, true );
+		$iqama_idx = array_search( 'asr_iqama', $header, true );
+
+		$this->assertNotSame( $standard[1][ $asr_idx ], $hanafi[1][ $asr_idx ] );
+		$this->assertMatchesRegularExpression( '/^\d{2}:\d{2}$/', $standard[1][ $iqama_idx ] );
+		$this->assertSame( $standard[1][ $iqama_idx ], $hanafi[1][ $iqama_idx ] );
+	}
+
+	/**
+	 * Internal dual-Asr columns are omitted unless requested by the user.
+	 */
+	public function test_generate_selected_asr_without_extra_columns() {
+		$with_dual    = $this->make_builder( true, 'hanafi' )->build( '2026-06-01', '2026-06-01' );
+		$without_dual = $this->make_builder( false, 'hanafi' )->build( '2026-06-01', '2026-06-01' );
+		$dual_header  = $with_dual[0];
+		$header       = $without_dual[0];
+
+		$asr_idx    = array_search( 'asr_athan', $header, true );
+		$hanafi_idx = array_search( 'asr_athan_hanafi', $dual_header, true );
+
+		$this->assertNotContains( 'asr_athan_standard', $header );
+		$this->assertNotContains( 'asr_athan_hanafi', $header );
+		$this->assertCount( 12, $header );
+		$this->assertCount( 12, $without_dual[1] );
+		$this->assertSame( $with_dual[1][ $hanafi_idx ], $without_dual[1][ $asr_idx ] );
 	}
 
 	// -----------------------------------------------------------------------

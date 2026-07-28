@@ -35,3 +35,5 @@ Example:
 ## Configuration
 
 Go to Settings > Muslim Prayer Times to configure default settings for the plugin.
+Use Asr Calculation Method for Asr iqama generation and Asr Athan Method to choose whether
+blocks and the SalahAPI CSV URL display the stored Standard or Hanafi Asr athan time.

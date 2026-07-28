@@ -96,11 +96,19 @@ updated_at     datetime (ON UPDATE CURRENT_TIMESTAMP)
 - `asr_athan_standard` / `asr_athan_hanafi` are optional (default `NULL`). They hold the Asr
   athan computed with both the Standard (Shafi) and Hanafi schools, per the SalahAPI 1.1 CSV
   fields. Generate, export and import all treat them as opt-in:
-  - **Generate** adds the columns when the "Include Asr Standard &amp; Hanafi" box is checked
-    (passes `$include_asr_methods` through `muslprti_create_builder()` to `Builder`).
+  - **Generate** passes `asr_athan_method` to `Builder` separately from the `asr_calc` value used
+    for Asr iqama. The Builder calculates another Asr method only when needed and adds the dual
+    columns only when the "Include Asr Standard &amp; Hanafi" box is checked.
   - **Export** appends the columns when the matching box is checked.
   - **Import** stores them only when the CSV header contains them; otherwise they are left
     untouched (`NULL`).
+  - **Display** uses the `asr_athan_method` setting to select one of these columns in all
+    blocks. If the selected column is empty, blocks fall back to the legacy `asr_athan` value.
+  - `asr_athan_method` is resolved by `muslprti_get_asr_athan_method()` in
+    `includes/helpers.php`; when the setting is absent it inherits `asr_calc`, so sites that
+    upgrade from before the setting existed keep their previous Asr athan school. Asr *iqama*
+    always follows `asr_calc`, so mixing the two schools can place the displayed Asr athan
+    after the Asr iqama.
 - DST handling is explicit in `includes/helpers.php` (`muslprti_time_to_minutes`,
   `muslprti_normalize_time_for_dst`, etc.) — be careful when changing stored vs. displayed time.
 
@@ -115,7 +123,7 @@ Namespace `muslim-prayer-times/v1`, all public (`permission_callback => '__retur
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/salah-api` | GET | Full prayer-time config in SalahAPI 1.1 JSON format; `location`/`dailyPrayerTimes` `timeFormat` reflects the Time Format setting |
+| `/salah-api` | GET | Full prayer-time config in SalahAPI 1.1 JSON format; `location`/`dailyPrayerTimes` `timeFormat` reflects the Time Format setting and `dailyPrayerTimes.csvUrl` includes the configured `asrMethod` |
 | `/last-updated` | GET | Timestamp of latest data update |
 | `/prayer-times-csv` | GET | CSV of stored times; optional `fromDate`/`toDate` (YYYY-MM-DD), optional `asrMethod` (`standard`/`hanafi`) to source `asr_athan` from the dual-Asr columns, optional `timeFormat` (`12hour`/`24hour`, defaults to the Time Format setting) |
 

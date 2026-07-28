@@ -2,6 +2,52 @@
 
 if (!defined('ABSPATH')) exit;
 
+/**
+ * Resolve the configured Asr athan method.
+ *
+ * Falls back to the Asr calculation method so sites that upgrade from before this
+ * setting existed keep the Asr athan school they were already using.
+ *
+ * @return string Either 'standard' or 'hanafi'.
+ */
+function muslprti_get_asr_athan_method() {
+    $opts = get_option('muslprti_settings', array());
+
+    if (isset($opts['asr_athan_method']) && '' !== $opts['asr_athan_method']) {
+        $method = $opts['asr_athan_method'];
+    } else {
+        $method = isset($opts['asr_calc']) ? $opts['asr_calc'] : 'standard';
+    }
+
+    return 'hanafi' === strtolower((string) $method) ? 'hanafi' : 'standard';
+}
+
+/**
+ * Select the configured Asr athan value for display.
+ *
+ * @param array       $prayer_times Prayer-time database row.
+ * @param string|null $method       Optional Asr athan method override.
+ * @return array Prayer-time row with the selected value in asr_athan.
+ */
+function muslprti_apply_asr_athan_method($prayer_times, $method = null) {
+    if (!is_array($prayer_times) || empty($prayer_times)) {
+        return $prayer_times;
+    }
+
+    if (null === $method) {
+        $method = muslprti_get_asr_athan_method();
+    }
+
+    $method = strtolower((string) $method);
+    $column = 'hanafi' === $method ? 'asr_athan_hanafi' : 'asr_athan_standard';
+
+    if (!empty($prayer_times[$column])) {
+        $prayer_times['asr_athan'] = $prayer_times[$column];
+    }
+
+    return $prayer_times;
+}
+
 // Helper function to convert DateTime to minutes since midnight
 function muslprti_time_to_minutes(DateTime $time) {
     // Get hours and minutes

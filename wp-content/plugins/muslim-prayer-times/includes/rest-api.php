@@ -3,6 +3,7 @@
 if (!defined('ABSPATH')) exit;
 
 require_once __DIR__ . '/salah-api-mappings.php';
+require_once __DIR__ . '/helpers.php';
 
 /**
  * Register REST API endpoints for Muslim Prayer Times
@@ -67,6 +68,7 @@ function muslprti_salah_api_endpoint($request) {
     // Get the base URL for the site
     $site_url = get_site_url();
     $csv_url = rest_url('muslim-prayer-times/v1/prayer-times-csv');
+    $csv_url = add_query_arg('asrMethod', muslprti_get_asr_athan_method(), $csv_url);
     
     // Build Info Object
     $info = array(

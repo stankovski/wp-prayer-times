@@ -737,6 +737,57 @@ class HelpersTest extends TestCase {
         $this->assertEquals('15:50:00', $results[0]->format('H:i:s'));
         $this->assertEquals('16:50:00', $results[1]->format('H:i:s'));
     }
+
+    /**
+     * Test selecting the configured Asr athan value for display
+     */
+    public function testApplyAsrAthanMethod() {
+        $prayer_times = [
+            'asr_athan' => '15:00:00',
+            'asr_athan_standard' => '15:30:00',
+            'asr_athan_hanafi' => '16:30:00',
+        ];
+
+        $standard = muslprti_apply_asr_athan_method($prayer_times, 'standard');
+        $hanafi = muslprti_apply_asr_athan_method($prayer_times, 'hanafi');
+
+        $this->assertEquals('15:30:00', $standard['asr_athan']);
+        $this->assertEquals('16:30:00', $hanafi['asr_athan']);
+
+        $this->setOption('muslprti_settings', ['asr_athan_method' => 'hanafi']);
+        $configured = muslprti_apply_asr_athan_method($prayer_times);
+        $this->assertEquals('16:30:00', $configured['asr_athan']);
+    }
+
+    /**
+     * Test falling back to the legacy Asr athan value
+     */
+    public function testApplyAsrAthanMethodFallsBackToLegacyValue() {
+        $prayer_times = [
+            'asr_athan' => '15:00:00',
+            'asr_athan_standard' => null,
+            'asr_athan_hanafi' => '',
+        ];
+
+        $this->assertEquals(
+            '15:00:00',
+            muslprti_apply_asr_athan_method($prayer_times, 'hanafi')['asr_athan']
+        );
+    }
+
+    /**
+     * Test that an unset Asr athan method inherits the Asr calculation method
+     */
+    public function testGetAsrAthanMethodDefaultsToAsrCalc() {
+        $this->setOption('muslprti_settings', ['asr_calc' => 'HANAFI']);
+        $this->assertEquals('hanafi', muslprti_get_asr_athan_method());
+
+        $this->setOption('muslprti_settings', ['asr_calc' => 'HANAFI', 'asr_athan_method' => 'standard']);
+        $this->assertEquals('standard', muslprti_get_asr_athan_method());
+
+        $this->setOption('muslprti_settings', []);
+        $this->assertEquals('standard', muslprti_get_asr_athan_method());
+    }
     
     /**
      * Test Asr Iqama time calculation during DST
