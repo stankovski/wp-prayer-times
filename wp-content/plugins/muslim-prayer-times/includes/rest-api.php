@@ -354,6 +354,52 @@ function muslprti_last_updated_endpoint($request) {
 }
 
 /**
+ * Get the entity tag for prayer times data.
+ *
+ * @return string|null Quoted ETag, or null when prayer times have not been updated.
+ */
+function muslprti_get_prayer_times_etag() {
+    $updated_at = get_option('muslprti_prayer_times_updated_at', null);
+
+    if (!is_string($updated_at) || '' === $updated_at || preg_match('/[\x00-\x20\x7F"]/', $updated_at)) {
+        return null;
+    }
+
+    return '"' . $updated_at . '"';
+}
+
+/**
+ * Check whether an If-None-Match header contains the current ETag.
+ *
+ * @param string|null $if_none_match If-None-Match request header.
+ * @param string      $etag          Current quoted ETag.
+ * @return bool Whether the request ETag matches.
+ */
+function muslprti_if_none_match_matches($if_none_match, $etag) {
+    if (!is_string($if_none_match) || '' === trim($if_none_match)) {
+        return false;
+    }
+
+    foreach (explode(',', $if_none_match) as $candidate) {
+        $candidate = trim($candidate);
+
+        if ('*' === $candidate) {
+            return true;
+        }
+
+        if (0 === strpos($candidate, 'W/')) {
+            $candidate = substr($candidate, 2);
+        }
+
+        if ($etag === $candidate) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
  * CSV endpoint callback
  * Returns prayer times data in CSV format
  */
@@ -427,6 +473,11 @@ function muslprti_prayer_times_csv_endpoint($request) {
     if ($days_diff > 366) {
         return new WP_Error('date_range_too_large', 'Date range cannot exceed 1 year', array('status' => 400));
     }
+
+    $etag = muslprti_get_prayer_times_etag();
+    if (null !== $etag && muslprti_if_none_match_matches($request->get_header('if-none-match'), $etag)) {
+        return new WP_REST_Response(null, 304, array('ETag' => $etag));
+    }
     
     // Check cache for this date range
     $cache_key = 'muslprti_csv_' . md5($from_date . '_' . $to_date . '_' . $asr_method . '_' . $time_format);
@@ -437,6 +488,9 @@ function muslprti_prayer_times_csv_endpoint($request) {
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: inline; filename="prayer-times.csv"');
         header('Content-Length: ' . strlen($cached_data));
+        if (null !== $etag) {
+            header('ETag: ' . $etag);
+        }
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo $cached_data;
         exit;
@@ -521,6 +575,9 @@ function muslprti_prayer_times_csv_endpoint($request) {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: inline; filename="prayer-times.csv"');
     header('Content-Length: ' . strlen($csv_content));
+    if (null !== $etag) {
+        header('ETag: ' . $etag);
+    }
     
     // Output CSV content and exit
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
