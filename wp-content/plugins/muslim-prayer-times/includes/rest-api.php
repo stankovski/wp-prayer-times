@@ -63,6 +63,11 @@ add_action('rest_api_init', 'muslprti_register_rest_routes');
  * Returns prayer times data in SalahAPI JSON format
  */
 function muslprti_salah_api_endpoint($request) {
+    $etag = muslprti_get_prayer_times_etag();
+    if (null !== $etag && muslprti_if_none_match_matches($request->get_header('if-none-match'), $etag)) {
+        return new WP_REST_Response(null, 304, array('ETag' => $etag));
+    }
+
     $opts = get_option('muslprti_settings', []);
     
     // Get the base URL for the site
@@ -139,7 +144,12 @@ function muslprti_salah_api_endpoint($request) {
         'dailyPrayerTimes' => $daily_prayer_times,
     );
     
-    return rest_ensure_response($response);
+    $response = rest_ensure_response($response);
+    if (null !== $etag) {
+        $response->header('ETag', $etag);
+    }
+
+    return $response;
 }
 
 /**

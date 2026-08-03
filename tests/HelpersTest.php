@@ -23,6 +23,15 @@ if (!function_exists('get_option')) {
     }
 }
 
+if (!function_exists('update_option')) {
+    function update_option($option, $value) {
+        global $wp_options;
+        $wp_options[$option] = $value;
+
+        return true;
+    }
+}
+
 require_once ABSPATH . 'plugins/muslim-prayer-times/includes/helpers.php';
 
 /**
@@ -47,6 +56,17 @@ class HelpersTest extends TestCase {
     protected function setOption($option, $value) {
         global $wp_options;
         $wp_options[$option] = $value;
+    }
+
+    public function testResetLastUpdated() {
+        $before = time();
+
+        muslprti_reset_last_updated();
+        $updated_at = get_option('muslprti_prayer_times_updated_at');
+
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $updated_at);
+        $this->assertGreaterThanOrEqual($before, strtotime($updated_at));
+        $this->assertLessThanOrEqual(time(), strtotime($updated_at));
     }
 
     /**

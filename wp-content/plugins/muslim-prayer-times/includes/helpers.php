@@ -48,6 +48,13 @@ function muslprti_apply_asr_athan_method($prayer_times, $method = null) {
     return $prayer_times;
 }
 
+/**
+ * Reset the timestamp used to invalidate prayer-times API responses.
+ */
+function muslprti_reset_last_updated() {
+    update_option('muslprti_prayer_times_updated_at', gmdate('Y-m-d\TH:i:s\Z'));
+}
+
 // Helper function to convert DateTime to minutes since midnight
 function muslprti_time_to_minutes(DateTime $time) {
     // Get hours and minutes

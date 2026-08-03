@@ -594,7 +594,7 @@ function muslprti_handle_import() {
     }
 
     // Record the timestamp of the last prayer times update.
-    update_option( 'muslprti_prayer_times_updated_at', gmdate( 'Y-m-d\TH:i:s\Z' ) );
+    muslprti_reset_last_updated();
 
     wp_send_json_success(
         array(
@@ -670,6 +670,7 @@ function muslprti_handle_import_salahapi_url() {
 
     // Update settings.
     update_option( 'muslprti_settings', $updated_settings );
+    muslprti_reset_last_updated();
 
     wp_send_json_success(
         array(
@@ -727,6 +728,7 @@ function muslprti_handle_import_salahapi_file() {
 
     // Update settings.
     update_option( 'muslprti_settings', $updated_settings );
+    muslprti_reset_last_updated();
 
     wp_send_json_success(
         array(

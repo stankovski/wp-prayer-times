@@ -374,6 +374,7 @@ function muslprti_settings_page() {
         $opts['jumuah3_name'] = isset($_POST['muslprti_jumuah3_name']) ? sanitize_text_field(wp_unslash($_POST['muslprti_jumuah3_name'])) : 'Jumuah 3';
         
         update_option('muslprti_settings', $opts);
+        muslprti_reset_last_updated();
         echo '<div class="updated"><p>General Prayer Times settings saved.</p></div>';
     }
     
@@ -433,6 +434,7 @@ function muslprti_settings_page() {
         $opts['ramadan_isha_rounding'] = isset($_POST['muslprti_ramadan_isha_rounding']) ? intval(wp_unslash($_POST['muslprti_ramadan_isha_rounding'])) : 1;
         
         update_option('muslprti_settings', $opts);
+        muslprti_reset_last_updated();
         echo '<div class="updated"><p>Iqama rules settings saved.</p></div>';
     }
     
