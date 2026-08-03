@@ -45,6 +45,16 @@ class RestApiTest extends TestCase {
 		$this->assertNull( muslprti_get_prayer_times_etag() );
 	}
 
+	public function test_etag_headers_include_shared_cache_policy() {
+		$this->assertSame(
+			array(
+				'Cache-Control' => 'public, max-age=60, s-maxage=3600',
+				'ETag'          => '"2026-08-01T12:34:56Z"',
+			),
+			muslprti_get_etag_headers( '"2026-08-01T12:34:56Z"' )
+		);
+	}
+
 	public function test_if_none_match_accepts_exact_weak_list_and_wildcard_matches() {
 		$etag = '"2026-08-01T12:34:56Z"';
 

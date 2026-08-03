@@ -65,7 +65,7 @@ add_action('rest_api_init', 'muslprti_register_rest_routes');
 function muslprti_salah_api_endpoint($request) {
     $etag = muslprti_get_prayer_times_etag();
     if (null !== $etag && muslprti_if_none_match_matches($request->get_header('if-none-match'), $etag)) {
-        return new WP_REST_Response(null, 304, array('ETag' => $etag));
+        return new WP_REST_Response(null, 304, muslprti_get_etag_headers($etag));
     }
 
     $opts = get_option('muslprti_settings', []);
@@ -145,8 +145,8 @@ function muslprti_salah_api_endpoint($request) {
     );
     
     $response = rest_ensure_response($response);
-    if (null !== $etag) {
-        $response->header('ETag', $etag);
+    foreach (muslprti_get_etag_headers($etag) as $header_name => $header_value) {
+        $response->header($header_name, $header_value);
     }
 
     return $response;
@@ -379,6 +379,24 @@ function muslprti_get_prayer_times_etag() {
 }
 
 /**
+ * Get cache headers for endpoints supporting prayer-times ETags.
+ *
+ * @param string|null $etag Current quoted ETag.
+ * @return array<string, string> Response headers.
+ */
+function muslprti_get_etag_headers($etag) {
+    $headers = array(
+        'Cache-Control' => 'public, max-age=60, s-maxage=3600',
+    );
+
+    if (null !== $etag) {
+        $headers['ETag'] = $etag;
+    }
+
+    return $headers;
+}
+
+/**
  * Check whether an If-None-Match header contains the current ETag.
  *
  * @param string|null $if_none_match If-None-Match request header.
@@ -486,7 +504,7 @@ function muslprti_prayer_times_csv_endpoint($request) {
 
     $etag = muslprti_get_prayer_times_etag();
     if (null !== $etag && muslprti_if_none_match_matches($request->get_header('if-none-match'), $etag)) {
-        return new WP_REST_Response(null, 304, array('ETag' => $etag));
+        return new WP_REST_Response(null, 304, muslprti_get_etag_headers($etag));
     }
     
     // Check cache for this date range
@@ -498,8 +516,8 @@ function muslprti_prayer_times_csv_endpoint($request) {
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: inline; filename="prayer-times.csv"');
         header('Content-Length: ' . strlen($cached_data));
-        if (null !== $etag) {
-            header('ETag: ' . $etag);
+        foreach (muslprti_get_etag_headers($etag) as $header_name => $header_value) {
+            header($header_name . ': ' . $header_value);
         }
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo $cached_data;
@@ -585,8 +603,8 @@ function muslprti_prayer_times_csv_endpoint($request) {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: inline; filename="prayer-times.csv"');
     header('Content-Length: ' . strlen($csv_content));
-    if (null !== $etag) {
-        header('ETag: ' . $etag);
+    foreach (muslprti_get_etag_headers($etag) as $header_name => $header_value) {
+        header($header_name . ': ' . $header_value);
     }
     
     // Output CSV content and exit
