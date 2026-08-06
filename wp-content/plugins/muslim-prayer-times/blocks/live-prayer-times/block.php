@@ -230,7 +230,8 @@ function muslprti_render_live_prayer_times_block($attributes) {
     // Helper function to get prayer icon HTML
     $get_prayer_icon = function($prayer_name, $class = 'prayer-icon') use ($prayer_icons) {
         if (isset($prayer_icons[$prayer_name])) {
-            return '<span class="' . esc_attr($class) . '" style="background-image: url(' . esc_url($prayer_icons[$prayer_name]) . ');" aria-hidden="true"></span>';
+            $icon_style = sprintf('--muslprti-icon: url("%s");', esc_url($prayer_icons[$prayer_name]));
+            return '<span class="' . esc_attr($class) . '" style="' . esc_attr($icon_style) . '" aria-hidden="true"></span>';
         }
         return '';
     };

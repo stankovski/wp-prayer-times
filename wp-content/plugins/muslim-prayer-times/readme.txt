@@ -3,7 +3,7 @@ Contributors: stankovski
 Tags: prayer times, muslim, islamic, mosque, salah
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.4.1
+Stable tag: 1.5.0
 Requires PHP: 7.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -139,6 +139,11 @@ Yes, all prayer time displays are fully responsive and will adapt to different s
 6. Import/export interface for prayer times management
 
 == Changelog ==
+
+= 1.5.0 =
+* Added theme-aware light and dark color defaults to prayer-time blocks
+* Made prayer and header SVG icons inherit the active text color
+* Added palette-aware block color controls and daily header text color
 
 = 1.4.0 =
 * Added support for SalahAPI 1.1 dual-Asr athan columns (asr_athan_standard and asr_athan_hanafi)

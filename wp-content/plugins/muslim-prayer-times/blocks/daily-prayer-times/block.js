@@ -5,8 +5,8 @@
     var PanelBody = components.PanelBody;
     var ToggleControl = components.ToggleControl;
     var SelectControl = components.SelectControl;
-    var ColorPicker = components.ColorPicker;
     var RangeControl = components.RangeControl;
+    var PanelColorSettings = blockEditor.PanelColorSettings;
     
     // Get plugin URL for icons
     var pluginUrl = (typeof muslprtiData !== 'undefined') ? muslprtiData.pluginUrl : '';
@@ -52,6 +52,10 @@
                 type: 'string',
                 default: '',
             },
+            headerTextColor: {
+                type: 'string',
+                default: '',
+            },
             showDate: {
                 type: 'boolean',
                 default: true,
@@ -89,17 +93,21 @@
             
             // Function to update text color
             function onChangeTextColor(newColor) {
-                props.setAttributes({ textColor: newColor.hex });
+                props.setAttributes({ textColor: newColor || '' });
             }
             
             // Function to update background color
             function onChangeBackgroundColor(newColor) {
-                props.setAttributes({ backgroundColor: newColor.hex });
+                props.setAttributes({ backgroundColor: newColor || '' });
             }
             
             // Function to update header color
             function onChangeHeaderColor(newColor) {
-                props.setAttributes({ headerColor: newColor.hex });
+                props.setAttributes({ headerColor: newColor || '' });
+            }
+
+            function onChangeHeaderTextColor(newColor) {
+                props.setAttributes({ headerTextColor: newColor || '' });
             }
             
             // Function to toggle date display
@@ -141,11 +149,11 @@
             function createPrayerNameCell(prayerName) {
                 var iconName = prayerName.toLowerCase();
                 var iconPath = prayerIcons[iconName] || '';
-                var iconElement = iconPath ? 
-                    el('img', { 
-                        src: iconPath,
+                var iconElement = iconPath ?
+                    el('span', {
                         className: 'prayer-icon',
-                        alt: prayerName
+                        style: { '--muslprti-icon': 'url("' + iconPath + '")' },
+                        'aria-hidden': true
                     }) : null;
                 
                 return el('td', { className: 'prayer-name' }, 
@@ -168,6 +176,9 @@
                 var headerStyle = {};
                 if (attributes.headerColor) {
                     headerStyle.backgroundColor = attributes.headerColor;
+                }
+                if (attributes.headerTextColor) {
+                    headerStyle.color = attributes.headerTextColor;
                 }
                 
                 return el('table', { 
@@ -277,29 +288,32 @@
                             onChange: onChangeTableStyle
                         })
                     ),
-                    el(PanelBody, { title: 'Color Settings', initialOpen: false },
-                        el('div', {},
-                            el('label', {}, 'Text Color'),
-                            el(ColorPicker, {
-                                color: attributes.textColor,
-                                onChangeComplete: onChangeTextColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '20px' } },
-                            el('label', {}, 'Background Color'),
-                            el(ColorPicker, {
-                                color: attributes.backgroundColor,
-                                onChangeComplete: onChangeBackgroundColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '20px' } },
-                            el('label', {}, 'Header Color'),
-                            el(ColorPicker, {
-                                color: attributes.headerColor,
-                                onChangeComplete: onChangeHeaderColor
-                            })
-                        )
-                    )
+                    el(PanelColorSettings, {
+                        title: 'Color Settings',
+                        initialOpen: false,
+                        colorSettings: [
+                            {
+                                value: attributes.textColor,
+                                onChange: onChangeTextColor,
+                                label: 'Text Color'
+                            },
+                            {
+                                value: attributes.backgroundColor,
+                                onChange: onChangeBackgroundColor,
+                                label: 'Background Color'
+                            },
+                            {
+                                value: attributes.headerColor,
+                                onChange: onChangeHeaderColor,
+                                label: 'Header Color'
+                            },
+                            {
+                                value: attributes.headerTextColor,
+                                onChange: onChangeHeaderTextColor,
+                                label: 'Header Text Color'
+                            }
+                        ]
+                    })
                 ),
                 
                 // Block preview

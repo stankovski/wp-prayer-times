@@ -73,6 +73,10 @@ function muslprti_register_daily_prayer_times_block() {
                 'type' => 'string',
                 'default' => '',
             ),
+            'headerTextColor' => array(
+                'type' => 'string',
+                'default' => '',
+            ),
             'showDate' => array(
                 'type' => 'boolean',
                 'default' => true,
@@ -219,6 +223,7 @@ function muslprti_render_daily_prayer_times_block($attributes) {
     $textColor = isset($attributes['textColor']) ? sanitize_hex_color($attributes['textColor']) : '';
     $backgroundColor = isset($attributes['backgroundColor']) ? sanitize_hex_color($attributes['backgroundColor']) : '';
     $headerColor = isset($attributes['headerColor']) ? sanitize_hex_color($attributes['headerColor']) : '';
+    $headerTextColor = isset($attributes['headerTextColor']) ? sanitize_hex_color($attributes['headerTextColor']) : '';
     $showDate = isset($attributes['showDate']) ? (bool)$attributes['showDate'] : true;
     $showHijriDate = isset($attributes['showHijriDate']) ? (bool)$attributes['showHijriDate'] : true;
     $showSunrise = isset($attributes['showSunrise']) ? (bool)$attributes['showSunrise'] : true;
@@ -244,6 +249,9 @@ function muslprti_render_daily_prayer_times_block($attributes) {
     if ($headerColor) {
         $header_style .= "background-color: " . esc_attr($headerColor) . ";";
     }
+    if ($headerTextColor) {
+        $header_style .= "color: " . esc_attr($headerTextColor) . ";";
+    }
     $header_style .= "text-transform: uppercase;";
     
     // Define icons for each prayer
@@ -260,7 +268,8 @@ function muslprti_render_daily_prayer_times_block($attributes) {
     // Helper function to get prayer icon HTML
     $get_prayer_icon = function($prayer_name) use ($prayer_icons) {
         if (isset($prayer_icons[$prayer_name])) {
-            return '<span class="prayer-icon" style="background-image: url(' . esc_url($prayer_icons[$prayer_name]) . ');" aria-hidden="true"></span>';
+            $icon_style = sprintf('--muslprti-icon: url("%s");', esc_url($prayer_icons[$prayer_name]));
+            return '<span class="prayer-icon" style="' . esc_attr($icon_style) . '" aria-hidden="true"></span>';
         }
         return '';
     };

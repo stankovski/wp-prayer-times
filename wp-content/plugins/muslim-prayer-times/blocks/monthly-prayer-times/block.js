@@ -6,7 +6,7 @@
     var ToggleControl = components.ToggleControl;
     var SelectControl = components.SelectControl;
     var RangeControl = components.RangeControl;
-    var ColorPicker = components.ColorPicker;
+    var PanelColorSettings = blockEditor.PanelColorSettings;
     
     // Register the block
     registerBlockType('prayer-times/monthly-prayer-times', {
@@ -76,12 +76,12 @@
             
             // Function to update header text color
             function onChangeHeaderTextColor(newColor) {
-                props.setAttributes({ headerTextColor: newColor.hex });
+                props.setAttributes({ headerTextColor: newColor || '' });
             }
             
             // Function to update header color
             function onChangeHeaderColor(newColor) {
-                props.setAttributes({ headerColor: newColor.hex });
+                props.setAttributes({ headerColor: newColor || '' });
             }
             
             // Function to toggle sunrise row
@@ -229,22 +229,14 @@
                             onChange: onChangeTableStyle
                         })
                     ),
-                    el(PanelBody, { title: 'Color Settings', initialOpen: false },
-                        el('div', {},
-                            el('label', {}, 'Header Text Color'),
-                            el(ColorPicker, {
-                                color: attributes.headerTextColor,
-                                onChangeComplete: onChangeHeaderTextColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '20px' } },
-                            el('label', {}, 'Header Color'),
-                            el(ColorPicker, {
-                                color: attributes.headerColor,
-                                onChangeComplete: onChangeHeaderColor
-                            })
-                        )
-                    )
+                    el(PanelColorSettings, {
+                        title: 'Color Settings',
+                        initialOpen: false,
+                        colorSettings: [
+                            { value: attributes.headerTextColor, onChange: onChangeHeaderTextColor, label: 'Header Text Color' },
+                            { value: attributes.headerColor, onChange: onChangeHeaderColor, label: 'Header Color' }
+                        ]
+                    })
                 ),
                 
                 // Block preview

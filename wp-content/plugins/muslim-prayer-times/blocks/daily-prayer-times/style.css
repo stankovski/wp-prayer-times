@@ -3,6 +3,10 @@
  */
 
 .wp-block-prayer-times-daily-prayer-times {
+    --muslprti-color-border: rgb(127 127 127 / 0.45);
+    --muslprti-color-surface: rgb(127 127 127 / 0.14);
+    --muslprti-color-stripe: rgb(127 127 127 / 0.08);
+    color: inherit;
     margin: 1em auto;
     max-width: 600px;
     margin-bottom: 2em;
@@ -21,8 +25,9 @@
 
 .wp-block-prayer-times-daily-prayer-times .hijri-date {
     font-size: 0.9em;
-    color: #555;
+    color: currentColor;
     margin-top: 0.3em;
+    opacity: 0.65;
 }
 
 .wp-block-prayer-times-daily-prayer-times .prayer-times-table {
@@ -38,9 +43,15 @@
     vertical-align: middle;
     margin-right: 8px;
     display: inline-block;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    background-color: currentColor;
+    -webkit-mask-image: var(--muslprti-icon);
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-image: var(--muslprti-icon);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
 }
 
 .wp-block-prayer-times-daily-prayer-times .prayer-name {
@@ -53,11 +64,12 @@
 .wp-block-prayer-times-daily-prayer-times .table-style-default td {
     padding: 0.5em;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--muslprti-color-border);
 }
 
 .wp-block-prayer-times-daily-prayer-times .table-style-default th {
-    background-color: #f5f5f5;
+    background-color: var(--muslprti-color-surface);
+    color: inherit;
     font-weight: bold;
 }
 
@@ -66,11 +78,12 @@
 .wp-block-prayer-times-daily-prayer-times .table-style-bordered td {
     padding: 0.5em;
     text-align: center;
-    border: 1px solid #ddd;
+    border: 1px solid var(--muslprti-color-border);
 }
 
 .wp-block-prayer-times-daily-prayer-times .table-style-bordered th {
-    background-color: #f5f5f5;
+    background-color: var(--muslprti-color-surface);
+    color: inherit;
     font-weight: bold;
 }
 
@@ -79,16 +92,17 @@
 .wp-block-prayer-times-daily-prayer-times .table-style-striped td {
     padding: 0.5em;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--muslprti-color-border);
 }
 
 .wp-block-prayer-times-daily-prayer-times .table-style-striped th {
-    background-color: #f5f5f5;
+    background-color: var(--muslprti-color-surface);
+    color: inherit;
     font-weight: bold;
 }
 
 .wp-block-prayer-times-daily-prayer-times .table-style-striped tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: var(--muslprti-color-stripe);
 }
 
 /* Minimal table style */
@@ -99,13 +113,13 @@
 }
 
 .wp-block-prayer-times-daily-prayer-times .table-style-minimal th {
-    border: 0px solid #ddd;
-    border-bottom: 1px solid #ddd;
+    border: 0 solid var(--muslprti-color-border);
+    border-bottom: 1px solid var(--muslprti-color-border);
     font-weight: bold;
 }
 
 .wp-block-prayer-times-daily-prayer-times .table-style-minimal td {
-    border: 0px solid #f0f0f0;
+    border: 0 solid var(--muslprti-color-border);
 }
 
 /* Carousel styling */
@@ -139,13 +153,13 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: #ccc;
+    background-color: var(--muslprti-color-border);
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
 .prayer-times-carousel-dot.active {
-    background-color: #333;
+    background-color: currentColor;
 }
 
 /* Carousel navigation arrows - set to display: none to hide them */
@@ -156,11 +170,11 @@
 .prayer-times-carousel-dot {
     width: 12px;
     height: 12px;
-    background-color: #ddd;
+    background-color: var(--muslprti-color-border);
 }
 
 .prayer-times-carousel-dot.active {
-    background-color: #555;
+    background-color: currentColor;
     transform: scale(1.2);
 }
 
@@ -208,16 +222,17 @@
     display: block;
     font-size: 0.9em;
     margin-top: 5px;
-    color: #555;
+    color: currentColor;
+    opacity: 0.65;
 }
 
 /* Table styles for Jumuah that match regular table styles */
 .wp-block-prayer-times-daily-prayer-times .table-style-bordered .jumuah-times-table td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--muslprti-color-border);
 }
 
 .wp-block-prayer-times-daily-prayer-times .table-style-striped .jumuah-times-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: var(--muslprti-color-stripe);
 }
 
 /* Ensure header color background takes precedence for all table styles */

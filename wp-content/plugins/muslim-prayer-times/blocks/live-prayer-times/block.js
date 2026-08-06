@@ -5,8 +5,8 @@
     var PanelBody = components.PanelBody;
     var ToggleControl = components.ToggleControl;
     var SelectControl = components.SelectControl;
-    var ColorPicker = components.ColorPicker;
     var RangeControl = components.RangeControl;
+    var PanelColorSettings = blockEditor.PanelColorSettings;
     
     // Get plugin URL for icons
     var pluginUrl = (typeof muslprtiData !== 'undefined') ? muslprtiData.pluginUrl : '';
@@ -117,32 +117,32 @@
             
             // Function to update text color
             function onChangeTextColor(newColor) {
-                props.setAttributes({ textColor: newColor.hex });
+                props.setAttributes({ textColor: newColor || '' });
             }
             
             // Function to update background color
             function onChangeBackgroundColor(newColor) {
-                props.setAttributes({ backgroundColor: newColor.hex });
+                props.setAttributes({ backgroundColor: newColor || '' });
             }
             
             // Function to update header color
             function onChangeHeaderColor(newColor) {
-                props.setAttributes({ headerColor: newColor.hex });
+                props.setAttributes({ headerColor: newColor || '' });
             }
             
             // Function to update header text color
             function onChangeHeaderTextColor(newColor) {
-                props.setAttributes({ headerTextColor: newColor.hex });
+                props.setAttributes({ headerTextColor: newColor || '' });
             }
             
             // Function to update highlight color
             function onChangeHighlightColor(newColor) {
-                props.setAttributes({ highlightColor: newColor.hex });
+                props.setAttributes({ highlightColor: newColor || '' });
             }
             
             // Function to update clock color
             function onChangeClockColor(newColor) {
-                props.setAttributes({ clockColor: newColor.hex });
+                props.setAttributes({ clockColor: newColor || '' });
             }
             
             // Function to change clock size
@@ -192,23 +192,23 @@
             
             // Function to update change color
             function onChangeChangeColor(newColor) {
-                props.setAttributes({ changeColor: newColor.hex });
+                props.setAttributes({ changeColor: newColor || '' });
             }
             
             // Function to update next prayer highlight color
             function onChangeNextPrayerColor(newColor) {
-                props.setAttributes({ nextPrayerColor: newColor.hex });
+                props.setAttributes({ nextPrayerColor: newColor || '' });
             }
             
             // Helper function to create a prayer cell with icon
             function createPrayerNameCell(prayerName) {
                 var iconName = prayerName.toLowerCase();
                 var iconPath = prayerIcons[iconName] || '';
-                var iconElement = iconPath ? 
-                    el('img', { 
-                        src: iconPath,
+                var iconElement = iconPath ?
+                    el('span', {
                         className: 'prayer-icon',
-                        alt: prayerName
+                        style: { '--muslprti-icon': 'url("' + iconPath + '")' },
+                        'aria-hidden': true
                     }) : null;
                 
                 return el('td', { className: 'prayer-name' }, 
@@ -390,13 +390,6 @@
                             max: 260,
                             onChange: onChangeClockSize
                         }),
-                        el('div', {},
-                            el('label', {}, 'Clock Color'),
-                            el(ColorPicker, {
-                                color: attributes.clockColor,
-                                onChangeComplete: onChangeClockColor
-                            })
-                        ),
                         el(ToggleControl, {
                             label: 'Show Seconds',
                             checked: attributes.showSeconds,
@@ -424,20 +417,6 @@
                             checked: attributes.showChanges,
                             onChange: onToggleShowChanges
                         }),
-                        attributes.showChanges && el('div', { style: { marginTop: '10px' } },
-                            el('label', {}, 'Change Indicator Color'),
-                            el(ColorPicker, {
-                                color: attributes.changeColor,
-                                onChangeComplete: onChangeChangeColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '10px' } },
-                            el('label', {}, 'Next Prayer Background Color'),
-                            el(ColorPicker, {
-                                color: attributes.nextPrayerColor,
-                                onChangeComplete: onChangeNextPrayerColor
-                            })
-                        ),
                         el(SelectControl, {
                             label: 'Text Alignment',
                             value: attributes.align,
@@ -465,43 +444,20 @@
                             onChange: onChangeTableStyle
                         })
                     ),
-                    el(PanelBody, { title: 'Color Settings', initialOpen: false },
-                        el('div', {},
-                            el('label', {}, 'Text Color'),
-                            el(ColorPicker, {
-                                color: attributes.textColor,
-                                onChangeComplete: onChangeTextColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '20px' } },
-                            el('label', {}, 'Background Color'),
-                            el(ColorPicker, {
-                                color: attributes.backgroundColor,
-                                onChangeComplete: onChangeBackgroundColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '20px' } },
-                            el('label', {}, 'Header Background Color'),
-                            el(ColorPicker, {
-                                color: attributes.headerColor,
-                                onChangeComplete: onChangeHeaderColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '20px' } },
-                            el('label', {}, 'Header Text Color'),
-                            el(ColorPicker, {
-                                color: attributes.headerTextColor,
-                                onChangeComplete: onChangeHeaderTextColor
-                            })
-                        ),
-                        el('div', { style: { marginTop: '20px' } },
-                            el('label', {}, 'Highlight Color (for Athan times & Hijri Arabic)'),
-                            el(ColorPicker, {
-                                color: attributes.highlightColor,
-                                onChangeComplete: onChangeHighlightColor
-                            })
-                        )
-                    )
+                    el(PanelColorSettings, {
+                        title: 'Color Settings',
+                        initialOpen: false,
+                        colorSettings: [
+                            { value: attributes.textColor, onChange: onChangeTextColor, label: 'Text Color' },
+                            { value: attributes.backgroundColor, onChange: onChangeBackgroundColor, label: 'Background Color' },
+                            { value: attributes.headerColor, onChange: onChangeHeaderColor, label: 'Header Background Color' },
+                            { value: attributes.headerTextColor, onChange: onChangeHeaderTextColor, label: 'Header Text Color' },
+                            { value: attributes.highlightColor, onChange: onChangeHighlightColor, label: 'Athan and Hijri Highlight Color' },
+                            { value: attributes.clockColor, onChange: onChangeClockColor, label: 'Clock Color' },
+                            { value: attributes.changeColor, onChange: onChangeChangeColor, label: 'Change Indicator Color' },
+                            { value: attributes.nextPrayerColor, onChange: onChangeNextPrayerColor, label: 'Next Prayer Background Color' }
+                        ]
+                    })
                 ),
                 
                 // Block preview
